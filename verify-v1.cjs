@@ -35,4 +35,6 @@ g.keys.add('e');g.balance(.1);assert(g.state.phase.route>0,'E advances the plate
 g.selectScene('neon');assert.equal(g.dishes().length,6,'scene cannot switch during active play');
 g.state.open='menu';g.selectScene('neon');assert.equal(g.dishes().length,6);
 assert.equal(g.activeStations().length,10);g.start();g.map(0);
-console.log('PASS: V1 toilet orders, stations, three close-ups, E-to-advance and original neon scene.');
+g.state.open='menu';g.selectScene('fridge');assert.equal(g.state.scene,'fridge');assert.equal(g.dishes().length,6);g.map(0);
+g.state.open='menu';g.selectScene('coffee');assert.equal(g.state.scene,'coffee');assert.equal(g.dishes().length,6);g.map(0);
+console.log('PASS: one-page office, fridge, toilet and coffee scenes; six foods; close-ups and E-to-advance.');
