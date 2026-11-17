@@ -1,19 +1,29 @@
 /* Buildless prototype. All simulation stays local; no hardware or AI connection. */
 (()=>{'use strict';
 const $=s=>document.querySelector(s),canvas=$('#game'),ctx=canvas.getContext('2d');
-const foods=[{id:'tomato',name:'番茄',dish:'浓缩火焰番茄',color:'#c8624a'},{id:'potato',name:'咖啡土豆',dish:'焦糖咖啡土豆',color:'#caa169'},{id:'mushroom',name:'蘑菇',dish:'榛香蘑菇煲',color:'#9a8c9b'}];
-const stations=[{id:'tomato',x:60,y:70,w:130,h:92,label:'番茄箱',type:'source',food:0},{id:'potato',x:205,y:70,w:130,h:92,label:'土豆箱',type:'source',food:1},{id:'mushroom',x:350,y:70,w:130,h:92,label:'蘑菇箱',type:'source',food:2},{id:'chop',x:550,y:70,w:180,h:92,label:'切菜台',type:'chop'},{id:'stove',x:860,y:125,w:160,h:118,label:'炒菜台',type:'stove'},{id:'plates',x:860,y:440,w:160,h:104,label:'盘子台',type:'plates'},{id:'serve',x:60,y:450,w:190,h:98,label:'出餐口',type:'serve'},{id:'trash',x:60,y:290,w:95,h:88,label:'垃圾桶',type:'trash'},{id:'counter',x:430,y:305,w:245,h:100,label:'临时置物台',type:'counter'}];
+const foods=[
+  {id:'stapler',name:'订书机',dish:'咖啡咔哒订书机',color:'#c66d62'},
+  {id:'boss',name:'老板',dish:'浓缩催单老板',color:'#d08b5c'},
+  {id:'folder',name:'文件夹',dish:'豆渣积压文件夹',color:'#d6a54b'},
+  {id:'printer',name:'打印机',dish:'卡豆报错打印机',color:'#8d789f'},
+  {id:'keyboard',name:'键盘',dish:'爆豆弹窗键盘',color:'#638d79'},
+  {id:'aircon',name:'空调',dish:'蒸汽失控空调',color:'#6e96a0'}
+];
+const stations=[
+  {id:'stapler',x:35,y:58,w:95,h:72,label:'订书机箱',type:'source',food:0},{id:'boss',x:145,y:58,w:95,h:72,label:'老板箱',type:'source',food:1},{id:'folder',x:255,y:58,w:95,h:72,label:'文件夹箱',type:'source',food:2},
+  {id:'printer',x:365,y:58,w:95,h:72,label:'打印机箱',type:'source',food:3},{id:'keyboard',x:475,y:58,w:95,h:72,label:'键盘箱',type:'source',food:4},{id:'aircon',x:585,y:58,w:95,h:72,label:'空调箱',type:'source',food:5},
+  {id:'chop',x:510,y:185,w:180,h:92,label:'切菜台',type:'chop'},{id:'stove',x:860,y:125,w:160,h:118,label:'炒菜台',type:'stove'},{id:'plates',x:860,y:440,w:160,h:104,label:'盘子台',type:'plates'},{id:'serve',x:60,y:450,w:190,h:98,label:'出餐口',type:'serve'},{id:'trash',x:60,y:285,w:95,h:88,label:'垃圾桶',type:'trash'},{id:'counter',x:430,y:355,w:245,h:100,label:'临时置物台',type:'counter'}];
 let state='intro',player={x:290,y:265,held:null,face:0},keys={},orders=[],score=0,served=0,missed=0,combo=0,time=180,elapsed=0,seq=0,delivery=0,path=[],target=null,autoWork=null,last=0,toastTime=0,particles=[],sound=true,audio=null;
 function beep(freq=450){if(!sound)return;try{audio ||= new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.frequency.value=freq;g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.1);o.start();o.stop(audio.currentTime+.1)}catch{}}
 function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');toastTime=2.8}
-function addOrder(){const f=foods[seq%3];orders.push({id:++seq,food:f.id,left:seq<=3?65+(seq-1)*25:80,max:seq<=3?65+(seq-1)*25:80});}
+function addOrder(){const f=foods[seq%foods.length];orders.push({id:++seq,food:f.id,left:seq<=3?65+(seq-1)*25:80,max:seq<=3?65+(seq-1)*25:80});}
 function reset(){player={x:290,y:265,held:null,face:0};stations.forEach(s=>s.item=null);score=served=missed=combo=elapsed=seq=delivery=0;time=180;orders=[];for(let i=0;i<3;i++)addOrder();keys={};path=[];target=autoWork=null;particles=[];challenge.reset();renderUI();}
-function begin(){reset();state='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='暂停';canvas.focus();toast('豆盒开店！先取菜，靠近工作台进入近景挑战');beep(650);}
+function begin(){reset();state='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='暂停';canvas.focus();toast('豆仓开店！先取菜，靠近工作台进入近景挑战');beep(650);}
 function modal(k,t,p,b){$('#modalKicker').textContent=k;$('#modalTitle').textContent=t;$('#modalText').innerHTML=p;$('#start').textContent=b;$('#overlay').classList.remove('hidden');keys={};}
-function finish(){state='ended';modal('SHIFT COMPLETE','打烊，辛苦了！',`本局得分 <b>${score}</b> · 成功出餐 <b>${served}</b> 单 · 超时 <b>${missed}</b> 单<br>${served>=5?'豆盒米其林，给你摘星！':served>=2?'后厨节奏已掌握，再挑战一次吧。':'先熟悉路线，每一份菜都要切、炒、装盘。'}`,'再开一家店 →');}
+function finish(){state='ended';modal('SHIFT COMPLETE','打烊，辛苦了！',`本局得分 <b>${score}</b> · 成功出餐 <b>${served}</b> 单 · 超时 <b>${missed}</b> 单<br>${served>=5?'豆仓米其林，给你摘星！':served>=2?'后厨节奏已掌握，再挑战一次吧。':'先熟悉路线，每一份菜都要切、炒、装盘。'}`,'再开一家店 →');}
 function pause(){if(state==='playing'){state='paused';modal('TAKE A BREATH','后厨暂停中','灶火和订单倒计时都已暂停。<br>准备好后，继续你的厨房接力。','继续营业 →');$('#pause').textContent='继续';}else if(state==='paused'){state='playing';$('#overlay').classList.add('hidden');$('#pause').textContent='暂停';canvas.focus();}}
 $('#start').onclick=()=>state==='paused'?pause():begin();$('#pause').onclick=pause;$('#restart').onclick=()=>{state='confirm';modal('NEW SHIFT','重新开店？','开始新一局会清空本局成绩和台面。','确认重新开始 →');};$('#sound').onclick=()=>{sound=!sound;$('#sound').textContent='音效 '+(sound?'开':'关');};
-document.querySelectorAll('[data-practice]').forEach(b=>b.onclick=()=>{begin();const mode=b.dataset.practice,item={food:'tomato',state:mode==='chop'?'raw':mode==='cook'?'chopped':'plated',progress:0,heat:0};if(mode==='carry'){player.held=item;player.x=830;player.y=570;}else{const s=stations.find(s=>s.type===mode.replace('cook','stove'));s.item=item;player.x=s.x+s.w/2;player.y=s.y+s.h+45;}challenge.start(mode,item);renderUI();});
+document.querySelectorAll('[data-practice]').forEach(b=>b.onclick=()=>{begin();const mode=b.dataset.practice,item={food:'stapler',state:mode==='chop'?'raw':mode==='cook'?'chopped':'plated',progress:0,heat:0};if(mode==='carry'){player.held=item;player.x=830;player.y=570;}else{const s=stations.find(s=>s.type===mode.replace('cook','stove'));s.item=item;player.x=s.x+s.w/2;player.y=s.y+s.h+45;}challenge.start(mode,item);renderUI();});
 function food(id){return foods.find(f=>f.id===id)}
 function name(i){return i?(i.state==='raw'?'生':i.state==='chopped'?'切好':i.state==='cooked'?'炒熟':i.state==='burnt'?'糊掉':'已装盘')+'的'+food(i.food).name:'两手空空'}
 function nearest(){let best=null,dist=Infinity;for(const s of stations){let dx=player.x-Math.max(s.x,Math.min(player.x,s.x+s.w)),dy=player.y-Math.max(s.y,Math.min(player.y,s.y+s.h)),d=Math.hypot(dx,dy);if(d<dist){dist=d;best=s;}}return dist<85?best:null;}
@@ -52,12 +62,28 @@ function renderUI(){renderChallengeUI();$('#score').textContent=String(score).pa
 function rect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}}
 function text(t,x,y,size=16,color='#493321',align='center'){ctx.font=`500 ${size}px "Noto Sans SC",sans-serif`;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(t,x,y);}
 function ellipse(x,y,rx,ry,c){ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();}
-function foodDraw(i,x,y,scale=1){if(!i)return;const f=food(i.food);ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);if(i.state==='plated'){ellipse(0,3,30,18,'#a5ad9b');ellipse(0,0,30,18,'#f7f2df');ellipse(0,0,23,12,'#dfdfcb');}if(i.state==='burnt'){ellipse(0,0,20,12,'#474637');text('糊',0,0,14,'#eee0c7');}else if(i.state==='raw'){if(i.food==='tomato'){ellipse(0,0,17,15,f.color);text('✦',0,-13,19,'#536a45');}else if(i.food==='potato'){ctx.rotate(-.3);ellipse(0,0,20,13,f.color);ellipse(-8,-3,2,2,'#96754b');ellipse(6,4,2,2,'#96754b');}else{ellipse(0,7,5,12,'#e9ddc9');ellipse(0,-3,21,12,f.color);}}else{for(let j=0;j<6;j++){const a=j*2.4;rect(Math.cos(a)*12-5,Math.sin(a)*7-4,10,8,2,i.state==='cooked'?'#b77c42':f.color);}}ctx.restore();}
+function foodDraw(i,x,y,scale=1){
+  if(!i)return;const f=food(i.food);ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+  if(i.state==='plated'){ellipse(0,3,32,19,'#8f7d68');ellipse(0,0,31,18,'#f7ead3');ellipse(0,0,24,12,'#d7c49f');}
+  if(i.state==='burnt'){ellipse(0,0,20,12,'#474637');text('糊',0,0,14,'#eee0c7');}
+  else if(i.state==='raw'){
+    if(i.food==='stapler'){rect(-23,-8,46,8,3,'#713b37');rect(-20,-13,36,6,3,f.color);rect(14,-12,9,15,2,'#8d4c43');rect(-21,4,43,8,3,'#45342c');rect(-14,5,28,2,1,'#e0b17c');}
+    else if(i.food==='boss'){ellipse(0,0,17,18,'#d99b72');rect(-18,-16,36,8,5,'#4b342b');rect(-13,-8,7,5,2,'#2c2621');rect(6,-8,7,5,2,'#2c2621');rect(-10,7,20,7,3,'#8f4138');rect(-6,7,12,2,1,'#f7e2bd');}
+    else if(i.food==='folder'){rect(-23,-12,18,6,2,'#e1b65c');rect(-23,-7,46,24,3,f.color);rect(-19,-3,38,4,1,'#f7e3ab');rect(-18,5,36,3,1,'#9d6d36');}
+    else if(i.food==='printer'){rect(-18,-17,36,10,3,'#e9dcc8');rect(-24,-7,48,22,4,f.color);rect(-18,-2,36,7,2,'#3e332d');rect(-14,8,28,11,2,'#f2e5d2');rect(14,-3,5,4,1,'#d9a04d');}
+    else if(i.food==='keyboard'){rect(-27,-12,54,27,4,'#3f554b');rect(-24,-9,48,19,3,f.color);for(let r=0;r<2;r++)for(let k=0;k<8;k++)rect(-21+k*6,-7+r*7,4,4,1,(r+k)%3?'#d8cfb5':'#f1e4ca');}
+    else{rect(-27,-14,54,29,4,f.color);rect(-24,-11,48,18,3,'#e9e1ce');rect(-22,1,44,5,2,'#9bb0a9');rect(-21,8,42,7,2,'#35443f');rect(14,-5,7,3,1,'#d5a24f');}
+    for(let b=0;b<2;b++){ellipse(20-b*9,-17-b*3,3,4,'#5b3828');ctx.strokeStyle='#c0915c';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(18-b*9,-17-b*3);ctx.lineTo(22-b*9,-18-b*3);ctx.stroke();}
+  }else{
+    for(let j=0;j<6;j++){const a=j*2.4,col=i.state==='cooked'?'#a86d3f':f.color;rect(Math.cos(a)*13-6,Math.sin(a)*8-5,12,10,3,col);rect(Math.cos(a)*13-2,Math.sin(a)*8-2,4,3,1,'#ead1a1');}
+  }
+  ctx.restore();
+}
 function bar(x,y,w,p,color='#708958'){rect(x,y,w,6,3,'#d6d6bf');rect(x,y,w*Math.max(0,Math.min(1,p)),6,3,color);}
 function drawWorld(){ctx.clearRect(0,0,1100,680);rect(0,0,1100,680,0,'#322219');rect(16,18,1068,625,52,'#b9986a','#70523c');rect(32,40,1036,586,40,'#734a30','#e6cf9d');
 ctx.strokeStyle='#93613c';ctx.lineWidth=2;for(let j=0;j<20;j++){ctx.beginPath();for(let x=35;x<1070;x+=15){const y=59+j*29+Math.sin(x*.012+elapsed*.8+j)*7;x===35?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();}
 for(let j=0;j<42;j++){const x=45+(j*193+elapsed*8)%1010,y=58+(j*113)%546;drawBean(x,y,11+j%4*3,j*.7);}
-rect(365,15,370,33,9,'#38291f');text('BEAN HOPPER · 咖啡机豆盒后厨',550,32,13,'#ecd6ae');text('备 菜 浮 台',350,207,14,'#d1b182');text('烘 焙 炒 台',920,292,14,'#d1b182');text('出 餐 栈 桥',190,580,14,'#e2c59b');
+rect(365,15,370,33,9,'#38291f');text('BEAN HOPPER · 咖啡机豆仓内部',550,32,13,'#ecd6ae');text('备 菜 浮 台',350,207,14,'#d1b182');text('烘 焙 炒 台',920,292,14,'#d1b182');text('出 餐 栈 桥',190,580,14,'#e2c59b');
 if(path.length){ctx.setLineDash([4,8]);ctx.strokeStyle='#9aaf80';ctx.beginPath();ctx.moveTo(player.x,player.y);path.forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);}
 const near=nearest();for(const s of stations){let color=s.type==='stove'?'#8f7359':s.type==='serve'?'#ad8d55':s.type==='trash'?'#80705c':'#aa8a64';rect(s.x+4,s.y+9,s.w,s.h,7,'#533c2a');rect(s.x,s.y,s.w,s.h,7,color,near===s?'#b46d46':'#76543a');rect(s.x+7,s.y+7,s.w-14,s.h-27,4,s.type==='source'?'#d0ad79':'#dfc49a');text(s.label,s.x+s.w/2,s.y+s.h-11,13,'#493321');
 if(s.type==='source'){const f=foods[s.food];foodDraw({food:f.id,state:'raw'},s.x+s.w/2,s.y+35);text('∞',s.x+s.w-16,s.y+16,13,'#6e7c58');}

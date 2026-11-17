@@ -20,7 +20,7 @@ body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 
 <div class="tag">⚡ OFFICE ARCADE / NEON KITCHEN</div>
 <h1 id="menu-title">极限出餐</h1>
 <p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单</p>
-<div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="toilet">冲水马桶内部</button></div>
+<div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" id="coffee-scene">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
 <div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业 ↗</button><button id="resume" hidden>继续游戏</button></div>
 <div class="buttons small" id="practice">
@@ -49,9 +49,12 @@ const officeDishes = [
   {name:"火爆空调", parts:["面板","滤网","导风叶"], tone:"#53dfff"}
 ];
 const toiletDishes = [
-  {name:"漩涡鱼板拉面",ingredient:"鱼板",parts:["鱼板片","面条","葱花"],tone:"#ec91a6"},
-  {name:"泡泡云朵蛋饭",ingredient:"鸡蛋",parts:["蛋白","蛋黄","米饭"],tone:"#f4cb67"},
-  {name:"橡皮鸭蛋包饭",ingredient:"胡萝卜",parts:["胡萝卜","蛋皮","鸭嘴"],tone:"#f1a064"}
+  {name:"漩涡咔哒订书机",ingredient:"订书机",parts:["压柄","钉槽","底座"],tone:"#d77b8f"},
+  {name:"泡发催单老板",ingredient:"老板",parts:["假发","脑袋","大嘴"],tone:"#dc9764"},
+  {name:"浸水积压文件夹",ingredient:"文件夹",parts:["封皮","纸张","夹扣"],tone:"#e2b957"},
+  {name:"进水卡纸打印机",ingredient:"打印机",parts:["机盖","墨盒","纸托"],tone:"#9c86c8"},
+  {name:"泡水弹窗键盘",ingredient:"键盘",parts:["键帽","轴体","外壳"],tone:"#65b8a5"},
+  {name:"堵塞失控空调",ingredient:"空调",parts:["面板","滤网","导风叶"],tone:"#68a9c2"}
 ];
 let dishes=officeDishes;
 const bins=dishes.map((d,i)=>({x:155,y:148+i*55,w:96,h:48,type:"bin",dish:i,label:d.name}));
@@ -62,7 +65,7 @@ const station=[
   {x:806,y:402,w:82,h:65,type:"trash",label:"回收槽"}
 ];
 const all=[...bins,...station];
-const activeStations=()=>state.scene==="toilet"?[...bins.slice(0,3),...station]:all;
+const activeStations=()=>all;
 const keys=new Set();
 const menu=get("overlay");
 const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
@@ -119,20 +122,22 @@ function toiletSprite(id,x,y,scale=1,part=null){
   ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(scale,scale);
   const b=(a,y,w,h,col)=>rect(a,y,w,h,col);
   if(id===0){
-    b(-19,-15,38,30,"#a75d75");b(-15,-19,30,38,"#a75d75");b(-16,-12,32,24,"#fff4e9");b(-12,-16,24,32,"#fff4e9");
-    b(-9,-10,17,5,"#ed92a7");b(3,-8,7,13,"#ed92a7");b(-8,1,17,6,"#ed92a7");b(-10,-3,6,7,"#ed92a7");b(-2,-4,8,6,"#fff4e9");b(0,-2,4,4,"#e47e9b");
+    b(-24,-10,48,9,"#7d4056");b(-21,-14,38,5,"#e99aab");b(15,-13,9,15,"#b85f75");b(-20,1,40,5,"#eff7f0");b(-23,8,47,8,"#824a5f");b(-17,8,35,3,"#e592a4");
   }else if(id===1){
-    b(-13,-19,26,38,"#a99476");b(-18,-11,36,25,"#a99476");b(-10,-17,20,34,"#fffaf0");b(-15,-9,30,20,"#fffaf0");
-    b(-5,-7,15,15,"#e5aa4c");b(-2,-5,10,11,"#f8d36d");b(0,-4,4,4,"#fff1b0");b(-10,-11,6,4,"#ffffff");
+    b(-18,-19,36,9,"#64485b");b(-21,-13,42,7,"#49384f");b(-16,-7,32,23,"#e5a47c");b(-21,-3,6,11,"#d57a69");b(15,-3,6,11,"#d57a69");b(-11,-3,6,5,"#31536b");b(5,-3,6,5,"#31536b");b(-11,8,22,7,"#994c58");b(-7,8,14,3,"#fff3cf");
+  }else if(id===2){
+    b(-24,-11,18,6,"#d89843");b(-24,-5,48,23,"#bd713b");b(-20,-5,40,15,"#fff1bf");b(-22,0,46,18,"#d7a94f");b(-18,4,38,3,"#fff5c7");b(8,11,10,4,"#fff1b5");
+  }else if(id===3){
+    b(-18,-18,36,10,"#e8f2ef");b(-14,-15,24,3,"#83aebc");b(-26,-7,52,21,"#9a83bd");b(-23,-4,46,4,"#d6c9e9");b(-17,4,34,6,"#31536b");b(-14,10,28,9,"#eef5f0");b(15,-3,6,4,"#78d8bd");
+  }else if(id===4){
+    b(-27,-12,54,26,"#4e8e8b");b(-24,-9,48,18,"#31536b");for(let row=0;row<2;row++)for(let col=0;col<8;col++)b(-21+col*6,-7+row*7,4,4,(row+col)%3?"#87d5c1":"#effff5");b(-19,6,38,4,"#a5e3d2");
   }else{
-    b(-21,-11,34,21,"#a95c38");b(-15,9,21,6,"#a95c38");b(-8,15,9,4,"#a95c38");b(-18,-8,32,16,"#ed9250");b(-13,7,21,5,"#ed9250");b(-8,12,9,3,"#ed9250");
-    b(-10,-5,17,4,"#f8ba79");b(-5,3,9,2,"#c87542");b(11,-16,7,12,"#5c966e");b(17,-21,6,15,"#83b97a");b(19,-11,8,5,"#568f6d");
+    b(-27,-14,54,28,"#6c98ae");b(-24,-11,48,18,"#eff8f3");b(-22,1,44,5,"#acd5d5");b(-21,7,42,7,"#31536b");b(-19,9,39,2,"#75cbd0");b(14,-5,7,3,"#79e0c7");
   }
+  for(let i=0;i<3;i++){ellipse(-13+i*13,-17-(i%2)*4,3,3,"#b8ece1");rect(-15+i*13,-16-(i%2)*4,4,2,"#fffdf2");}
   if(part!==null){
     b(-23,19,46,5,"#315d78");b(-16,21,32,3,"#f8e8bc");
-    if(id===0)b(-10,22,20,2,"#ef9cb0");
-    if(id===1)b(-5,21,10,3,"#eab64c");
-    if(id===2)b(-10,21,20,3,"#e79a55");
+    b(-10,21,20,3,dishes[id].tone);
   }
   ctx.restore();
 }
@@ -354,9 +359,15 @@ function toiletNearBase(title,subtitle){
 }
 function toiletChip(id,x,y,s=1,cooked=false){
   ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(s,s);
-  if(id===0){rect(-13,-10,26,20,cooked?"#b96d7c":"#d88498");rect(-10,-7,20,14,"#fff5e9");rect(-4,-4,9,8,cooked?"#df9a9c":"#ee9caf");rect(0,-2,4,4,"#fff5e9");}
-  else if(id===1){rect(-13,-8,26,16,cooked?"#d29b57":"#eee2ca");rect(-10,-10,20,20,"#fff9ed");rect(-6,-6,12,12,cooked?"#e4ad4a":"#f3c65c");rect(-2,-4,6,7,"#f9da78");}
-  else{rect(-12,-9,24,18,cooked?"#b96a39":"#d77b42");rect(-9,-6,18,12,cooked?"#e39b53":"#f3a463");rect(-4,-4,9,3,"#fac487");rect(8,-11,5,5,"#79af77");}
+  const tone=dishes[id].tone,hot=["#aa596c","#c67d55","#bd8a42","#78639a","#438f7e","#487f99"][id];
+  rect(-13,-9,26,18,cooked?hot:tone);rect(-10,-6,20,12,"#f6f4df");rect(-7,-4,14,8,cooked?hot:tone);
+  if(id===0){rect(-7,-1,14,3,"#fff7e8");rect(4,-4,4,8,"#763d52");}
+  else if(id===1){rect(-5,-3,3,3,"#31536b");rect(3,-3,3,3,"#31536b");rect(-5,3,10,2,"#974a55");}
+  else if(id===2){rect(-7,-4,4,8,"#f7dda1");rect(-1,-4,8,2,"#9e713d");}
+  else if(id===3){rect(-6,-3,12,5,"#31536b");rect(-4,3,8,3,"#e7efe9");}
+  else if(id===4){for(let k=0;k<3;k++)rect(-6+k*5,-3,3,3,"#31536b");}
+  else{rect(-7,-3,14,3,"#9fd4d6");rect(-5,3,10,2,"#31536b");}
+  ellipse(10,-8,3,3,"#b8ece1");rect(9,-9,2,2,"#fffdf2");
   ctx.restore();
 }
 function toiletDrawChop(t){
@@ -512,7 +523,7 @@ function toggleMenu(mode){
     const title={menu:"极限出餐",pause:"营业暂停",end:"营业结算",practice:"练习结算"}[mode];
     get("menu-title").textContent=title;
     get("menu-copy").innerHTML={
-      menu:state.scene==="toilet"?"缩小进入冲水马桶内部，在白瓷台面完成奇妙订单。<br>鱼板 · 鸡蛋 · 胡萝卜 / 180 秒":"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",
+      menu:state.scene==="toilet"?"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>订书机 · 老板 · 文件夹 · 打印机 · 键盘 · 空调 / 180 秒":"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",
       pause:"营业、订单和工序倒计时已暂停。",
       end:"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
       practice:state.practiceResult||"练习完成"
@@ -755,6 +766,7 @@ function selectScene(scene){
 }
 get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
 for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
+get("coffee-scene").onclick=()=>{window.location.href="dist/index.html";};
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
 const requestedScene=new URLSearchParams(window.location.search).get("scene");
