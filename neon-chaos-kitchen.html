@@ -6,6 +6,8 @@
 <title>极限出餐｜赛博后厨</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#05051a;color:#edfcff;font-family:"Courier New","PingFang SC","Microsoft Yahei",monospace;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);position:relative;aspect-ratio:16/9;background:#050523;overflow:hidden;container-type:inline-size}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030520b8;backdrop-filter:blur(3px)}[hidden]{display:none!important}.panel{width:63%;text-align:center;background:#080b2cf5;border:3px solid #31e8ff;box-shadow:0 0 0 5px #2025b4,0 0 0 8px #0c1035,0 0 36px #126fff80,inset 0 0 30px #1834aa88;padding:4cqw 3cqw;position:relative}.panel:before,.panel:after{content:"";position:absolute;width:8%;height:6px;background:#f456ff;box-shadow:0 0 13px #ff00eb;top:-4px}.panel:before{left:6%}.panel:after{right:6%}.tag{letter-spacing:.26em;color:#51efff;font-weight:bold;font-size:1.45cqw}.panel h1{font-size:6cqw;letter-spacing:.09em;margin:.08em 0 .23em;text-shadow:3px 4px #3122ac,0 0 20px #24caff}.panel p{font:600 1.65cqw/1.7 system-ui;margin:.45em 0 1.1em;color:#cbdbff}.buttons{display:flex;justify-content:center;gap:.9cqw;flex-wrap:wrap}button,select,input{font:700 1.45cqw system-ui;color:#e9faff;background:#0e1d57;border:2px solid #438fd8;border-radius:0;padding:.6em .85em}button{cursor:pointer}button:hover,button:focus-visible{background:#293993;border-color:#ff7bf8;outline:none}button.primary{color:#060b35;background:#35eaff;border-color:#baffff;box-shadow:4px 4px #273bc6;padding:.7em 1.4em}button.primary:hover{background:#fff}.small{margin-top:1.4cqw}.controls{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:flex;gap:.65cqw}.controls button{padding:.4em .65em;touch-action:none}.pause{position:absolute;right:1.2%;top:1.5%;padding:.25em .55em;font-family:inherit}.hint{font-size:1.12cqw;color:#a8c7f4;margin-top:1.3cqw}select{max-width:40%}input{width:76%;margin-bottom:1.3cqw;border-color:#3657b2;background:#0a143d}input::placeholder{color:#9db6e0}
+.scene-choice{display:flex;align-items:center;justify-content:center;gap:.7cqw;margin:0 0 1.1cqw;font:700 1.35cqw system-ui}.scene-choice button{font-size:1.25cqw;padding:.35em .7em}.scene-choice button.selected{background:#35eaff;color:#071044;border-color:#fff}
+body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 0 0 5px #7ab6bd,0 0 0 8px #22485f,0 0 35px #a5e0dd77}body.toilet-scene .panel h1{text-shadow:3px 4px #22485f}body.toilet-scene .panel p,body.toilet-scene .hint{color:#e5f4e8}body.toilet-scene button.primary{background:#f6d77f;border-color:#fff9e7;color:#31536b}body.toilet-scene .scene-choice button.selected{background:#f6d77f;color:#31536b;border-color:#fff9e7}
 </style>
 </head>
 <body>
@@ -18,6 +20,7 @@
 <div class="tag">⚡ OFFICE ARCADE / NEON KITCHEN</div>
 <h1 id="menu-title">极限出餐</h1>
 <p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单</p>
+<div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="toilet">冲水马桶内部</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
 <div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业 ↗</button><button id="resume" hidden>继续游戏</button></div>
 <div class="buttons small" id="practice">
@@ -37,7 +40,7 @@ ctx.imageSmoothingEnabled = false;
 const get = id => document.getElementById(id);
 const W=960,H=540;
 const c = {bg:"#060622",ink:"#070923",blue:"#283acd",light:"#38dfff",white:"#effeff",pink:"#ff47e8",yellow:"#ffd84e",red:"#ff537f",green:"#76ffba"};
-const dishes = [
+const officeDishes = [
   {name:"火爆订书机", parts:["压柄","钉槽","底座"], tone:"#ff477e"},
   {name:"火爆老板", parts:["假发","脑袋","大嘴"], tone:"#ff9b50"},
   {name:"火爆文件夹", parts:["封皮","纸张","夹扣"], tone:"#ffdc53"},
@@ -45,6 +48,12 @@ const dishes = [
   {name:"火爆键盘", parts:["键帽","轴体","外壳"], tone:"#5fffc8"},
   {name:"火爆空调", parts:["面板","滤网","导风叶"], tone:"#53dfff"}
 ];
+const toiletDishes = [
+  {name:"漩涡鱼板拉面",ingredient:"鱼板",parts:["鱼板片","面条","葱花"],tone:"#ec91a6"},
+  {name:"泡泡云朵蛋饭",ingredient:"鸡蛋",parts:["蛋白","蛋黄","米饭"],tone:"#f4cb67"},
+  {name:"橡皮鸭蛋包饭",ingredient:"胡萝卜",parts:["胡萝卜","蛋皮","鸭嘴"],tone:"#f1a064"}
+];
+let dishes=officeDishes;
 const bins=dishes.map((d,i)=>({x:155,y:148+i*55,w:96,h:48,type:"bin",dish:i,label:d.name}));
 const station=[
   {x:356,y:274,w:110,h:96,type:"wok",label:"电磁炒锅"},
@@ -53,9 +62,10 @@ const station=[
   {x:806,y:402,w:82,h:65,type:"trash",label:"回收槽"}
 ];
 const all=[...bins,...station];
+const activeStations=()=>state.scene==="toilet"?[...bins.slice(0,3),...station]:all;
 const keys=new Set();
 const menu=get("overlay");
-const state={view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
+const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
@@ -105,7 +115,29 @@ function trim(t){
   battery(866,190,c.pink);battery(897,190,c.light);battery(784,469,c.light);
   for(const [x,y,w] of [[0,265,145],[0,423,113],[817,248,143],[813,360,147]]){frame(x,y,w,18,"#568bff","#3148d0",4);hazard(x+17,y+4,w-30);}
 }
+function toiletSprite(id,x,y,scale=1,part=null){
+  ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(scale,scale);
+  const b=(a,y,w,h,col)=>rect(a,y,w,h,col);
+  if(id===0){
+    b(-19,-15,38,30,"#a75d75");b(-15,-19,30,38,"#a75d75");b(-16,-12,32,24,"#fff4e9");b(-12,-16,24,32,"#fff4e9");
+    b(-9,-10,17,5,"#ed92a7");b(3,-8,7,13,"#ed92a7");b(-8,1,17,6,"#ed92a7");b(-10,-3,6,7,"#ed92a7");b(-2,-4,8,6,"#fff4e9");b(0,-2,4,4,"#e47e9b");
+  }else if(id===1){
+    b(-13,-19,26,38,"#a99476");b(-18,-11,36,25,"#a99476");b(-10,-17,20,34,"#fffaf0");b(-15,-9,30,20,"#fffaf0");
+    b(-5,-7,15,15,"#e5aa4c");b(-2,-5,10,11,"#f8d36d");b(0,-4,4,4,"#fff1b0");b(-10,-11,6,4,"#ffffff");
+  }else{
+    b(-21,-11,34,21,"#a95c38");b(-15,9,21,6,"#a95c38");b(-8,15,9,4,"#a95c38");b(-18,-8,32,16,"#ed9250");b(-13,7,21,5,"#ed9250");b(-8,12,9,3,"#ed9250");
+    b(-10,-5,17,4,"#f8ba79");b(-5,3,9,2,"#c87542");b(11,-16,7,12,"#5c966e");b(17,-21,6,15,"#83b97a");b(19,-11,8,5,"#568f6d");
+  }
+  if(part!==null){
+    b(-23,19,46,5,"#315d78");b(-16,21,32,3,"#f8e8bc");
+    if(id===0)b(-10,22,20,2,"#ef9cb0");
+    if(id===1)b(-5,21,10,3,"#eab64c");
+    if(id===2)b(-10,21,20,3,"#e79a55");
+  }
+  ctx.restore();
+}
 function sprite(id,x,y,scale=1,part=null){
+  if(state.scene==="toilet"){toiletSprite(id,x,y,scale,part);return;}
   const d=dishes[id], tone=d.tone;
   ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(scale,scale);
   const blocks=[
@@ -136,6 +168,14 @@ function sprite(id,x,y,scale=1,part=null){
   ctx.restore();
 }
 function chef(x,y,t){
+  if(state.scene==="toilet"){
+    const bob=state.moving?Math.round(Math.sin(t*16)*2):0;y+=bob;
+    rect(x-14,y+11,28,6,"#6a9aaa");rect(x-12,y+3,9,14,"#597f82");rect(x+4,y+3,9,14,"#597f82");
+    rect(x-16,y-17,32,24,"#ed9d78");rect(x-11,y-13,22,19,"#fff9e7");rect(x-11,y-29,22,17,"#f5ce9e");
+    rect(x-17,y-36,34,10,"#fffdf3");rect(x-10,y-43,20,9,"#fffdf3");rect(x-5,y-24,3,3,"#31536b");rect(x+5,y-24,3,3,"#31536b");
+    if(state.held!==null)sprite(state.held.id,x+18,y-9,.46);
+    return;
+  }
   ellipse(x,y+14,19,8,"#05051e");ellipse(x,y+13,17,6,c.pink);ellipse(x,y+12,12,4,"#522357");
   const bob=state.moving?Math.round(Math.sin(t*16)*2):0; y+=bob;
   rect(x-12,y-24,24,27,"#0c103b");rect(x-12,y-20,24,11,"#bccaff");rect(x-10,y-25,8,9,c.white);rect(x-3,y-29,12,11,c.white);rect(x+7,y-23,6,10,"#b5c8ff");rect(x-9,y-10,18,12,"#ffc498");
@@ -173,6 +213,17 @@ function pan(x,y,s=1){
 }
 function stationArt(o,t){
   const {x,y,w,h,type}=o;
+  if(state.scene==="toilet"){
+    rect(x-w/2+5,y-h/2+8,w,h,"#54798c");rect(x-w/2,y-h/2,w,h,"#315c76");rect(x-w/2+5,y-h/2+5,w-10,h-10,"#fffbed");
+    rect(x-w/2+9,y-h/2+9,w-18,h-30,type==="bin"?"#f3d885":type==="chop"?"#e6c69b":type==="wok"?"#f2a37c":"#afd9cf");
+    if(type==="bin")sprite(o.dish,x,y-7,.75);
+    if(type==="chop"){rect(x-31,y-21,62,27,"#c99468");rect(x-27,y-18,54,21,"#f7dda8");knife(x+24,y-8,.22,-.7);}
+    if(type==="wok"){ellipse(x-5,y-8,35,18,"#31536b");ellipse(x-5,y-11,27,13,"#6da4ab");rect(x+25,y-13,24,7,"#985f46");}
+    if(type==="serve"){rect(x-44,y-20,88,26,"#4d9bae");text("↑ 交单",x,y-8,15,"#fff9e5");}
+    if(type==="trash")text("↺",x,y-7,24,"#31536b");
+    text(type==="bin"?dishes[o.dish].ingredient+"箱":type==="chop"?"马桶盖砧板":type==="wok"?"迷你电磁炉":type==="serve"?"出餐窗口":"刷桶回收",x,y+h/2-11,12,"#31516b");
+    return;
+  }
   frame(x-w/2,y-h/2+10,w,h,c.pink,"#23338e",8);
   frame(x-w/2,y-h/2,w,h-8,c.light,"#273da5",8);
   rect(x-w/2+7,y+h/2-8,w-14,4,"#3f63fd");
@@ -188,6 +239,7 @@ function stationArt(o,t){
   }
 }
 function map(t){
+  if(state.scene==="toilet"){toiletMap(t);return;}
   circuitry(t,false);
   floor(94,105,348,365);floor(517,105,350,365);
   for(const y of [164,282,406]){
@@ -215,6 +267,29 @@ function map(t){
   const current=state.queue[0];
   text(state.open==="menu"?"取料  →  切菜  →  颠锅  →  端盘":current?instructions(): "订单结算",473,501,16);
   if(state.target){ellipse(state.target.x,state.target.y,7,3,c.light);}
+}
+function toiletMap(t){
+  rect(0,0,W,H,"#31536b");
+  for(let y=0;y<H;y+=24)for(let x=0;x<W;x+=24){rect(x,y,22,22,(x/24+y/24)%2?"#e8eee5":"#f8f6e9");}
+  ellipse(480,281,386,246,"#739eaf");ellipse(480,269,386,246,"#fffdf2");ellipse(480,269,337,204,"#cde2df");ellipse(480,269,312,181,"#4a91a8");ellipse(480,269,278,149,"#82ced6");ellipse(480,269,236,116,"#a8e3de");
+  for(let j=0;j<6;j++){const x=275+j*80,y=199+(j%3)*60;rect(x,y,33,6,"#e1f8e8");rect(x+12,y+10,24,5,"#65b6c5");}
+  ellipse(480,269,48,29,"#376d84");ellipse(480,267,29,17,"#25516a");
+  for(const [x,y,w,h] of [[94,105,348,365],[517,105,350,365]]){
+    rect(x+6,y+8,w,h,"#719daf");rect(x,y,w,h,"#fffdf2");rect(x+8,y+8,w-16,h-16,"#e5eee5");
+    for(let yy=y+12;yy<y+h-12;yy+=24)for(let xx=x+12;xx<x+w-12;xx+=24)rect(xx,yy,22,22,((xx+yy)/24)%2?"#edf2e8":"#f8f8eb");
+  }
+  for(const y of bridges){rect(430,y-18,100,36,"#fffaf0");rect(435,y-13,90,26,"#aed4d0");text("»  »",480,y,23,"#458da0");}
+  rect(344,7,272,29,"#31536b");text("03 / 冲水马桶内部",480,22,15,"#fff9e7");
+  for(const o of activeStations())stationArt(o,t);
+  chef(state.player.x,state.player.y,t);
+  rect(20,13,540,69,"#31536b");
+  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
+  for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,"#fff9e8");rect(x+3,22,162,51,"#d9ece4");sprite(o.id,x+31,46,.65);text(dishes[o.id].name,x+100,41,12,"#31536b");text(timeText(o.left),x+100,62,13,o.left<15?"#c86655":"#39758a");}
+  rect(600,14,344,61,"#31536b");text("胡闹厨房 / 白瓷后厨",772,39,20,"#fff9e7");text("PORCELAIN BOWL",772,61,11,"#9fe0d8");
+  rect(20,475,169,53,"#31536b");text(String(state.score).padStart(3,"0"),103,501,29,"#fff9e7");
+  rect(751,475,187,53,"#31536b");text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":"#fff9e7");
+  rect(203,481,540,41,"#31536b");text(state.open==="menu"?"取菜 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,"#fff9e7");
+  if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f3d77c");
 }
 function instructions(){
   const held=state.held, name=dishes[state.queue[0].id].name;
@@ -259,7 +334,57 @@ function board(){
   for(const [x,y] of [[213,158],[747,157],[182,354],[779,355]])screw(x,y);
   hazard(295,387,69);hazard(600,387,69);led(437,388,9);
 }
+function toiletNearBase(title,subtitle){
+  rect(0,0,W,H,"#31536b");for(let y=20;y<H;y+=32)for(let x=20;x<W;x+=32)rect(x,y,30,30,(x/32+y/32)%2?"#386b80":"#3d7186");
+  rect(28,23,904,495,"#31536b");rect(38,33,884,475,"#467f91");rect(48,43,864,455,"#2f5e76");
+  text("PORCELAIN BOWL / 白瓷厨房操作近景",480,57,15,"#bce9dc");text(title,480,99,28,"#fff9e7");text(subtitle,480,135,17,"#bce9dc");
+  rect(40,39,105,53,"#fff9e7");text("阶段剩余",92,54,12,"#31536b");text(timeText(state.phase.left),92,75,21,"#31536b");
+}
+function toiletChip(id,x,y,s=1,cooked=false){
+  ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(s,s);
+  if(id===0){rect(-13,-10,26,20,cooked?"#b96d7c":"#d88498");rect(-10,-7,20,14,"#fff5e9");rect(-4,-4,9,8,cooked?"#df9a9c":"#ee9caf");rect(0,-2,4,4,"#fff5e9");}
+  else if(id===1){rect(-13,-8,26,16,cooked?"#d29b57":"#eee2ca");rect(-10,-10,20,20,"#fff9ed");rect(-6,-6,12,12,cooked?"#e4ad4a":"#f3c65c");rect(-2,-4,6,7,"#f9da78");}
+  else{rect(-12,-9,24,18,cooked?"#b96a39":"#d77b42");rect(-9,-6,18,12,cooked?"#e39b53":"#f3a463");rect(-4,-4,9,3,"#fac487");rect(8,-11,5,5,"#79af77");}
+  ctx.restore();
+}
+function toiletDrawChop(t){
+  const p=state.phase,hit=Math.max(0,1-(t-p.hit)*5.5);
+  toiletNearBase("01 / 马桶盖砧板 · 十刀备菜","按住 E 上下切 · 食材逐步变成像素碎块");
+  rect(154,178,652,244,"#31536b");rect(147,170,652,244,"#fff9e7");rect(158,180,630,224,"#e8d9b3");
+  for(let j=0;j<7;j++)rect(170,194+j*29,607,3,"#d3bf97");
+  sprite(p.id,364,290,2.7);
+  for(let j=0;j<p.cuts;j++)toiletChip(p.id,490+(j%5)*44,263+Math.floor(j/5)*48,.85);
+  ctx.save();ctx.translate(691-hit*67,267+hit*28);ctx.rotate(-.3+hit*.4);rect(-12,-68,24,111,"#31536b");rect(-8,-65,16,74,"#f8f9ef");rect(-6,9,12,39,"#a4694c");rect(-2,16,4,22,"#f3c36f");ctx.restore();
+  text(dishes[p.id].name+" · "+p.cuts+" / 10",480,448,20,"#fff9e7");
+  rect(230,479,500,15,"#214b65");rect(233,482,494*p.cuts/10,9,"#f2ca76");
+}
+function toiletDrawWok(t){
+  const p=state.phase,need=p.flipWindow>0,jump=clamp((.55-(t-p.toss))/.55,0,1);
+  toiletNearBase("02 / 迷你电磁炉 · 翻炒",need?"现在按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"按住 E 小幅翻炒 · 提示时按 F 翻面");
+  rect(199,200,562,258,"#fff9e7");rect(219,215,522,225,"#80b9c2");rect(246,234,468,190,"#31536b");
+  const shake=keys.has("e")?Math.sin(t*18)*5:0,y=321-Math.sin(jump*Math.PI)*45;
+  ellipse(475+shake,y+24,193,70,"#31536b");ellipse(475+shake,y+13,187,65,"#91bdc2");ellipse(475+shake,y+3,172,55,"#537d89");rect(647+shake,y-4,110,26,"#a66e53");
+  for(let j=0;j<9;j++){const a=t*(keys.has("e")?5:1)+j*2.2,x=375+(j%3)*98+Math.round(Math.sin(a)*7),yy=y-26+Math.floor(j/3)*26-Math.sin(jump*Math.PI)*(35+j%3*9);toiletChip(p.id,x,yy,1.15,p.progress>.45||p.flips>0);}
+  text("翻面 "+p.flips+" / 2",813,222,18,"#fff9e7");text("焦糊风险 "+Math.round(p.burn)+"%",480,461,17,p.burn>60?"#ffae91":"#fff9e7");
+  rect(230,480,500,15,"#214b65");rect(233,483,494*p.progress,9,"#f2ca76");
+}
+function toiletDrawServe(t){
+  const p=state.phase,travel=p.route*1050,step=keys.has("e")?Math.round(Math.sin(t*13)*4):0,danger=Math.abs(p.tilt)>.54;
+  toiletNearBase("03 / 水流栈道 · 平稳端盘",p.route>=1?"到出餐口了！松开 E，保持水平 1.2 秒":"按住 E 前进 · A / D 反向修正盘子");
+  rect(63,167,834,252,"#4c9bb1");ctx.save();ctx.beginPath();ctx.rect(63,167,834,252);ctx.clip();
+  for(let j=0;j<7;j++)for(let i=0;i<13;i++)rect(64+((i*83-travel*.7+1000)%1000),184+j*29,41,7,j%2?"#79c8ce":"#b5e8db");
+  for(let i=0;i<9;i++){const x=64+((i*142-travel+1150)%1150);rect(x,174,8,44,"#f8ebba");rect(x,375,8,39,"#f8ebba");}
+  const exitX=885-p.route*365;rect(exitX,197,15,183,"#f8e7a8");text("出餐口 →",exitX-64,223,15,"#fff9e7");ctx.restore();
+  ctx.save();ctx.translate(480+p.tilt*15,297+step);ctx.rotate(p.tilt*.28);
+  ellipse(0,12,202,77,"#31536b");ellipse(0,3,196,72,"#fff9e7");ellipse(0,-4,160,50,"#d7eadf");
+  for(let j=0;j<5;j++)toiletChip(p.id,-100+j*50+p.tilt*24,-5+(j%2)*8,1.25,true);
+  ctx.restore();
+  rect(241,437,478,26,"#31536b");rect(397,440,166,20,"#8fc8b4");rect(477+p.tilt*180,433,7,34,danger?"#ffad83":"#fff9e7");
+  text(danger?"盘子倾斜，快修正！":p.route>=1?"稳住，准备交单":"盘子平稳",480,474,19,danger?"#ffad83":"#fff9e7");
+  rect(260,488,440,10,"#214b65");rect(263,491,434*p.route,4,"#f2ca76");text("路程 "+Math.floor(p.route*100)+"%  ·  完整度 "+Math.ceil(p.integrity)+"%",784,148,14,"#fff9e7");
+}
 function drawChop(t){
+  if(state.scene==="toilet"){toiletDrawChop(t);return;}
   const p=state.phase,d=dishes[p.id],last=Math.max(0,1-(t-p.hit)*5.5);
   drawChallengeHeader("01 / 分解砧板","按住 E 上下切 · 逐步拆出零件",t);
   board();
@@ -274,6 +399,7 @@ function drawChop(t){
   bar(237,459,486,18,p.cuts/10,c.light,10);
 }
 function drawWok(t){
+  if(state.scene==="toilet"){toiletDrawWok(t);return;}
   const p=state.phase, d=dishes[p.id], jump=clamp((.55-(t-p.toss))/.55,0,1);
   drawChallengeHeader("02 / 电磁颠锅",p.flipWindow>0?"现在按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"按住 E 翻炒 · 翻面提示亮起再按 F",t);
   ellipse(452,362,169,40,"#201267");ellipse(452,354,160,38,c.pink);ellipse(452,346,157,35,"#222b9b");
@@ -313,6 +439,7 @@ function glove(x,y,side){
   ctx.restore();
 }
 function drawServe(t){
+  if(state.scene==="toilet"){toiletDrawServe(t);return;}
   const p=state.phase, d=dishes[p.id], danger=Math.abs(p.tilt)>.54;
   drawChallengeHeader("03 / 端盘上菜 · 电流干扰",p.route>=1?"松开 E · 将指针留在中心 1.2 秒":"按住 E 前进 · A / D 向反方向修正",t);
   const vanish=[480,160], shift=p.tilt*35;
@@ -370,16 +497,17 @@ function toggleMenu(mode){
   state.open=mode; keys.clear(); state.moving=false;
   menu.hidden=!mode;
   if(mode){
-    const title={menu:"极限出餐",pause:"营业暂停",end:"营业结算",practice:"练习结算"}[mode];
+    const title={menu:state.scene==="toilet"?"白瓷厨房极限出餐":"极限出餐",pause:"营业暂停",end:"营业结算",practice:"练习结算"}[mode];
     get("menu-title").textContent=title;
     get("menu-copy").innerHTML={
-      menu:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",
+      menu:state.scene==="toilet"?"缩小进入冲水马桶内部，在白瓷台面完成奇妙订单。<br>鱼板 · 鸡蛋 · 胡萝卜 / 180 秒":"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",
       pause:"营业、订单和工序倒计时已暂停。",
       end:"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
-    get("office-event").hidden=mode==="pause";
+    get("office-event").hidden=mode==="pause"||state.scene==="toilet";
+    get("scene-choice").hidden=mode==="pause";
     get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
     get("practice").hidden=mode==="pause";
   }
@@ -393,10 +521,10 @@ function start(){
   const event=get("office-event").value.trim();
   const officeTerms=[/订书机|装订|卡钉/,/老板|领导|上司|开会|催|被骂/,/文件夹|文件|文档|表格|归档/,/打印机|打印|复印|卡纸/,/键盘|打字|码字|敲键|开心/,/空调|冷气|太冷|太热|冻/,];
   const match=officeTerms.findIndex(term=>term.test(event));
-  const first=match<0&&/生气|烦|压力大/.test(event)?0:match;
+  const first=state.scene==="toilet"?-1:match<0&&/生气|烦|压力大/.test(event)?0:match;
   const order=dishes.map((_,i)=>i);
   for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
-  if(first>=0){order.splice(order.indexOf(first),1);order.unshift(first);}
+  if(first>=0&&first<order.length){order.splice(order.indexOf(first),1);order.unshift(first);}
   state.queue=order.slice(0,3).map((id,i)=>({id,left:82+i*43}));
   toggleMenu(null);
 }
@@ -454,12 +582,12 @@ function inReach(o){
   return Math.hypot(Math.max(0,Math.abs(p.x-o.x)-o.w/2),Math.max(0,Math.abs(p.y-o.y)-o.h/2))<31;
 }
 function nearStation(){
-  return all.filter(inReach).sort((a,b)=>Math.hypot(a.x-state.player.x,a.y-state.player.y)-Math.hypot(b.x-state.player.x,b.y-state.player.y))[0];
+  return activeStations().filter(inReach).sort((a,b)=>Math.hypot(a.x-state.player.x,a.y-state.player.y)-Math.hypot(b.x-state.player.x,b.y-state.player.y))[0];
 }
 function valid(x,y){
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
   const crossing=x>=425&&x<=535&&bridges.some(b=>Math.abs(y-b)<=14);
-  return y>=120&&y<=453&&(left||right||crossing)&&!all.some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+  return y>=120&&y<=453&&(left||right||crossing)&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
 }
 function walk(dx,dy){
   const p=state.player;
@@ -598,12 +726,26 @@ window.addEventListener("blur",()=>{if(!state.open)toggleMenu("pause");});
 canvas.addEventListener("pointerdown",e=>{
   if(state.open)return;
   const box=canvas.getBoundingClientRect(),p={x:(e.clientX-box.left)*W/box.width,y:(e.clientY-box.top)*H/box.height,w:0,h:0};
-  if(state.view==="map")target(all.find(o=>hit(p,o))||p);
+  if(state.view==="map")target(activeStations().find(o=>hit(p,o))||p);
   else if(state.view==="chop")cutOnce();
 });
+function selectScene(scene){
+  if(!state.open||state.open==="pause")return;
+  state.scene=scene==="toilet"?"toilet":"neon";dishes=state.scene==="toilet"?toiletDishes:officeDishes;
+  document.body.classList.toggle("toilet-scene",state.scene==="toilet");
+  document.querySelector(".tag").textContent=state.scene==="toilet"?"PORCELAIN BOWL / PIXEL KITCHEN":"⚡ OFFICE ARCADE / NEON KITCHEN";
+  document.title=state.scene==="toilet"?"极限出餐｜冲水马桶内部":"极限出餐｜赛博后厨";
+  for(const button of document.querySelectorAll("[data-scene]"))button.classList.toggle("selected",button.dataset.scene===state.scene);
+  get("dish-select").replaceChildren();
+  dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
+  get("menu-hint").textContent=state.scene==="toilet"?"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面":"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停";
+  reset();toggleMenu("menu");
+}
 get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
+for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
+if(new URLSearchParams(window.location.search).get("scene")==="toilet")selectScene("toilet");
 function frameLoop(ms){
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
