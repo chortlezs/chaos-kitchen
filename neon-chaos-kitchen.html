@@ -371,7 +371,12 @@ function coffeeMap(t){
   /* 烘焙炉芯从豆仓底部透出暖光。 */
   ellipse(480,320,470,268,"#4d2515");ellipse(480,310,455,254,"#6c351d");
   /* 透明豆仓外壁与铜制固定环。 */
-  ellipse(480,288,456,263,"#613018");ellipse(480,280,444,252,"#f0b06b");ellipse(480,280,431,239,"#a35b2e");
+  // 下半仓体留出道路侧壁与投影的空间，底部转角也完整落在圆盘内。
+  const hopperShell=(x,y,rx,upper,lower,color)=>{
+    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,upper,0,Math.PI,Math.PI*2);
+    ctx.ellipse(x,y,rx,lower,0,0,Math.PI);ctx.closePath();ctx.fill();
+  };
+  hopperShell(480,288,456,263,300,"#613018");hopperShell(480,280,444,252,290,"#f0b06b");hopperShell(480,280,431,239,277,"#a35b2e");
   ctx.save();ctx.strokeStyle="#fff0c9";ctx.globalAlpha=.74;ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(480,270,418,228,0,Math.PI*1.06,Math.PI*1.8);ctx.stroke();ctx.strokeStyle="#efb76f";ctx.globalAlpha=.58;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,286,426,237,0,-.12,Math.PI*.72);ctx.stroke();ctx.restore();
   /* 底层豆床基本铺满仓体：小豆均匀散落，大豆簇制造自然疏密。 */
   ctx.save();ctx.beginPath();ctx.ellipse(480,280,424,232,0,0,Math.PI*2);ctx.clip();
@@ -412,7 +417,10 @@ function coffeeMap(t){
   ctx.save();ctx.translate(168,98);ctx.scale(.65,.65);
   ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
   ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#bb8c5b":"#ffe0a1");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#f4b65e");ctx.restore();
-  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
+  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);
+  // 前沿在道路之后绘制，明确外壳包住内部平台的层级。
+  ctx.save();ctx.strokeStyle="#ffd197";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,280,438,284,0,.15,Math.PI-.15);ctx.stroke();ctx.restore();
+  themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
   rect(0,0,W,H,"#31536b");
