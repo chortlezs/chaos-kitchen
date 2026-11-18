@@ -51,7 +51,9 @@ static void emit_plate(float ax, float ay, float az)
     const float tilt_x = atan2f(ax, sqrtf(ay * ay + az * az));
     const float tilt_y = atan2f(ay, sqrtf(ax * ax + az * az));
     const bool use_x = fabsf(tilt_x) >= fabsf(tilt_y);
-    const float roll_rad = use_x ? tilt_x : tilt_y;
+    // The physical serving motion is mirrored relative to the browser cursor:
+    // tilting the board left must move the cursor left, so invert the sensor sign.
+    const float roll_rad = -(use_x ? tilt_x : tilt_y);
     const float roll = fmaxf(-1.0f, fminf(1.0f, roll_rad / 0.7853981634f));
     ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"plate\",\"motion\":\"tilt\",\"roll\":%.3f,\"axis\":\"%s\",\"t_ms\":%lld}",
              roll, use_x ? "x" : "y", (long long)(esp_timer_get_time() / 1000));
