@@ -82,10 +82,10 @@ const coffeeBins=[
   ...[3,4,5].map((dish,i)=>({x:806,y:166+i*118,w:98,h:60,type:"bin",dish,label:coffeeDishes[dish].name}))
 ];
 const coffeeStation=[
-  {x:600,y:230,w:118,h:88,type:"wok",label:"烘焙炒台"},
-  {x:360,y:230,w:118,h:88,type:"chop",label:"滤篮砧板"},
-  {x:480,y:370,w:106,h:58,type:"serve",label:"出餐滤杯"},
-  {x:650,y:370,w:88,h:62,type:"trash",label:"豆渣回收"}
+  {x:640,y:250,w:118,h:88,type:"wok",label:"烘焙炒台"},
+  {x:350,y:220,w:118,h:88,type:"chop",label:"滤篮砧板"},
+  {x:420,y:400,w:106,h:58,type:"serve",label:"出餐滤杯"},
+  {x:650,y:390,w:88,h:62,type:"trash",label:"豆渣回收"}
 ];
 const coffeeAll=[...coffeeBins,...coffeeStation];
 const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
@@ -381,8 +381,8 @@ function coffeeMap(t){
   /* 参考 Frost Kitchen：逐层铺设整张道路图，让交叉口自然合并成实体平台。 */
   for(const [color,width] of [["#2b1711",66],["#9b5a32",60],["#e0a25d",54],["#6a3b24",48]])for(const points of coffeeRoutes)path(points,color,width);
   for(const points of coffeeRoutes)path(points,"#f7cf88",3);
-  for(const [x,y] of [[228,132],[228,300],[228,444],[732,132],[732,300],[732,444]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
-  text("分解 ↑",360,300,12,"#ffe4a6");text("翻炒 ↑",600,300,12,"#ffe4a6");text("出餐 ↓",480,306,12,"#ffe4a6");
+  for(const [x,y] of [[228,132],[228,330],[228,444],[732,180],[732,300],[732,444],[340,350],[600,350]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
+  text("分解 ↓",350,140,12,"#ffe4a6");text("翻炒 ←",732,250,12,"#ffe4a6");text("出餐 ↓",420,350,12,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
@@ -394,7 +394,7 @@ function coffeeMap(t){
   ctx.restore();
   for(let i=0;i<18;i++){const a=i*1.73+t*.22,r=88+(i%6)*54;ellipse(480+Math.cos(a)*r,300+Math.sin(a)*r*.5,2+i%3,2+i%2,i%2?"#ffcf70":"#fff0bb");}
   /* 中央研磨漏斗与刀盘。 */
-  ctx.save();ctx.translate(168,28);ctx.scale(.65,.65);
+  ctx.save();ctx.translate(168,98);ctx.scale(.65,.65);
   ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
   ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");ctx.restore();
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
@@ -451,7 +451,7 @@ function toiletMap(t){
 function instructions(){
   const held=state.held, name=dishes[state.queue[0].id].name;
   if(!held)return "取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
-  if(state.scene==="coffee")return name+"  →  "+["中间主路左侧 · 滤篮砧板","中间主路右侧 · 烘焙炒台","中间主路下方 · 出餐滤杯"][held.stage];
+  if(state.scene==="coffee")return name+"  →  "+["左上方 · 滤篮砧板","右侧 · 烘焙炒台","下方偏左 · 出餐滤杯"][held.stage];
   if(held.stage===0)return name+"  →  右侧分解砧板";
   if(held.stage===1)return name+"  →  左侧电磁炒锅";
   return name+"  →  右上方出餐通道";
@@ -644,8 +644,11 @@ const phaseLimits={chop:14,wok:22,serve:17};
 const bridges=[164,282,406];
 const coffeeRoutes=[
   [[228,132],[228,444]],[[732,132],[732,444]],
-  [[228,132],[732,132]],[[228,300],[732,300]],[[228,444],[732,444]],
-  [[480,300],[480,324]],[[650,300],[650,324]]
+  [[228,132],[540,132],[630,156],[732,180]],
+  [[228,330],[340,350],[600,350],[732,300]],
+  [[228,444],[570,444],[650,456],[732,444]],
+  [[350,132],[350,160]],[[732,250],[714,250]],[[420,350],[420,364]],
+  ...[166,284,402].flatMap(y=>[[[210,y],[228,y]],[[732,y],[750,y]]])
 ];
 let now=0,lastFrame=0;
 function wanted(){
@@ -791,7 +794,8 @@ function routeTo(goal){
     }
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
       const b=[x+dx,y+dy],k=b.join();
-      if(!seen.has(k)&&valid(b[0]*grid,b[1]*grid)){seen.set(k,a);queue.push(b);}
+      const clear=state.scene!=="coffee"||[.25,.5,.75].every(f=>valid((x+dx*f)*grid,(y+dy*f)*grid));
+      if(!seen.has(k)&&clear&&valid(b[0]*grid,b[1]*grid)){seen.set(k,a);queue.push(b);}
     }
   }
   return [];

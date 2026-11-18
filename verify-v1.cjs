@@ -49,7 +49,7 @@ for(const stop of coffeeStops){
       const dx=point.x-g.state.player.x,dy=point.y-g.state.player.y,len=Math.hypot(dx,dy),step=Math.min(2,len);
       g.walk(dx/len*step,dy/len*step);
     }
-    assert(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)<.1,'route can actually be walked');
+    assert(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)<.1,'route can actually be walked: '+JSON.stringify({stop,point,player:g.state.player}));
   }
   assert(g.inReach(stop),'station can be interacted with after walking');
 }
