@@ -55,7 +55,7 @@ for(const stop of coffeeStops){
 }
 assert(!g.valid(480,210),'grinder area cannot be entered');
 for(let id=0;id<6;id++){
-  g.state.coffeeLevel=id;g.start();
+  element('dish-select').value=String(id);g.start();
   assert.equal(g.state.queue.length,1,'coffee level has exactly one meal');
   assert.equal(g.state.queue[0].id,id,'selected food is the only order');
   g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};
@@ -63,5 +63,9 @@ for(let id=0;id<6;id++){
   assert.equal(g.state.served,1);assert.equal(g.state.open,'end','one meal completes the level');
 }
 console.log('PASS: all six coffee levels finish after their selected single meal.');
+element('dish-select').value='auto';element('office-event').value='今天又被老板催了';g.start();assert.equal(g.state.queue[0].id,1,'event matches boss');
+element('dish-select').value='4';g.start();assert.equal(g.state.queue[0].id,4,'manual choice overrides event');
+g.state.open='menu';g.selectScene('fridge');assert(element('frost-experience').hidden,'selecting fridge stays in shared menu');
+element('dish-select').value='3';g.start();assert.equal(element('frost-experience').src,'frost-kitchen.html?level=3&autostart=1');
 console.log('PASS: coffee spawn and all ten stations reachable through actual walking.');
 console.log('PASS: one-page office, fridge, toilet and coffee scenes; six foods; close-ups and E-to-advance.');

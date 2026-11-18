@@ -1070,7 +1070,11 @@ function frame(ms){
   if(!overlay||overlay==='menu')now+=dt;
   tick(dt);render();requestAnimationFrame(frame);
 }
-refreshMenu();requestAnimationFrame(frame);
+const launchParams=new URLSearchParams(window.location.search);
+if(launchParams.get('autostart')==='1'){
+  const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;start();
+}else refreshMenu();
+requestAnimationFrame(frame);
 
 </script>
 </body>

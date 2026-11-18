@@ -692,15 +692,14 @@ function toggleMenu(mode){
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
-    get("office-event").hidden=mode==="pause"||state.scene!=="neon";
+    get("office-event").hidden=mode==="pause";
     get("scene-choice").hidden=mode==="pause";
     get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
     get("practice").hidden=mode==="pause";
-    get("coffee-levels").hidden=state.scene!=="coffee"||mode==="pause";
+    get("coffee-levels").hidden=true;
     if(state.scene==="coffee"){
-      if(mode==="menu")get("menu-copy").innerHTML="选择一种办公室食材，完成取料、切菜、翻炒和端盘。<br>六选一 · 每关一道菜 · 180 秒";
-      get("start").textContent=mode==="menu"?"开始第 "+(state.coffeeLevel+1)+" 关 ↗":"重试本关 ↗";
-      renderCoffeeLevels();
+      if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒 · 每关一道菜";
+      get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
     }
   }
   updateControls();
@@ -720,11 +719,17 @@ function reset(){
 }
 function start(){
   reset();
-  if(state.scene==="coffee"){state.queue=[{id:state.coffeeLevel,left:180}];toggleMenu(null);return;}
   const event=get("office-event").value.trim();
   const officeTerms=[/订书机|装订|卡钉/,/老板|领导|上司|开会|催|被骂/,/文件夹|文件|文档|表格|归档/,/打印机|打印|复印|卡纸/,/键盘|打字|码字|敲键|开心/,/空调|冷气|太冷|太热|冻/,];
   const match=officeTerms.findIndex(term=>term.test(event));
-  const first=state.scene!=="neon"?-1:match<0&&/生气|烦|压力大/.test(event)?0:match;
+  const manual=get("dish-select").value;
+  const first=/^[0-5]$/.test(manual)?Number(manual):match<0&&/生气|烦|压力大/.test(event)?0:match;
+  if(state.scene==="coffee"||state.scene==="fridge"){
+    const id=first>=0?first:Math.floor(Math.random()*6);
+    if(state.scene==="coffee"){state.coffeeLevel=id;state.queue=[{id,left:180}];toggleMenu(null);return;}
+    const frost=get("frost-experience");frost.src="frost-kitchen.html?level="+id+"&autostart=1";
+    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;return;
+  }
   const order=dishes.map((_,i)=>i);
   for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
   if(first>=0&&first<order.length){order.splice(order.indexOf(first),1);order.unshift(first);}
@@ -737,7 +742,7 @@ function phase(mode,id){
   updateControls();
 }
 function practice(mode){
-  reset();state.practice=true;phase(mode,Number(get("dish-select").value));toggleMenu(null);
+  reset();state.practice=true;const value=get("dish-select").value;phase(mode,/^[0-5]$/.test(value)?Number(value):0);toggleMenu(null);
 }
 function conclude(success,label){
   const p=state.phase;
@@ -943,16 +948,6 @@ canvas.addEventListener("pointerdown",e=>{
 });
 function selectScene(scene){
   if(!state.open||state.open==="pause")return;
-  if(scene==="fridge"){
-    state.scene="fridge";dishes=fridgeDishes;
-    const frost=get("frost-experience");
-    if(frost.src==="about:blank")frost.src="frost-kitchen.html";
-    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("pause").hidden=true;get("controls").hidden=true;
-    document.body.classList.toggle("fridge-scene",true);document.body.classList.toggle("toilet-scene",false);document.body.classList.toggle("coffee-scene",false);
-    document.title="极限出餐｜冰封后厨";
-    if(window.history?.replaceState)window.history.replaceState(null,"","?scene=fridge");
-    return;
-  }
   get("frost-experience").hidden=true;get("frost-back").hidden=true;canvas.hidden=false;menu.hidden=false;
   state.scene=["neon","fridge","toilet","coffee"].includes(scene)?scene:"neon";
   dishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes}[state.scene];
@@ -963,7 +958,9 @@ function selectScene(scene){
   if(window.history?.replaceState)window.history.replaceState(null,"","?scene="+state.scene);
   for(const button of document.querySelectorAll("[data-scene]"))button.classList.toggle("selected",button.dataset.scene===state.scene);
   get("dish-select").replaceChildren();
+  const automatic=document.createElement("option");automatic.value="auto";automatic.textContent="根据心情匹配 / 随机";get("dish-select").append(automatic);
   dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
+  get("dish-select").value="auto";get("dish-select").ariaLabel="选择物品，手动选择优先";
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
   reset();toggleMenu("menu");
 }
