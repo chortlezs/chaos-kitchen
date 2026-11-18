@@ -65,6 +65,12 @@ python -m http.server 8767 --bind 127.0.0.1
 保持原工程的 ESP-Iris、Vibe Mode、资源和分区契约，使用官方 `mosaico.py` 更新。
 这不是可以直接独立刷写的完整固件工程。组件的采样和阈值详见其 README。
 
+本次固定版本的 ESP32-S31 SDK 在对 flash 映射的 GSP 界面资源做硬件 SHA 时，
+出现 `sha_hal_read_digest` 返回全零并 abort 的启动故障，发生在动作任务启动之前。
+`firmware/sdkconfig.application.defaults` 提供应用配置：禁用硬件 SHA 加速，
+通过软件实现继续完成相同的 SHA-256 校验。将这一项合并到应用 defaults；已有
+构建还需更新有效 sdkconfig 后重新编译。不要跳过资源校验或改动分区布局。
+
 设备输出示例：
 
 ```text
