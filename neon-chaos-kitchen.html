@@ -378,11 +378,10 @@ function coffeeMap(t){
     coffeeBean(x,y,9+((j+p)%4)*2,((j*43+p*29)%180)*Math.PI/180);
   }
   for(let i=0;i<8;i++)coffeeBean(338+((i*83)%285),126+((i*29)%42),7+i%3,((i*47)%170)*Math.PI/180);
-  /* 铜轨最后绘制，形成压在咖啡豆上方的凸起金属步道。 */
-  const coffeeRails=[[[218,132],[218,444]],[[742,132],[742,444]],...bridges.map(y=>[[218,y],[742,y]])];
-  for(const points of coffeeRails){path(points,"#2c1711",46);path(points,"#d18b49",38);path(points,"#643821",28);path(points,"#f5c87b",4);}
-  for(const [x,y] of [[218,142],[218,268],[218,394],[742,142],[742,268],[742,394],[300,164],[480,164],[660,164],[300,282],[480,282],[660,282],[300,406],[480,406],[660,406]]){ellipse(x,y,5,5,"#3a2017");ellipse(x-1,y-1,2,2,"#ffe0a0");}
-  for(const [x,y,a] of [[218,224,"↓"],[218,350,"↓"],[742,224,"↓"],[742,350,"↓"],[330,164,"→"],[630,164,"←"],[330,282,"→"],[630,282,"←"],[330,406,"→"],[630,406,"←"]])text(a,x,y,15,"#ffe4a6");
+  /* 不规则主环路与工作台支路，最后绘制在豆床之上。 */
+  for(const points of coffeeRoutes){path(points,"#2c1711",46);path(points,"#d18b49",38);path(points,"#643821",28);path(points,"#f5c87b",4);}
+  for(const [x,y] of [[218,145],[212,284],[252,416],[390,438],[575,438],[704,416],[744,284],[742,145],[330,132],[480,146],[630,132],[260,232],[700,232],[430,420],[530,420]]){ellipse(x,y,5,5,"#3a2017");ellipse(x-1,y-1,2,2,"#ffe0a0");}
+  for(const [x,y,a] of [[214,225,"↓"],[226,350,"↓"],[746,225,"↓"],[734,350,"↓"],[355,135,"→"],[605,135,"←"],[292,425,"→"],[668,425,"←"],[271,237,"↗"],[689,237,"↖"]])text(a,x,y,15,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
@@ -396,8 +395,6 @@ function coffeeMap(t){
   /* 中央研磨漏斗与刀盘。 */
   ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
   ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");
-  /* 铜制栈桥把两侧滤篮接向中央磨盘，保持路径清晰。 */
-  for(const y of bridges){rect(426,y-15,108,30,"#392219");rect(432,y-10,96,20,"#c08b57");text("·  ·  ·",480,y,18,"#fff0c9");}
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
@@ -642,6 +639,13 @@ function visuals(t){
 }
 const phaseLimits={chop:14,wok:22,serve:17};
 const bridges=[164,282,406];
+const coffeeRoutes=[
+  [[218,145],[210,205],[224,270],[212,330],[230,382],[280,425],[390,438],[480,420],[575,438],[680,425],[730,382],[748,330],[736,270],[750,205],[742,145],[630,132],[480,146],[330,132],[218,145]],
+  [[218,166],[205,166]],[[212,284],[205,284]],[[250,402],[210,402]],
+  [[742,166],[755,166]],[[744,284],[755,284]],[[710,402],[750,402]],
+  [[224,270],[252,242],[284,211]],[[736,270],[708,242],[676,211]],
+  [[390,438],[430,420],[480,406],[530,420],[575,438]],[[680,425],[676,406]]
+];
 let now=0,lastFrame=0;
 function wanted(){
   const held=state.held;
@@ -682,7 +686,7 @@ function toggleMenu(mode){
   updateControls();
 }
 function reset(){
-  const spawn=state.scene==="coffee"?{x:218,y:406}:{x:285,y:401};
+  const spawn=state.scene==="coffee"?{x:210,y:402}:{x:285,y:401};
   Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
 function start(){
@@ -753,11 +757,14 @@ function inReach(o){
 function nearStation(){
   return activeStations().filter(inReach).sort((a,b)=>Math.hypot(a.x-state.player.x,a.y-state.player.y)-Math.hypot(b.x-state.player.x,b.y-state.player.y))[0];
 }
+function segmentDistance(x,y,a,b){
+  const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy||1,q=clamp(((x-a[0])*dx+(y-a[1])*dy)/l,0,1);
+  return Math.hypot(x-(a[0]+dx*q),y-(a[1]+dy*q));
+}
 function valid(x,y){
   if(state.scene==="coffee"){
-    const onHorizontal=bridges.some(y0=>x>=218&&x<=742&&Math.abs(y-y0)<=21);
-    const onVertical=y>=120&&y<=453&&(Math.abs(x-218)<=21||Math.abs(x-742)<=21);
-    return (onHorizontal||onVertical)&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=21));
+    return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   }
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
   const crossing=x>=425&&x<=535&&bridges.some(b=>Math.abs(y-b)<=14);
