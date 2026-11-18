@@ -370,12 +370,11 @@ function coffeeMap(t){
     ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap="round";ctx.beginPath();ctx.ellipse(0,0,rx,ry,start,0,Math.PI*1.58);ctx.stroke();
   }
   ctx.restore();
-  /* 参考办公室与冰箱的路线表达：双侧主环路连接三个铜桥。 */
-  path([[154,146],[154,434],[356,434],[356,300],[284,282],[284,208]],"#4a281c",30);
-  path([[154,146],[154,434],[356,434],[356,300],[284,282],[284,208]],"#f0b765",5);
-  path([[806,146],[806,434],[676,434],[676,208]],"#4a281c",30);
-  path([[806,146],[806,434],[676,434],[676,208]],"#f0b765",5);
-  for(const [x,y,a] of [[154,238,"↓"],[154,370,"↓"],[312,434,"→"],[806,238,"↓"],[806,370,"↓"],[716,434,"←"],[284,250,"↑"],[676,250,"↑"]])text(a,x,y,15,"#ffe4a6");
+  /* 真正可行走的铜轨：两条纵向主路与三条横向连接。 */
+  for(const points of [[[218,132],[218,444]],[[742,132],[742,444]],...bridges.map(y=>[[218,y],[742,y]])]){
+    path(points,"#4a281c",34);path(points,"#f0b765",6);
+  }
+  for(const [x,y,a] of [[218,224,"↓"],[218,350,"↓"],[742,224,"↓"],[742,350,"↓"],[330,164,"→"],[630,164,"←"],[330,282,"→"],[630,282,"←"],[330,406,"→"],[630,406,"←"]])text(a,x,y,15,"#ffe4a6");
   /* 豆子以不规则小簇散落在仓壁和底部，不再围绕中心放射排列。 */
   const beanPiles=[[210,168],[748,168],[190,326],[770,326],[340,404],[620,404]];
   for(let p=0;p<beanPiles.length;p++)for(let j=0;j<8;j++){
@@ -682,7 +681,8 @@ function toggleMenu(mode){
   updateControls();
 }
 function reset(){
-  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:{x:285,y:401},target:null,toast:null,fx:[]});
+  const spawn=state.scene==="coffee"?{x:218,y:406}:{x:285,y:401};
+  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
 function start(){
   reset();
@@ -753,6 +753,11 @@ function nearStation(){
   return activeStations().filter(inReach).sort((a,b)=>Math.hypot(a.x-state.player.x,a.y-state.player.y)-Math.hypot(b.x-state.player.x,b.y-state.player.y))[0];
 }
 function valid(x,y){
+  if(state.scene==="coffee"){
+    const onHorizontal=bridges.some(y0=>x>=218&&x<=742&&Math.abs(y-y0)<=21);
+    const onVertical=y>=120&&y<=453&&(Math.abs(x-218)<=21||Math.abs(x-742)<=21);
+    return (onHorizontal||onVertical)&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+  }
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
   const crossing=x>=425&&x<=535&&bridges.some(b=>Math.abs(y-b)<=14);
   return y>=120&&y<=453&&(left||right||crossing)&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
