@@ -370,18 +370,25 @@ function coffeeMap(t){
     ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap="round";ctx.beginPath();ctx.ellipse(0,0,rx,ry,start,0,Math.PI*1.58);ctx.stroke();
   }
   ctx.restore();
-  /* 真正可行走的铜轨：两条纵向主路与三条横向连接。 */
-  for(const points of [[[218,132],[218,444]],[[742,132],[742,444]],...bridges.map(y=>[[218,y],[742,y]])]){
-    path(points,"#4a281c",34);path(points,"#f0b765",6);
+  /* 底层豆床基本铺满仓体：小豆均匀散落，大豆簇制造自然疏密。 */
+  let beanSeed=73;
+  for(let i=0;i<360;i++){
+    beanSeed=(beanSeed*9301+49297)%233280;const x=104+(beanSeed/233280)*752;
+    beanSeed=(beanSeed*9301+49297)%233280;const y=116+(beanSeed/233280)*338;
+    const inside=((x-480)/385)**2+((y-282)/190)**2<1;
+    if(inside){beanSeed=(beanSeed*9301+49297)%233280;coffeeBean(x,y,7+(i%4),beanSeed/233280*Math.PI);}
   }
-  for(const [x,y,a] of [[218,224,"↓"],[218,350,"↓"],[742,224,"↓"],[742,350,"↓"],[330,164,"→"],[630,164,"←"],[330,282,"→"],[630,282,"←"],[330,406,"→"],[630,406,"←"]])text(a,x,y,15,"#ffe4a6");
-  /* 豆子以不规则小簇散落在仓壁和底部，不再围绕中心放射排列。 */
   const beanPiles=[[210,168],[748,168],[190,326],[770,326],[340,404],[620,404]];
   for(let p=0;p<beanPiles.length;p++)for(let j=0;j<8;j++){
     const [cx,cy]=beanPiles[p],x=cx+(((j*31+p*17)%73)-36),y=cy+(((j*19+p*23)%49)-24);
     coffeeBean(x,y,9+((j+p)%4)*2,((j*43+p*29)%180)*Math.PI/180);
   }
   for(let i=0;i<8;i++)coffeeBean(338+((i*83)%285),126+((i*29)%42),7+i%3,((i*47)%170)*Math.PI/180);
+  /* 铜轨最后绘制，形成压在咖啡豆上方的凸起金属步道。 */
+  const coffeeRails=[[[218,132],[218,444]],[[742,132],[742,444]],...bridges.map(y=>[[218,y],[742,y]])];
+  for(const points of coffeeRails){path(points,"#2c1711",46);path(points,"#d18b49",38);path(points,"#643821",28);path(points,"#f5c87b",4);}
+  for(const [x,y] of [[218,142],[218,268],[218,394],[742,142],[742,268],[742,394],[300,164],[480,164],[660,164],[300,282],[480,282],[660,282],[300,406],[480,406],[660,406]]){ellipse(x,y,5,5,"#3a2017");ellipse(x-1,y-1,2,2,"#ffe0a0");}
+  for(const [x,y,a] of [[218,224,"↓"],[218,350,"↓"],[742,224,"↓"],[742,350,"↓"],[330,164,"→"],[630,164,"←"],[330,282,"→"],[630,282,"←"],[330,406,"→"],[630,406,"←"]])text(a,x,y,15,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
