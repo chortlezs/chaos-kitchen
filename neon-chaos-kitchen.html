@@ -73,7 +73,19 @@ const station=[
   {x:806,y:402,w:82,h:65,type:"trash",label:"回收槽"}
 ];
 const all=[...bins,...station];
-const activeStations=()=>all;
+/* 咖啡豆仓把六个食材滤篮分置两侧，中央留给研磨漩涡。 */
+const coffeeBins=[
+  ...[0,1,2].map((dish,i)=>({x:154,y:166+i*118,w:98,h:60,type:"bin",dish,label:coffeeDishes[dish].name})),
+  ...[3,4,5].map((dish,i)=>({x:806,y:166+i*118,w:98,h:60,type:"bin",dish,label:coffeeDishes[dish].name}))
+];
+const coffeeStation=[
+  {x:676,y:211,w:118,h:88,type:"wok",label:"烘焙炒台"},
+  {x:284,y:211,w:118,h:88,type:"chop",label:"滤篮砧板"},
+  {x:480,y:406,w:106,h:58,type:"serve",label:"出餐滤杯"},
+  {x:676,y:406,w:88,h:62,type:"trash",label:"豆渣回收"}
+];
+const coffeeAll=[...coffeeBins,...coffeeStation];
+const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
 const keys=new Set();
 const menu=get("overlay");
 const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
@@ -232,6 +244,16 @@ function pan(x,y,s=1){
 }
 function themedStationArt(o,t,theme){
   const {x,y,w,h,type}=o,isIce=theme==="fridge",dark=isIce?"#315a73":"#4a3026",edge=isIce?"#8fd8ea":"#a8784d",fill=isIce?"#e7f8fb":"#ead3ad",accent=isIce?"#9edbea":"#c78b4d";
+  if(theme==="coffee"){
+    ellipse(x+4,y+9,w*.53,h*.48,"#2b1a14");ellipse(x,y+3,w*.54,h*.5,"#6f452f");ellipse(x,y-2,w*.49,h*.43,"#d4aa73");ellipse(x,y-4,w*.43,h*.36,type==="bin"?"#593426":"#8c5d3b");
+    if(type==="bin"){for(let j=0;j<5;j++)coffeeBean(x-24+j*12,y-8+(j%2)*9,5+j%2,j*.7);sprite(o.dish,x,y-8,.62);}
+    if(type==="chop"){rect(x-31,y-21,62,27,"#7a4b31");rect(x-27,y-18,54,21,"#d8b075");knife(x+24,y-8,.22,-.7);}
+    if(type==="wok"){ellipse(x-5,y-8,35,18,"#2d1d17");ellipse(x-5,y-11,27,13,"#6c4935");rect(x+25,y-13,24,7,"#4a2c20");}
+    if(type==="serve"){rect(x-43,y-19,86,25,"#5d3a28");text("↑ 交单",x,y-8,15,"#fff0cf");}
+    if(type==="trash")text("↺",x,y-7,24,"#f1d1a0");
+    const coffeeLabel=type==="bin"?dishes[o.dish].name.replace(/^(咖啡|浓缩|豆渣|卡豆|爆豆|蒸汽)/,""):type==="chop"?"滤篮砧板":type==="wok"?"烘焙炒台":type==="serve"?"出餐滤杯":"豆渣回收";
+    rect(x-w*.38,y+h*.29,w*.76,16,"#3b241b");text(coffeeLabel,x,y+h*.29+8,10,"#f3ddbd");return;
+  }
   rect(x-w/2+5,y-h/2+8,w,h,dark);rect(x-w/2,y-h/2,w,h,edge);rect(x-w/2+5,y-h/2+5,w-10,h-10,fill);
   rect(x-w/2+9,y-h/2+9,w-18,h-30,type==="bin"?(isIce?"#c9edf4":"#d7b580"):accent);
   if(type==="bin")sprite(o.dish,x,y-7,.7);
@@ -317,12 +339,33 @@ function fridgeMap(t){
   for(let i=0;i<12;i++){const x=122+(i*67)%720,y=122+(i%3)*118;poly([[x,y],[x+11,y+5],[x+7,y+17],[x-6,y+14],[x-10,y+4]],i%2?"#eaffff":"#91d4e5");}
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("fridge");rect(344,86,272,29,"#315a73");text("02 / 冰箱内部",480,101,15,"#eaffff");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#eaffff");
 }
-function coffeeBean(x,y,s,a){ctx.save();ctx.translate(x,y);ctx.rotate(a);ellipse(0,0,s*1.4,s,"#4e2d20");path([[-s*.7,s*.25],[0,-s*.45],[s*.7,-s*.25]],"#c38a55",1.5);ctx.restore();}
+function coffeeBean(x,y,s,a){
+  ctx.save();ctx.translate(x,y);ctx.rotate(a);
+  ellipse(2,3,s*1.48,s*1.05,"#291712");ellipse(0,0,s*1.42,s,"#6a3c29");
+  ellipse(-s*.28,-s*.28,s*.48,s*.18,"#b9794c");
+  path([[-s*.72,s*.3],[-s*.18,-s*.08],[.08,-s*.48],[s*.28,-s*.08],[s*.72,-s*.3]],"#e0a36a",Math.max(1.5,s*.14));
+  ctx.restore();
+}
 function coffeeMap(t){
-  rect(0,0,W,H,"#291914");ellipse(480,283,438,250,"#8d6843");ellipse(480,276,422,235,"#5f3b29");
-  for(let i=0;i<38;i++){const x=72+(i*149)%824,y=90+(i*83)%360;coffeeBean(x,y,10+(i%3)*3,i*.63+t*.03);}
-  rect(84,112,348,350,"#6f4a31");rect(94,122,328,330,"#9b7449");rect(527,112,348,350,"#6f4a31");rect(537,122,328,330,"#9b7449");
-  for(const y of bridges){rect(430,y-18,100,36,"#4b2d21");rect(435,y-13,90,26,"#c39358");text("»  »",480,y,23,"#fff0c9");}
+  rect(0,0,W,H,"#21130f");
+  /* 透明豆仓外壁与铜制固定环。 */
+  ellipse(480,288,456,263,"#241610");ellipse(480,280,444,252,"#c58b58");ellipse(480,280,431,239,"#68412d");
+  ctx.save();ctx.strokeStyle="#f9dfb8";ctx.globalAlpha=.66;ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(480,270,418,228,0,Math.PI*1.06,Math.PI*1.8);ctx.stroke();ctx.strokeStyle="#86a9a0";ctx.globalAlpha=.42;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,286,426,237,0,-.12,Math.PI*.72);ctx.stroke();ctx.restore();
+  /* 焦糖、奶油与咖啡粉组成的旋转流线。 */
+  ctx.save();ctx.translate(480,286);ctx.rotate(t*.035);
+  for(const [rx,ry,w,col,start] of [[350,190,30,"#352018",.2],[316,166,20,"#9f5d36",1.1],[280,143,17,"#dda864",2.0],[242,119,11,"#f5d9ab",.55]]){
+    ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap="round";ctx.beginPath();ctx.ellipse(0,0,rx,ry,start,0,Math.PI*1.58);ctx.stroke();
+  }
+  ctx.restore();
+  /* 豆子沿漩涡轨道运动，形成前后层次。 */
+  for(let i=0;i<48;i++){const a=i*.57-t*.08,r=108+(i%6)*48,x=480+Math.cos(a)*r,y=286+Math.sin(a)*r*.55;coffeeBean(x,y,10+(i%3)*4,a+.5);}
+  for(let i=0;i<8;i++){const y=102+i*22+((t*28+i*17)%22);coffeeBean(480+Math.sin(i*2.3)*25,y,7+i%3,i*.5);}
+  for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
+  /* 中央研磨漏斗与刀盘。 */
+  ellipse(480,286,112,72,"#2c1b15");ellipse(480,280,104,66,"#c9a071");ellipse(480,280,88,54,"#473026");
+  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");
+  /* 铜制栈桥把两侧滤篮接向中央磨盘，保持路径清晰。 */
+  for(const y of bridges){rect(426,y-15,108,30,"#392219");rect(432,y-10,96,20,"#c08b57");text("·  ·  ·",480,y,18,"#fff0c9");}
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
