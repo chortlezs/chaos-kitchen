@@ -432,7 +432,7 @@ function coffeeMap(t){
     ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin="round";ctx.lineCap="round";
     ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();ctx.restore();
   };
-  for(const [color,width,offset] of [["#402012",66,6],["#ad6230",60,3],["#f6bd75",54,0],["#8a4a26",48,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
+  for(const [color,width,offset] of [["#402012",54,5],["#ad6230",48,2],["#f6bd75",42,0],["#8a4a26",36,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
   for(const points of coffeeRoutes)railStroke(points,"#ffe0a0",3);
   for(const [x,y] of [[228,132],[228,330],[228,444],[732,180],[732,300],[732,444],[340,350],[600,350]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
   text("↓",350,140,14,"#ffe4a6");text("←",732,250,14,"#ffe4a6");text("↓",420,350,14,"#ffe4a6");
@@ -851,7 +851,7 @@ function valid(x,y){
     return onPorcelain&&!inWater&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   }
   if(state.scene==="coffee"){
-    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
+    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=18));
     return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   }
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
