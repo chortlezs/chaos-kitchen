@@ -13,6 +13,8 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 #frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
 .coffee-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;margin:1.2cqw 0}.coffee-levels button{background:#62381f;border-color:#dca368;color:#fff0ce;text-align:left;padding:.8em .6em;font-size:1.2cqw}.coffee-levels button:hover,.coffee-levels button[aria-pressed=true]{background:#a15d2b;border-color:#ffe5ac}.coffee-levels small{display:block;color:#e9bf85;font-size:.95cqw;margin-top:.35em}
 body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
+@media (hover:hover) and (pointer:fine){body.coffee-scene .controls{display:none}}
+@media (pointer:coarse){body.coffee-scene .controls{bottom:12%;gap:.45cqw}body.coffee-scene .controls button{background:#4a281eef;border-color:#e7b674;color:#fff0cc}}
 </style>
 </head>
 <body>
@@ -395,7 +397,7 @@ function coffeeMap(t){
   for(const [color,width,offset] of [["#402012",66,6],["#ad6230",60,3],["#f6bd75",54,0],["#8a4a26",48,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
   for(const points of coffeeRoutes)railStroke(points,"#ffe0a0",3);
   for(const [x,y] of [[228,132],[228,330],[228,444],[732,180],[732,300],[732,444],[340,350],[600,350]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
-  text("分解 ↓",350,140,12,"#ffe4a6");text("翻炒 ←",732,250,12,"#ffe4a6");text("出餐 ↓",420,350,12,"#ffe4a6");
+  text("↓",350,140,14,"#ffe4a6");text("←",732,250,14,"#ffe4a6");text("↓",420,350,14,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
@@ -463,7 +465,7 @@ function toiletMap(t){
 }
 function instructions(){
   const held=state.held, name=dishes[state.queue[0].id].name;
-  if(!held)return "取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
+  if(!held)return state.scene==="coffee"?"取料 · "+name+" ｜ 点击料篮 / 靠近按空格":"取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
   if(state.scene==="coffee")return name+"  →  "+["左上方 · 滤篮砧板","右侧 · 烘焙炒台","下方偏左 · 出餐滤杯"][held.stage];
   if(held.stage===0)return name+"  →  右侧分解砧板";
   if(held.stage===1)return name+"  →  左侧电磁炒锅";
