@@ -350,7 +350,7 @@ function coffeeBean(x,y,s,a){
   ctx.restore();
 }
 function coffeeMap(t){
-  rect(0,0,W,H,"#3a1b10");
+  rect(0,0,W,H,"#512511");
   /* 咖啡机金属内胆：侧板、铆钉、压力表与进豆漏斗。 */
   rect(20,88,86,374,"#43251b");rect(28,96,70,358,"#8d5638");rect(37,108,52,334,"#332019");
   rect(854,88,86,374,"#43251b");rect(862,96,70,358,"#8d5638");rect(871,108,52,334,"#332019");
@@ -362,9 +362,10 @@ function coffeeMap(t){
   /* 烘焙炉芯从豆仓底部透出暖光。 */
   ellipse(480,320,470,268,"#4d2515");ellipse(480,310,455,254,"#6c351d");
   /* 透明豆仓外壁与铜制固定环。 */
-  ellipse(480,288,456,263,"#4a2417");ellipse(480,280,444,252,"#e0a064");ellipse(480,280,431,239,"#824727");
+  ellipse(480,288,456,263,"#613018");ellipse(480,280,444,252,"#f0b06b");ellipse(480,280,431,239,"#a35b2e");
   ctx.save();ctx.strokeStyle="#fff0c9";ctx.globalAlpha=.74;ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(480,270,418,228,0,Math.PI*1.06,Math.PI*1.8);ctx.stroke();ctx.strokeStyle="#efb76f";ctx.globalAlpha=.58;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,286,426,237,0,-.12,Math.PI*.72);ctx.stroke();ctx.restore();
   /* 底层豆床基本铺满仓体：小豆均匀散落，大豆簇制造自然疏密。 */
+  ctx.save();ctx.beginPath();ctx.ellipse(480,280,424,232,0,0,Math.PI*2);ctx.clip();
   let beanSeed=73;
   for(let i=0;i<360;i++){
     beanSeed=(beanSeed*9301+49297)%233280;const x=104+(beanSeed/233280)*752;
@@ -378,9 +379,14 @@ function coffeeMap(t){
     coffeeBean(x,y,9+((j+p)%4)*2,((j*43+p*29)%180)*Math.PI/180);
   }
   for(let i=0;i<8;i++)coffeeBean(338+((i*83)%285),126+((i*29)%42),7+i%3,((i*47)%170)*Math.PI/180);
+  ctx.restore();
   /* 参考 Frost Kitchen：逐层铺设整张道路图，让交叉口自然合并成实体平台。 */
-  for(const [color,width] of [["#2b1711",66],["#9b5a32",60],["#e0a25d",54],["#6a3b24",48]])for(const points of coffeeRoutes)path(points,color,width);
-  for(const points of coffeeRoutes)path(points,"#f7cf88",3);
+  const railStroke=(points,color,width,offset=0)=>{
+    ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin="round";ctx.lineCap="round";
+    ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();ctx.restore();
+  };
+  for(const [color,width,offset] of [["#402012",66,6],["#ad6230",60,3],["#f6bd75",54,0],["#8a4a26",48,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
+  for(const points of coffeeRoutes)railStroke(points,"#ffe0a0",3);
   for(const [x,y] of [[228,132],[228,330],[228,444],[732,180],[732,300],[732,444],[340,350],[600,350]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
   text("分解 ↓",350,140,12,"#ffe4a6");text("翻炒 ←",732,250,12,"#ffe4a6");text("出餐 ↓",420,350,12,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
@@ -396,7 +402,7 @@ function coffeeMap(t){
   /* 中央研磨漏斗与刀盘。 */
   ctx.save();ctx.translate(168,98);ctx.scale(.65,.65);
   ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
-  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");ctx.restore();
+  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#bb8c5b":"#ffe0a1");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#f4b65e");ctx.restore();
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
@@ -643,7 +649,7 @@ function visuals(t){
 const phaseLimits={chop:14,wok:22,serve:17};
 const bridges=[164,282,406];
 const coffeeRoutes=[
-  [[228,132],[228,444]],[[732,132],[732,444]],
+  [[228,132],[228,444]],[[732,180],[732,444]],
   [[228,132],[540,132],[630,156],[732,180]],
   [[228,330],[340,350],[600,350],[732,300]],
   [[228,444],[570,444],[650,456],[732,444]],
