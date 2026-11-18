@@ -359,9 +359,9 @@ function coffeeMap(t){
     ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap="round";ctx.beginPath();ctx.ellipse(0,0,rx,ry,start,0,Math.PI*1.58);ctx.stroke();
   }
   ctx.restore();
-  /* 豆子沿漩涡轨道运动，形成前后层次。 */
-  for(let i=0;i<48;i++){const a=i*.57-t*.08,r=108+(i%6)*48,x=480+Math.cos(a)*r,y=286+Math.sin(a)*r*.55;coffeeBean(x,y,10+(i%3)*4,a+.5);}
-  for(let i=0;i<8;i++){const y=102+i*22+((t*28+i*17)%22);coffeeBean(480+Math.sin(i*2.3)*25,y,7+i%3,i*.5);}
+  /* 豆子静态堆叠在仓内，避免整圈漂浮旋转的不真实感。 */
+  for(let i=0;i<48;i++){const a=i*.57+.18,r=108+(i%6)*48,x=480+Math.cos(a)*r,y=286+Math.sin(a)*r*.55;coffeeBean(x,y,10+(i%3)*4,a+.5);}
+  for(let i=0;i<8;i++){const y=112+i*22;coffeeBean(480+Math.sin(i*2.3)*25,y,7+i%3,i*.5);}
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
