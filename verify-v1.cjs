@@ -58,6 +58,9 @@ for(let id=0;id<6;id++){
   element('dish-select').value=String(id);g.start();
   assert.equal(g.state.queue.length,1,'coffee level has exactly one meal');
   assert.equal(g.state.queue[0].id,id,'selected food is the only order');
+  const sources=g.activeStations().filter(o=>o.type==='bin');assert.equal(sources.length,1,'one ingredient pickup per level');assert.equal(sources[0].dish,id,'pickup matches selected food');
+  assert(g.routeTo(sources[0]).length,'selected ingredient pickup is reachable');
+  for(const mode of ['chop','wok','serve']){g.phase(mode,id);assert.equal(g.state.phase.id,id);({chop:g.drawChop,wok:g.drawWok,serve:g.drawServe})[mode](1);}
   g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};
   g.returnFromPhase();
   assert.equal(g.state.served,1);assert.equal(g.state.open,'end','one meal completes the level');
@@ -67,5 +70,5 @@ element('dish-select').value='auto';element('office-event').value='今天又被�
 element('dish-select').value='4';g.start();assert.equal(g.state.queue[0].id,4,'manual choice overrides event');
 g.state.open='menu';g.selectScene('fridge');assert(element('frost-experience').hidden,'selecting fridge stays in shared menu');
 element('dish-select').value='3';g.start();assert.equal(element('frost-experience').src,'frost-kitchen.html?level=3&autostart=1');
-console.log('PASS: coffee spawn and all ten stations reachable through actual walking.');
+console.log('PASS: coffee pickup and four workstations reachable through actual walking.');
 console.log('PASS: one-page office, fridge, toilet and coffee scenes; six foods; close-ups and E-to-advance.');

@@ -91,7 +91,10 @@ const coffeeStation=[
   {x:650,y:390,w:88,h:62,type:"trash",label:"豆渣回收"}
 ];
 const coffeeAll=[...coffeeBins,...coffeeStation];
-const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
+const activeStations=()=>state?.scene==="coffee"?[
+  {x:154,y:284,w:98,h:60,type:"bin",dish:state.coffeeLevel,label:coffeeDishes[state.coffeeLevel].name},
+  ...coffeeStation
+]:all;
 const keys=new Set();
 const menu=get("overlay");
 const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
@@ -658,7 +661,7 @@ const coffeeRoutes=[
   [[228,330],[340,350],[600,350],[732,300]],
   [[228,444],[570,444],[650,456],[732,444]],
   [[350,132],[350,160]],[[732,250],[714,250]],[[420,350],[420,364]],
-  ...[166,284,402].flatMap(y=>[[[210,y],[228,y]],[[732,y],[750,y]]])
+  [[210,284],[228,284]]
 ];
 let now=0,lastFrame=0;
 function wanted(){
@@ -698,7 +701,7 @@ function toggleMenu(mode){
     get("practice").hidden=mode==="pause";
     get("coffee-levels").hidden=true;
     if(state.scene==="coffee"){
-      if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒 · 每关一道菜";
+      if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒";
       get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
     }
   }
@@ -966,6 +969,7 @@ function selectScene(scene){
 }
 get("frost-back").onclick=()=>{state.open="menu";selectScene("neon");};
 get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
+get("dish-select").onchange=()=>{const value=get("dish-select").value;if(state.scene==="coffee"&&/^[0-5]$/.test(value))state.coffeeLevel=Number(value);};
 for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
