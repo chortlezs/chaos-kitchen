@@ -10,11 +10,14 @@
 body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 0 0 5px #7ab6bd,0 0 0 8px #22485f,0 0 35px #a5e0dd77}body.toilet-scene .panel h1{text-shadow:3px 4px #22485f}body.toilet-scene .panel p,body.toilet-scene .hint{color:#e5f4e8}body.toilet-scene button.primary{background:#f6d77f;border-color:#fff9e7;color:#31536b}body.toilet-scene .scene-choice button.selected{background:#f6d77f;color:#31536b;border-color:#fff9e7}
 body.fridge-scene .panel{background:#315b75f5;border-color:#e9fbff;box-shadow:0 0 0 5px #8ed8ec,0 0 0 8px #244c69,0 0 35px #b9efff77}body.fridge-scene .panel p,body.fridge-scene .hint{color:#e9fbff}body.fridge-scene button.primary,body.fridge-scene .scene-choice button.selected{background:#c8f2ff;color:#244c69;border-color:#fff}
 body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 0 0 5px #a7784d,0 0 0 8px #2b1a16,0 0 35px #d4a46f77}body.coffee-scene .panel p,body.coffee-scene .hint{color:#f4dfbf}body.coffee-scene button.primary,body.coffee-scene .scene-choice button.selected{background:#d9a45f;color:#342017;border-color:#f9e2bd}
+#frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
 </style>
 </head>
 <body>
 <main>
 <canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
+<iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
+<button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
 <button class="pause" id="pause" hidden aria-label="暂停">Ⅱ</button>
 <div class="controls" id="controls" hidden></div>
 <div class="overlay" id="overlay">
@@ -868,6 +871,17 @@ canvas.addEventListener("pointerdown",e=>{
 });
 function selectScene(scene){
   if(!state.open||state.open==="pause")return;
+  if(scene==="fridge"){
+    state.scene="fridge";dishes=fridgeDishes;
+    const frost=get("frost-experience");
+    if(frost.src==="about:blank")frost.src="frost-kitchen.html";
+    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("pause").hidden=true;get("controls").hidden=true;
+    document.body.classList.toggle("fridge-scene",true);document.body.classList.toggle("toilet-scene",false);document.body.classList.toggle("coffee-scene",false);
+    document.title="极限出餐｜冰封后厨";
+    if(window.history?.replaceState)window.history.replaceState(null,"","?scene=fridge");
+    return;
+  }
+  get("frost-experience").hidden=true;get("frost-back").hidden=true;canvas.hidden=false;menu.hidden=false;
   state.scene=["neon","fridge","toilet","coffee"].includes(scene)?scene:"neon";
   dishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes}[state.scene];
   document.body.classList.toggle("toilet-scene",state.scene==="toilet");
@@ -881,6 +895,7 @@ function selectScene(scene){
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
   reset();toggleMenu("menu");
 }
+get("frost-back").onclick=()=>{state.open="menu";selectScene("neon");};
 get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
 for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
