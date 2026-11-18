@@ -67,6 +67,17 @@ for(let id=0;id<6;id++){
 }
 console.log('PASS: all six coffee levels finish after their selected single meal.');
 g.state.open='menu';g.selectScene('toilet');
+for(const stop of g.activeStations()){
+  const route=g.routeTo(stop);assert(route.length||g.inReach(stop),'toilet station reachable: '+stop.type);
+  for(const point of route){
+    for(let n=0;n<100&&Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)>.05;n++){
+      const dx=point.x-g.state.player.x,dy=point.y-g.state.player.y,len=Math.hypot(dx,dy),step=Math.min(2,len);g.walk(dx/len*step,dy/len*step);
+    }
+    assert(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)<.1,'toilet route can be walked');
+  }
+  assert(g.inReach(stop),'toilet station within interaction range');
+}
+assert(!g.valid(480,285),'toilet water cannot be walked on');
 for(let id=0;id<6;id++){
   element('dish-select').value=String(id);g.start();assert.equal(g.state.queue.length,1);assert.equal(g.state.queue[0].id,id);
   const source=g.activeStations().find(o=>o.type==='bin');assert.equal(source.dish,id);assert(g.routeTo(source).length);

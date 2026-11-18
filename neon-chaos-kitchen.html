@@ -13,7 +13,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 #frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
 .coffee-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;margin:1.2cqw 0}.coffee-levels button{background:#62381f;border-color:#dca368;color:#fff0ce;text-align:left;padding:.8em .6em;font-size:1.2cqw}.coffee-levels button:hover,.coffee-levels button[aria-pressed=true]{background:#a15d2b;border-color:#ffe5ac}.coffee-levels small{display:block;color:#e9bf85;font-size:.95cqw;margin-top:.35em}
 body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
-@media (hover:hover) and (pointer:fine){body.coffee-scene .controls{display:none}}
+@media (hover:hover) and (pointer:fine){body.coffee-scene .controls,body.toilet-scene .controls{display:none}}
 @media (pointer:coarse){body.coffee-scene .controls{bottom:12%;gap:.45cqw}body.coffee-scene .controls button{background:#4a281eef;border-color:#e7b674;color:#fff0cc}}
 </style>
 </head>
@@ -97,7 +97,11 @@ const activeStations=()=>state?.scene==="coffee"?[
   {x:154,y:284,w:98,h:60,type:"bin",dish:state.coffeeLevel,label:coffeeDishes[state.coffeeLevel].name},
   ...coffeeStation
 ]:state?.scene==="toilet"?[
-  {...bins[2],dish:state.toiletLevel??0,label:toiletDishes[state.toiletLevel??0].name},...station
+  {...bins[2],x:190,y:284,dish:state.toiletLevel??0,label:toiletDishes[state.toiletLevel??0].name},
+  {x:340,y:240,w:110,h:96,type:"wok",label:"迷你电磁炉"},
+  {x:650,y:230,w:116,h:86,type:"chop",label:"马桶盖砧板"},
+  {x:780,y:140,w:132,h:61,type:"serve",label:"出餐窗口"},
+  {x:780,y:400,w:82,h:65,type:"trash",label:"刷桶回收"}
 ]:all;
 const keys=new Set();
 const menu=get("overlay");
@@ -439,12 +443,6 @@ function toiletMap(t){
   for(let yy=92;yy<474;yy+=24)for(let xx=116;xx<844;xx+=24)rect(xx,yy,22,22,((xx+yy)/24)%2?"#edf2e8":"#f8f8eb");
   ctx.restore();
   ellipse(480,285,274,145,"#cde2df");ellipse(480,285,250,128,"#4a91a8");ellipse(480,285,222,105,"#82ced6");ellipse(480,285,188,78,"#a8e3de");
-  /* 双侧防滑通道与三处跨水连接，让操作路线一眼可读。 */
-  path([[154,146],[154,438],[356,438],[356,284],[284,284],[284,202]],"#5b8792",31);
-  path([[154,146],[154,438],[356,438],[356,284],[284,284],[284,202]],"#f8f1d9",5);
-  path([[806,146],[806,438],[676,438],[676,202]],"#5b8792",31);
-  path([[806,146],[806,438],[676,438],[676,202]],"#f8f1d9",5);
-  for(const [x,y,a] of [[154,238,"↓"],[154,370,"↓"],[312,438,"→"],[806,238,"↓"],[806,370,"↓"],[716,438,"←"],[284,244,"↑"],[676,244,"↑"]])text(a,x,y,15,"#31536b");
   for(let j=0;j<6;j++){const x=323+j*58,y=248+(j%2)*43;rect(x,y,27,5,"#e1f8e8");rect(x+10,y+9,19,4,"#65b6c5");}
   ellipse(480,285,45,25,"#376d84");ellipse(480,283,27,14,"#25516a");
   ctx.save();ctx.translate(480,284);ctx.rotate(t*.18);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);ellipse(70,0,16,5,i%2?"#dff7eb":"#67b8c3");}ctx.restore();
@@ -460,7 +458,14 @@ function toiletMap(t){
   poly([[360,407],[600,407],[583,465],[552,479],[408,479],[377,465]],"#fffdf2");
   poly([[385,422],[575,422],[562,456],[540,466],[420,466],[398,456]],"#dcebe3");
   rect(441,478,78,9,"#719daf");rect(451,473,58,8,"#fffdf2");
-  for(const y of bridges){rect(430,y-18,100,36,"#fffaf0");rect(435,y-13,90,26,"#aed4d0");text("»  »",480,y,23,"#458da0");}
+  /* 水流与底座绘制完成后铺设桥面，角色和工作台位于桥面之上。 */
+  ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
+  for(const [color,width,offset] of [["#345f72",62,7],["#86b9bd",56,3],["#fff7df",50,0],["#afd5cc",42,0]]){
+    ctx.strokeStyle=color;ctx.lineWidth=width;
+    for(const points of toiletRoutes){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();}
+  }ctx.restore();
+  for(const y of [180,340,420])for(let x=300;x<710;x+=36){rect(x,y-10,2,20,"#8ebcb6");rect(x+3,y-10,8,2,"#e5f1dc");}
+  for(const [x,y,a] of [[260,230,"↓"],[260,370,"↓"],[720,230,"↑"],[720,370,"↑"],[470,180,"→"],[480,340,"→"],[480,420,"←"]])text(a,x,y,15,"#427b87");
   rect(344,7,272,29,"#31536b");text("03 / 冲水马桶内部",480,22,15,"#fff9e7");
   for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
@@ -668,6 +673,7 @@ function visuals(t){
 }
 const phaseLimits={chop:14,wok:22,serve:17};
 const bridges=[164,282,406];
+const toiletRoutes=[[[260,180],[720,180],[720,420],[260,420],[260,180]],[[260,340],[720,340]],[[238,284],[260,284]],[[720,180],[750,180]],[[720,400],[732,400]]];
 const coffeeRoutes=[
   [[228,132],[228,444]],[[732,180],[732,444]],
   [[228,132],[540,132],[630,156],[732,180]],
@@ -730,7 +736,7 @@ function renderCoffeeLevels(){
   });
 }
 function reset(){
-  const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
+  const spawn=state.scene==="coffee"?{x:228,y:444}:state.scene==="toilet"?{x:260,y:420}:{x:285,y:401};
   Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
 function start(){
@@ -814,6 +820,7 @@ function segmentDistance(x,y,a,b){
   return Math.hypot(x-(a[0]+dx*q),y-(a[1]+dy*q));
 }
 function valid(x,y){
+  if(state.scene==="toilet")return toiletRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=22))&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   if(state.scene==="coffee"){
     const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
     return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
@@ -842,7 +849,7 @@ function routeTo(goal){
     }
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
       const b=[x+dx,y+dy],k=b.join();
-      const clear=state.scene!=="coffee"||[.25,.5,.75].every(f=>valid((x+dx*f)*grid,(y+dy*f)*grid));
+      const clear=!["coffee","toilet"].includes(state.scene)||[.25,.5,.75].every(f=>valid((x+dx*f)*grid,(y+dy*f)*grid));
       if(!seen.has(k)&&clear&&valid(b[0]*grid,b[1]*grid)){seen.set(k,a);queue.push(b);}
     }
   }
