@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>极限出餐｜赛博后厨</title>
+<link rel="stylesheet" href="hardware-chop.css">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#05051a;color:#edfcff;font-family:"Courier New","PingFang SC","Microsoft Yahei",monospace;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);position:relative;aspect-ratio:16/9;background:#050523;overflow:hidden;container-type:inline-size}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030520b8;backdrop-filter:blur(3px)}[hidden]{display:none!important}.panel{width:63%;text-align:center;background:#080b2cf5;border:3px solid #31e8ff;box-shadow:0 0 0 5px #2025b4,0 0 0 8px #0c1035,0 0 36px #126fff80,inset 0 0 30px #1834aa88;padding:4cqw 3cqw;position:relative}.panel:before,.panel:after{content:"";position:absolute;width:8%;height:6px;background:#f456ff;box-shadow:0 0 13px #ff00eb;top:-4px}.panel:before{left:6%}.panel:after{right:6%}.tag{letter-spacing:.26em;color:#51efff;font-weight:bold;font-size:1.45cqw}.panel h1{font-size:6cqw;letter-spacing:.09em;margin:.08em 0 .23em;text-shadow:3px 4px #3122ac,0 0 20px #24caff}.panel p{font:600 1.65cqw/1.7 system-ui;margin:.45em 0 1.1em;color:#cbdbff}.buttons{display:flex;justify-content:center;gap:.9cqw;flex-wrap:wrap}button,select,input{font:700 1.45cqw system-ui;color:#e9faff;background:#0e1d57;border:2px solid #438fd8;border-radius:0;padding:.6em .85em}button{cursor:pointer}button:hover,button:focus-visible{background:#293993;border-color:#ff7bf8;outline:none}button.primary{color:#060b35;background:#35eaff;border-color:#baffff;box-shadow:4px 4px #273bc6;padding:.7em 1.4em}button.primary:hover{background:#fff}.small{margin-top:1.4cqw}.controls{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:flex;gap:.65cqw}.controls button{padding:.4em .65em;touch-action:none}.pause{position:absolute;right:1.2%;top:1.5%;padding:.25em .55em;font-family:inherit}.hint{font-size:1.12cqw;color:#a8c7f4;margin-top:1.3cqw}select{max-width:40%}input{width:76%;margin-bottom:1.3cqw;border-color:#3657b2;background:#0a143d}input::placeholder{color:#9db6e0}
 .scene-choice{display:flex;align-items:center;justify-content:center;gap:.7cqw;margin:0 0 1.1cqw;font:700 1.35cqw system-ui}.scene-choice button{font-size:1.25cqw;padding:.35em .7em}.scene-choice button.selected{background:#35eaff;color:#071044;border-color:#fff}
@@ -15,6 +16,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 </head>
 <body>
 <main>
+<div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
 <canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
@@ -36,6 +38,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 </section>
 </div>
 </main>
+<script src="hardware-chop.js"></script>
 <script>
 (() => {
 "use strict";
@@ -825,9 +828,9 @@ function move(dt){
   if(n<=speed+1){if(valid(next.x,next.y))Object.assign(state.player,next);route.shift();}
   else walk(x/n*speed,y/n*speed);
 }
-function cutOnce(){
+function cutOnce(source="manual"){
   const p=state.phase;
-  if(p.done||now<p.nextCut)return;
+  if(p.done||(source!=="hardware"&&now<p.nextCut))return;
   p.nextCut=now+.29;p.hit=now;p.cuts++;
   burst(348+Math.random()*130,260,now,p.cuts%3?c.light:c.pink,p.cuts%3?12:28);
   if(p.cuts===10)conclude(true,p.left>8?"EXCELLENT · 零件齐全":"GOOD · 零件齐全");
@@ -921,16 +924,20 @@ canvas.addEventListener("pointerdown",e=>{
   if(state.view==="map")target(activeStations().find(o=>hit(p,o))||p);
   else if(state.view==="chop")cutOnce();
 });
+function sceneQuery(scene){
+  const query=new URLSearchParams(window.location.search);query.set("scene",scene);return "?"+query;
+}
 function selectScene(scene){
   if(!state.open||state.open==="pause")return;
+  get("hardware-controls").hidden=scene==="fridge";
   if(scene==="fridge"){
     state.scene="fridge";dishes=fridgeDishes;
     const frost=get("frost-experience");
-    if(frost.src==="about:blank")frost.src="frost-kitchen.html";
+    if(frost.src==="about:blank")frost.src="frost-kitchen.html"+(new URLSearchParams(window.location.search).get("esp")==="1"?"?esp=1":"");
     frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("pause").hidden=true;get("controls").hidden=true;
     document.body.classList.toggle("fridge-scene",true);document.body.classList.toggle("toilet-scene",false);document.body.classList.toggle("coffee-scene",false);
     document.title="极限出餐｜冰封后厨";
-    if(window.history?.replaceState)window.history.replaceState(null,"","?scene=fridge");
+    if(window.history?.replaceState)window.history.replaceState(null,"",sceneQuery("fridge"));
     return;
   }
   get("frost-experience").hidden=true;get("frost-back").hidden=true;canvas.hidden=false;menu.hidden=false;
@@ -940,7 +947,7 @@ function selectScene(scene){
   document.body.classList.toggle("fridge-scene",state.scene==="fridge");document.body.classList.toggle("coffee-scene",state.scene==="coffee");
   document.querySelector(".tag").textContent={neon:"⚡ OFFICE ARCADE / NEON KITCHEN",fridge:"FROZEN SHELF / ICE KITCHEN",toilet:"PORCELAIN BOWL / PIXEL KITCHEN",coffee:"BEAN HOPPER / MICRO KITCHEN"}[state.scene];
   document.title="极限出餐｜"+{neon:"赛博办公室",fridge:"冰箱内部",toilet:"冲水马桶内部",coffee:"咖啡机豆仓内部"}[state.scene];
-  if(window.history?.replaceState)window.history.replaceState(null,"","?scene="+state.scene);
+  if(window.history?.replaceState)window.history.replaceState(null,"",sceneQuery(state.scene));
   for(const button of document.querySelectorAll("[data-scene]"))button.classList.toggle("selected",button.dataset.scene===state.scene);
   get("dish-select").replaceChildren();
   dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
@@ -954,6 +961,12 @@ for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
 const requestedScene=new URLSearchParams(window.location.search).get("scene");
 selectScene(["neon","fridge","toilet","coffee"].includes(requestedScene)?requestedScene:"toilet");
+if(window.KitchenHardware)window.KitchenHardware.bind({
+  button:get("hardware-connect"),status:get("hardware-status"),
+  onChop(){
+    if(!document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="chop"&&state.phase&&!state.phase.done)cutOnce("hardware");
+  }
+});
 function frameLoop(ms){
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
