@@ -82,10 +82,10 @@ const coffeeBins=[
   ...[3,4,5].map((dish,i)=>({x:806,y:166+i*118,w:98,h:60,type:"bin",dish,label:coffeeDishes[dish].name}))
 ];
 const coffeeStation=[
-  {x:676,y:211,w:118,h:88,type:"wok",label:"烘焙炒台"},
-  {x:284,y:211,w:118,h:88,type:"chop",label:"滤篮砧板"},
-  {x:480,y:406,w:106,h:58,type:"serve",label:"出餐滤杯"},
-  {x:676,y:406,w:88,h:62,type:"trash",label:"豆渣回收"}
+  {x:600,y:230,w:118,h:88,type:"wok",label:"烘焙炒台"},
+  {x:360,y:230,w:118,h:88,type:"chop",label:"滤篮砧板"},
+  {x:480,y:370,w:106,h:58,type:"serve",label:"出餐滤杯"},
+  {x:650,y:370,w:88,h:62,type:"trash",label:"豆渣回收"}
 ];
 const coffeeAll=[...coffeeBins,...coffeeStation];
 const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
@@ -379,10 +379,10 @@ function coffeeMap(t){
   }
   for(let i=0;i<8;i++)coffeeBean(338+((i*83)%285),126+((i*29)%42),7+i%3,((i*47)%170)*Math.PI/180);
   /* 参考 Frost Kitchen：逐层铺设整张道路图，让交叉口自然合并成实体平台。 */
-  for(const [color,width] of [["#2b1711",58],["#9b5a32",50],["#e0a25d",44],["#6a3b24",34]])for(const points of coffeeRoutes)path(points,color,width);
+  for(const [color,width] of [["#2b1711",66],["#9b5a32",60],["#e0a25d",54],["#6a3b24",48]])for(const points of coffeeRoutes)path(points,color,width);
   for(const points of coffeeRoutes)path(points,"#f7cf88",3);
-  for(const [x,y] of [[210,166],[215,284],[210,402],[300,445],[480,445],[650,445],[750,402],[745,284],[750,166],[284,154],[380,132],[480,148],[580,132],[676,154],[480,364],[650,362]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
-  for(const [x,y,a] of [[212,230,"↓"],[212,350,"↓"],[748,230,"↓"],[748,350,"↓"],[405,140,"→"],[555,140,"←"],[355,445,"→"],[605,445,"←"],[480,392,"↑"]])text(a,x,y,15,"#ffe4a6");
+  for(const [x,y] of [[228,132],[228,300],[228,444],[732,132],[732,300],[732,444]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
+  text("分解 ↑",360,300,12,"#ffe4a6");text("翻炒 ↑",600,300,12,"#ffe4a6");text("出餐 ↓",480,306,12,"#ffe4a6");
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
@@ -394,8 +394,9 @@ function coffeeMap(t){
   ctx.restore();
   for(let i=0;i<18;i++){const a=i*1.73+t*.22,r=88+(i%6)*54;ellipse(480+Math.cos(a)*r,300+Math.sin(a)*r*.5,2+i%3,2+i%2,i%2?"#ffcf70":"#fff0bb");}
   /* 中央研磨漏斗与刀盘。 */
+  ctx.save();ctx.translate(168,28);ctx.scale(.65,.65);
   ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
-  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");
+  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#9d9a8d":"#d3c5aa");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#d39a59");ctx.restore();
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
@@ -450,6 +451,7 @@ function toiletMap(t){
 function instructions(){
   const held=state.held, name=dishes[state.queue[0].id].name;
   if(!held)return "取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
+  if(state.scene==="coffee")return name+"  →  "+["中间主路左侧 · 滤篮砧板","中间主路右侧 · 烘焙炒台","中间主路下方 · 出餐滤杯"][held.stage];
   if(held.stage===0)return name+"  →  右侧分解砧板";
   if(held.stage===1)return name+"  →  左侧电磁炒锅";
   return name+"  →  右上方出餐通道";
@@ -641,10 +643,9 @@ function visuals(t){
 const phaseLimits={chop:14,wok:22,serve:17};
 const bridges=[164,282,406];
 const coffeeRoutes=[
-  [[210,166],[215,284],[210,402]],[[750,166],[745,284],[750,402]],
-  [[210,402],[300,445],[480,445],[650,445],[750,402]],
-  [[215,284],[246,220],[284,154]],[[284,154],[380,132],[480,148],[580,132],[676,154]],[[676,154],[714,220],[745,284]],
-  [[480,445],[480,364]],[[650,445],[650,362]]
+  [[228,132],[228,444]],[[732,132],[732,444]],
+  [[228,132],[732,132]],[[228,300],[732,300]],[[228,444],[732,444]],
+  [[480,300],[480,324]],[[650,300],[650,324]]
 ];
 let now=0,lastFrame=0;
 function wanted(){
@@ -686,7 +687,7 @@ function toggleMenu(mode){
   updateControls();
 }
 function reset(){
-  const spawn=state.scene==="coffee"?{x:210,y:402}:{x:285,y:401};
+  const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
   Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
 function start(){
@@ -763,7 +764,7 @@ function segmentDistance(x,y,a,b){
 }
 function valid(x,y){
   if(state.scene==="coffee"){
-    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=21));
+    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
     return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   }
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
