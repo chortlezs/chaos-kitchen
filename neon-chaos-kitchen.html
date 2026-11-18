@@ -458,18 +458,6 @@ function toiletMap(t){
   poly([[360,407],[600,407],[583,465],[552,479],[408,479],[377,465]],"#fffdf2");
   poly([[385,422],[575,422],[562,456],[540,466],[420,466],[398,456]],"#dcebe3");
   rect(441,478,78,9,"#719daf");rect(451,473,58,8,"#fffdf2");
-  /* 水流与底座绘制完成后铺设桥面，角色和工作台位于桥面之上。 */
-  ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
-  for(const [color,width,offset] of [["#345f72",38,5],["#86b9bd",32,2],["#fff7df",28,0],["#afd5cc",24,0]]){
-    ctx.strokeStyle=color;ctx.lineWidth=width;
-    for(const points of toiletRoutes){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();}
-  }ctx.restore();
-  for(const points of toiletRoutes)for(let i=1;i<points.length;i++){
-    const [x,y]=points[i-1],[u,v]=points[i],len=Math.hypot(u-x,v-y);
-    ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(v-y,u-x));
-    for(let d=28;d<len-15;d+=36){rect(d,-8,2,16,"#8ebcb6");rect(d+3,-8,6,2,"#e5f1dc");}ctx.restore();
-  }
-  for(const [x,y,a] of [[260,230,"↓"],[246,370,"↓"],[720,230,"↑"],[738,370,"↑"],[480,432,"←"]])text(a,x,y,13,"#427b87");
   for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
   // 顶部使用连续的冷白瓷面衬底，遮住背景与水箱在信息栏间露出的碎块。
@@ -831,7 +819,11 @@ function segmentDistance(x,y,a,b){
   return Math.hypot(x-(a[0]+dx*q),y-(a[1]+dy*q));
 }
 function valid(x,y){
-  if(state.scene==="toilet")return toiletRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=12))&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+  if(state.scene==="toilet"){
+    const onPorcelain=((x-480)/370)**2+((y-282)/210)**2<=1&&y>=180&&y<=460;
+    const inWater=((x-480)/240)**2+((y-285)/116)**2<1;
+    return onPorcelain&&!inWater&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+  }
   if(state.scene==="coffee"){
     const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
     return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
