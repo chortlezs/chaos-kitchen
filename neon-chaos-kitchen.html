@@ -220,7 +220,7 @@ function chef(x,y,t){
     const bob=state.moving?Math.round(Math.sin(t*16)*2):0;y+=bob;
     rect(x-14,y+11,28,6,"#6a9aaa");rect(x-12,y+3,9,14,"#597f82");rect(x+4,y+3,9,14,"#597f82");
     rect(x-16,y-17,32,24,"#ed9d78");rect(x-11,y-13,22,19,"#fff9e7");rect(x-11,y-29,22,17,"#f5ce9e");
-    rect(x-17,y-36,34,10,"#fffdf3");rect(x-10,y-43,20,9,"#fffdf3");rect(x-5,y-24,3,3,"#31536b");rect(x+5,y-24,3,3,"#31536b");
+    rect(x-17,y-36,34,10,"#e67b2f");rect(x-10,y-43,20,9,"#ffa64f");rect(x-8,y-42,12,3,"#ffcd83");rect(x-17,y-28,34,2,"#ba5528");rect(x-5,y-24,3,3,"#31536b");rect(x+5,y-24,3,3,"#31536b");
     if(state.held!==null)sprite(state.held.id,x+18,y-9,.46);
     return;
   }
