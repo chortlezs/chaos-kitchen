@@ -995,7 +995,8 @@ function spawnJet(p){
 function balance(dt){
   const p=phase,active=is('e')&&p.progress<1;
   const plate=hardwareServeReady()?hardwareInput?.plate():null;
-  const direction=plate?Math.max(-1,Math.min(1,plate.roll)):Number(is('d','arrowright'))-Number(is('a','arrowleft'));
+  const plateCorrection=plate?(Math.abs(plate.roll)<.06?0:Math.max(-1,Math.min(1,plate.roll*2.5))):null;
+  const direction=plate?plateCorrection:Number(is('d','arrowright'))-Number(is('a','arrowleft'));
   p.kick=Math.max(0,p.kick-dt*2.9);p.jet+=dt;
   if(p.jet>=1.55){p.jet=0;spawnJet(p);}
   p.spray+=dt;
@@ -1007,7 +1008,7 @@ function balance(dt){
     }
   }
   const slip=(Math.sin(now*5.4)*.56+Math.sin(now*2.5)*.51)+p.sign*(active?1.8:1.4)+p.sign*p.kick*2.35;
-  p.velocity+=(direction*6.6+slip-p.tilt*.74-p.velocity*2.8)*dt;
+  p.velocity+=((plate?direction*12:direction*6.6)+slip-p.tilt*.74-p.velocity*2.8)*dt;
   p.tilt=clamp(p.tilt+p.velocity*dt,-balanceTrack.maxTilt,balanceTrack.maxTilt);
   if(Math.abs(p.tilt)>1.15)p.velocity*=.87;
   if(Math.abs(p.tilt)>.69)p.integrity=clamp(p.integrity-dt*(16+Math.abs(p.tilt)*15),0,100);

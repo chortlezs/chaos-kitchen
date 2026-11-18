@@ -872,13 +872,14 @@ function balance(dt){
   const p=state.phase;
   p.elapsed+=dt;p.surge=Math.max(0,p.surge-dt);
   const plate=hardwareServeReady()?hardwareInput?.plate():null;
-  const input=plate?clamp(plate.roll,-1,1):+(keys.has("d")||keys.has("arrowright"))-+(keys.has("a")||keys.has("arrowleft"));
+  const plateCorrection=plate?(Math.abs(plate.roll)<.06?0:clamp(plate.roll*2.5,-1,1)):null;
+  const input=plate?plateCorrection:+(keys.has("d")||keys.has("arrowright"))-+(keys.has("a")||keys.has("arrowleft"));
   const shock=Math.sin(p.elapsed*3.25)*.92+Math.cos(p.elapsed*7)*.42+.23;
   if(p.elapsed>=p.nextSurge){
     p.vel+=(Math.sin(p.elapsed*2.61)>0?1:-1)*.92;p.surge=.27;p.nextSurge+=1.45+Math.random()*.48;
     burst(330,335,now,c.pink,10);burst(630,335,now,c.light,10);
   }
-  p.vel+=(input*4+shock-p.tilt*.74)*dt;
+  p.vel+=((plate?input*9:input*4)+shock-p.tilt*.74)*dt;
   p.vel*=Math.exp(-2.4*dt);
   p.tilt=clamp(p.tilt+p.vel*dt,-1,1);
   if(p.route<1&&keys.has("e"))p.route=Math.min(1,p.route+dt*(.198-Math.abs(p.tilt)*.048));
