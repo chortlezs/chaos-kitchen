@@ -11,6 +11,8 @@ body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 
 body.fridge-scene .panel{background:#315b75f5;border-color:#e9fbff;box-shadow:0 0 0 5px #8ed8ec,0 0 0 8px #244c69,0 0 35px #b9efff77}body.fridge-scene .panel p,body.fridge-scene .hint{color:#e9fbff}body.fridge-scene button.primary,body.fridge-scene .scene-choice button.selected{background:#c8f2ff;color:#244c69;border-color:#fff}
 body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 0 0 5px #a7784d,0 0 0 8px #2b1a16,0 0 35px #d4a46f77}body.coffee-scene .panel p,body.coffee-scene .hint{color:#f4dfbf}body.coffee-scene button.primary,body.coffee-scene .scene-choice button.selected{background:#d9a45f;color:#342017;border-color:#f9e2bd}
 #frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
+.coffee-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;margin:1.2cqw 0}.coffee-levels button{background:#62381f;border-color:#dca368;color:#fff0ce;text-align:left;padding:.8em .6em;font-size:1.2cqw}.coffee-levels button:hover,.coffee-levels button[aria-pressed=true]{background:#a15d2b;border-color:#ffe5ac}.coffee-levels small{display:block;color:#e9bf85;font-size:.95cqw;margin-top:.35em}
+body.coffee-scene .panel{padding:2cqw 3cqw}body.coffee-scene .panel h1{font-size:4.6cqw;color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
 </style>
 </head>
 <body>
@@ -27,6 +29,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 <p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单</p>
 <div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="fridge">冰箱内部</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" data-scene="coffee">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
+<div class="coffee-levels" id="coffee-levels" aria-label="选择咖啡豆仓关卡" hidden></div>
 <div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业 ↗</button><button id="resume" hidden>继续游戏</button></div>
 <div class="buttons small" id="practice">
 <select id="dish-select" aria-label="练习菜品"></select>
@@ -91,7 +94,7 @@ const coffeeAll=[...coffeeBins,...coffeeStation];
 const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
 const keys=new Set();
 const menu=get("overlay");
-const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
+const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
@@ -329,8 +332,9 @@ function map(t){
 }
 function themedHud(theme){
   const ice=theme==="fridge",dark=ice?"#294e68":"#3f281e",paper=ice?"#ecfbff":"#f2dfbf",soft=ice?"#c6edf4":"#d8b983",accent=ice?"#65bfd6":"#b97943";
-  rect(20,13,540,69,dark);const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
+  rect(20,13,540,69,dark);const queue=state.queue.length?state.queue:state.scene==="coffee"?[{id:state.coffeeLevel,left:180}]:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
   for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,paper);rect(x+3,22,162,51,soft);sprite(o.id,x+31,46,.6);text(dishes[o.id].name,x+100,41,11,dark);text(timeText(o.left),x+100,62,13,o.left<15?"#c55b55":accent);}
+  if(!ice){text("第 "+(state.coffeeLevel+1)+" 关 · 单份订单",390,40,16,paper);text("取料 → 切菜 → 翻炒 → 端盘",390,62,11,soft);}
   rect(600,14,344,61,dark);text("极限出餐",772,39,20,paper);text(ice?"冰箱内部":"咖啡机豆仓内部",772,61,11,soft);
   rect(20,475,169,53,dark);text(String(state.score).padStart(3,"0"),103,501,29,paper);rect(751,475,187,53,dark);text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":paper);
   rect(203,481,540,41,dark);text(state.open==="menu"?"取料 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,paper);
@@ -684,7 +688,7 @@ function toggleMenu(mode){
     get("menu-copy").innerHTML={
       menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
+      end:state.scene==="coffee"?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.coffeeLevel].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
@@ -692,8 +696,23 @@ function toggleMenu(mode){
     get("scene-choice").hidden=mode==="pause";
     get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
     get("practice").hidden=mode==="pause";
+    get("coffee-levels").hidden=state.scene!=="coffee"||mode==="pause";
+    if(state.scene==="coffee"){
+      if(mode==="menu")get("menu-copy").innerHTML="选择一种办公室食材，完成取料、切菜、翻炒和端盘。<br>六选一 · 每关一道菜 · 180 秒";
+      get("start").textContent=mode==="menu"?"开始第 "+(state.coffeeLevel+1)+" 关 ↗":"重试本关 ↗";
+      renderCoffeeLevels();
+    }
   }
   updateControls();
+}
+function renderCoffeeLevels(){
+  const choices=get("coffee-levels");choices.replaceChildren();
+  coffeeDishes.forEach((dish,id)=>{
+    const button=document.createElement("button");button.type="button";button.ariaPressed=String(id===state.coffeeLevel);
+    button.textContent=String(id+1).padStart(2,"0")+" · "+dish.name;
+    button.onclick=()=>{state.coffeeLevel=id;get("dish-select").value=String(id);start();};
+    choices.append(button);
+  });
 }
 function reset(){
   const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
@@ -701,6 +720,7 @@ function reset(){
 }
 function start(){
   reset();
+  if(state.scene==="coffee"){state.queue=[{id:state.coffeeLevel,left:180}];toggleMenu(null);return;}
   const event=get("office-event").value.trim();
   const officeTerms=[/订书机|装订|卡钉/,/老板|领导|上司|开会|催|被骂/,/文件夹|文件|文档|表格|归档/,/打印机|打印|复印|卡纸/,/键盘|打字|码字|敲键|开心/,/空调|冷气|太冷|太热|冻/,];
   const match=officeTerms.findIndex(term=>term.test(event));

@@ -18,7 +18,7 @@ const window={location:{search:'?scene=toilet'},addEventListener:noop};
 const sandbox={document,window,requestAnimationFrame:noop,URLSearchParams,Math,console};
 const html=fs.readFileSync('neon-chaos-kitchen.html','utf8');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('requestAnimationFrame(frameLoop);\n})();',
-  'globalThis.test={state,selectScene,start,phase,map,drawChop,drawWok,drawServe,balance,activeStations,valid,routeTo,walk,inReach,dishes:()=>dishes,keys};\n})();');
+  'globalThis.test={state,selectScene,start,phase,map,drawChop,drawWok,drawServe,balance,returnFromPhase,activeStations,valid,routeTo,walk,inReach,dishes:()=>dishes,keys};\n})();');
 vm.runInNewContext(script,sandbox);
 const g=sandbox.test;
 assert.equal(g.state.scene,'toilet');
@@ -54,5 +54,14 @@ for(const stop of coffeeStops){
   assert(g.inReach(stop),'station can be interacted with after walking');
 }
 assert(!g.valid(480,210),'grinder area cannot be entered');
+for(let id=0;id<6;id++){
+  g.state.coffeeLevel=id;g.start();
+  assert.equal(g.state.queue.length,1,'coffee level has exactly one meal');
+  assert.equal(g.state.queue[0].id,id,'selected food is the only order');
+  g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};
+  g.returnFromPhase();
+  assert.equal(g.state.served,1);assert.equal(g.state.open,'end','one meal completes the level');
+}
+console.log('PASS: all six coffee levels finish after their selected single meal.');
 console.log('PASS: coffee spawn and all ten stations reachable through actual walking.');
 console.log('PASS: one-page office, fridge, toilet and coffee scenes; six foods; close-ups and E-to-advance.');
