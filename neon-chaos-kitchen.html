@@ -460,15 +460,16 @@ function toiletMap(t){
   rect(441,478,78,9,"#719daf");rect(451,473,58,8,"#fffdf2");
   /* 水流与底座绘制完成后铺设桥面，角色和工作台位于桥面之上。 */
   ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
-  for(const [color,width,offset] of [["#345f72",62,7],["#86b9bd",56,3],["#fff7df",50,0],["#afd5cc",42,0]]){
+  for(const [color,width,offset] of [["#345f72",44,5],["#86b9bd",38,2],["#fff7df",34,0],["#afd5cc",28,0]]){
     ctx.strokeStyle=color;ctx.lineWidth=width;
     for(const points of toiletRoutes){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();}
   }ctx.restore();
   for(const y of [180,340,420])for(let x=300;x<710;x+=36){rect(x,y-10,2,20,"#8ebcb6");rect(x+3,y-10,8,2,"#e5f1dc");}
   for(const [x,y,a] of [[260,230,"↓"],[260,370,"↓"],[720,230,"↑"],[720,370,"↑"],[470,180,"→"],[480,340,"→"],[480,420,"←"]])text(a,x,y,15,"#427b87");
-  rect(344,7,272,29,"#31536b");text("03 / 冲水马桶内部",480,22,15,"#fff9e7");
   for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
+  // 顶部使用连续的冷白瓷面衬底，遮住背景与水箱在信息栏间露出的碎块。
+  rect(0,0,W,84,"#e8f0e9");rect(0,81,W,3,"#719daf");
   rect(20,13,540,69,"#31536b");
   const queue=state.queue.length?state.queue:[{id:state.toiletLevel??0,left:180}];
   for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,"#fff9e8");rect(x+3,22,162,51,"#d9ece4");sprite(o.id,x+31,46,.65);text(dishes[o.id].name,x+100,41,12,"#31536b");text(timeText(o.left),x+100,62,13,o.left<15?"#c86655":"#39758a");}
@@ -820,7 +821,7 @@ function segmentDistance(x,y,a,b){
   return Math.hypot(x-(a[0]+dx*q),y-(a[1]+dy*q));
 }
 function valid(x,y){
-  if(state.scene==="toilet")return toiletRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=22))&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+  if(state.scene==="toilet")return toiletRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=14))&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   if(state.scene==="coffee"){
     const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
     return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
