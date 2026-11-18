@@ -96,6 +96,8 @@ const coffeeAll=[...coffeeBins,...coffeeStation];
 const activeStations=()=>state?.scene==="coffee"?[
   {x:154,y:284,w:98,h:60,type:"bin",dish:state.coffeeLevel,label:coffeeDishes[state.coffeeLevel].name},
   ...coffeeStation
+]:state?.scene==="toilet"?[
+  {...bins[2],dish:state.toiletLevel??0,label:toiletDishes[state.toiletLevel??0].name},...station
 ]:all;
 const keys=new Set();
 const menu=get("overlay");
@@ -463,8 +465,9 @@ function toiletMap(t){
   for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
   rect(20,13,540,69,"#31536b");
-  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
+  const queue=state.queue.length?state.queue:[{id:state.toiletLevel??0,left:180}];
   for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,"#fff9e8");rect(x+3,22,162,51,"#d9ece4");sprite(o.id,x+31,46,.65);text(dishes[o.id].name,x+100,41,12,"#31536b");text(timeText(o.left),x+100,62,13,o.left<15?"#c86655":"#39758a");}
+  text("第 "+((state.toiletLevel??0)+1)+" 关 · 单份订单",390,40,16,"#fff9e7");text("取料 → 切菜 → 翻炒 → 端盘",390,62,11,"#9fe0d8");
   rect(600,14,344,61,"#31536b");text("极限出餐",772,39,20,"#fff9e7");text("冲水马桶内部",772,61,11,"#9fe0d8");
   rect(20,475,169,53,"#31536b");text(String(state.score).padStart(3,"0"),103,501,29,"#fff9e7");
   rect(751,475,187,53,"#31536b");text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":"#fff9e7");
@@ -701,7 +704,7 @@ function toggleMenu(mode){
     get("menu-copy").innerHTML={
       menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:state.scene==="coffee"?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.coffeeLevel].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
+      end:["coffee","toilet"].includes(state.scene)?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.scene==="coffee"?state.coffeeLevel:state.toiletLevel??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
@@ -737,9 +740,10 @@ function start(){
   const match=officeTerms.findIndex(term=>term.test(event));
   const manual=get("dish-select").value;
   const first=/^[0-5]$/.test(manual)?Number(manual):match<0&&/生气|烦|压力大/.test(event)?0:match;
-  if(state.scene==="coffee"||state.scene==="fridge"){
+  if(["coffee","toilet","fridge"].includes(state.scene)){
     const id=first>=0?first:Math.floor(Math.random()*6);
     if(state.scene==="coffee"){state.coffeeLevel=id;state.queue=[{id,left:180}];toggleMenu(null);return;}
+    if(state.scene==="toilet"){state.toiletLevel=id;state.queue=[{id,left:180}];toggleMenu(null);return;}
     const frost=get("frost-experience");frost.src="frost-kitchen.html?level="+id+"&autostart=1";
     frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;return;
   }
