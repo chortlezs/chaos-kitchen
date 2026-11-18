@@ -129,6 +129,8 @@ const water = [];
 const sparks = [];
 let selected = 0, scene = 'map', overlay = 'menu', practice = false, step = 0;
 let clock = 100, phase, now = 0, last = 0, toast, delay = 0, result;
+let hardwareInput=null;
+function hardwareWokReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='wok'&&phase&&!delay;}
 let player = {...spawn}, target = null, evaluations = [];
 const is = (...names) => names.some(k=>keys.has(k));
 const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
@@ -629,7 +631,7 @@ function closeHeader(){
   for(const x of [418,862]){oval(x,35,21,21,'#1466cb');oval(x,35,17,17,'#1bd2ff');oval(x,35,14,14,'#147ad4');snow(x,35,11);}
   label('OFFICE ARCADE / FREEZER KITCHEN',640,36,15,C.aqua);
   label(titles[scene],640,78,35);
-  const controls={chop:'按住 E 上下切开冰壳 · 共 10 刀',wok:'按住 E 翻炒 · 提示出现时按 F 翻面',serve:'按住 E 前进 · A / D 压向相反方向'};
+  const controls={chop:'按住 E 上下切开冰壳 · 共 10 刀',wok:'平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面',serve:'按住 E 前进 · A / D 压向相反方向'};
   box(396,102,488,42,C.aqua,'#092766');label(controls[scene],640,124,21);
   box(1047,72,168,75,C.aqua,'#10265a');label('本步倒计时',1131,94,14,'#91eaff');
   label(timeText(phase.left),1131,124,27,phase.left<6?C.red:C.ice);
@@ -812,7 +814,7 @@ function burst(x,y,n=18){
     sparks.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-40,r:3+Math.random()*7,life:.25+Math.random()*.32,c:[C.ice,C.aqua,C.gold,C.pink][i%4]});
   }
 }
-function clearKeys(){keys.clear();}
+function clearKeys(){keys.clear();hardwareInput?.clearStir();}
 function button(text,callback,style=''){
   const b=document.createElement('button');b.type='button';b.textContent=text;b.className=style;b.addEventListener('click',callback);return b;
 }
@@ -972,7 +974,7 @@ function flip(){
   burst(653,371,28);say('翻面成功 '+p.flips+' / 2',C.gold,.68);
 }
 function cook(dt){
-  const p=phase,active=is('e');
+  const p=phase,active=is('e')||(hardwareWokReady()&&hardwareInput?.stirring());
   p.flipLift=Math.max(0,p.flipLift-dt*2.3);
   if(p.window>0){
     p.window-=dt;if(p.window<=0){fail('错过翻面窗口，冻品烧焦了');return;}
@@ -1073,11 +1075,13 @@ function frame(ms){
   if(!overlay||overlay==='menu')now+=dt;
   tick(dt);render();requestAnimationFrame(frame);
 }
-if(window.KitchenHardware)window.KitchenHardware.bind({
+if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   button:$('hardware-connect'),status:$('hardware-status'),
   onChop(){
     if(!document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='chop'&&phase&&!delay)cut('hardware');
-  }
+  },
+  onStir(){return !!hardwareWokReady();},
+  onFlip(){if(hardwareWokReady())flip();}
 });
 refreshMenu();requestAnimationFrame(frame);
 
