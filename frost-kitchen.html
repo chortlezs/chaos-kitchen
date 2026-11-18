@@ -131,6 +131,7 @@ let selected = 0, scene = 'map', overlay = 'menu', practice = false, step = 0;
 let clock = 100, phase, now = 0, last = 0, toast, delay = 0, result;
 let hardwareInput=null;
 function hardwareWokReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='wok'&&phase&&!delay;}
+function hardwareServeReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='serve'&&phase&&!delay;}
 let player = {...spawn}, target = null, evaluations = [];
 const is = (...names) => names.some(k=>keys.has(k));
 const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
@@ -814,7 +815,7 @@ function burst(x,y,n=18){
     sparks.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-40,r:3+Math.random()*7,life:.25+Math.random()*.32,c:[C.ice,C.aqua,C.gold,C.pink][i%4]});
   }
 }
-function clearKeys(){keys.clear();hardwareInput?.clearStir();}
+function clearKeys(){keys.clear();hardwareInput?.clearStir();hardwareInput?.clearPlate();}
 function button(text,callback,style=''){
   const b=document.createElement('button');b.type='button';b.textContent=text;b.className=style;b.addEventListener('click',callback);return b;
 }
@@ -993,7 +994,8 @@ function spawnJet(p){
 }
 function balance(dt){
   const p=phase,active=is('e')&&p.progress<1;
-  const direction=Number(is('d','arrowright'))-Number(is('a','arrowleft'));
+  const plate=hardwareServeReady()?hardwareInput?.plate():null;
+  const direction=plate?Math.max(-1,Math.min(1,plate.roll)):Number(is('d','arrowright'))-Number(is('a','arrowleft'));
   p.kick=Math.max(0,p.kick-dt*2.9);p.jet+=dt;
   if(p.jet>=1.55){p.jet=0;spawnJet(p);}
   p.spray+=dt;
@@ -1081,7 +1083,8 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
     if(!document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='chop'&&phase&&!delay)cut('hardware');
   },
   onStir(){return !!hardwareWokReady();},
-  onFlip(){if(hardwareWokReady())flip();}
+  onFlip(){if(hardwareWokReady())flip();},
+  onPlate(){return !!hardwareServeReady();}
 });
 refreshMenu();requestAnimationFrame(frame);
 

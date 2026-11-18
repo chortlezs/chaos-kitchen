@@ -1,3 +1,9 @@
-# Merge into the consuming ESP-Mosaico application's defaults/effective sdkconfig.
-# Preserve complete resource SHA-256 verification using software hashing.
+# Keep the OTA writer only in the retained factory Recovery image. The normal
+# application exposes the enter-Recovery RPC through iris_ota_support_start().
+# CONFIG_ESP_IRIS_OTA is not set
+CONFIG_ESP_IRIS_USB_PRODUCT="ESP-Iris Mosaico kitchen_link"
+CONFIG_ESP_IRIS_HEALTH_TIMEOUT_MS=45000
+
+# The pinned S31 SHA accelerator aborts while hashing flash-mapped GSP data.
+# Keep full SHA-256 resource verification through the software implementation.
 # CONFIG_MBEDTLS_HARDWARE_SHA is not set

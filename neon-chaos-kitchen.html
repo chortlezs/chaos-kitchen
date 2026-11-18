@@ -98,6 +98,7 @@ const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],serve
 let hardwareInput=null;
 function hardwareWokReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="wok"&&state.phase&&!state.phase.done;}
 function stirring(){return keys.has("e")||(hardwareWokReady()&&hardwareInput?.stirring());}
+function hardwareServeReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="serve"&&state.phase&&!state.phase.done;}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
@@ -683,6 +684,7 @@ function updateControls(){
 }
 function toggleMenu(mode){
   hardwareInput?.clearStir();
+  hardwareInput?.clearPlate();
   state.open=mode; keys.clear(); state.moving=false;
   menu.hidden=!mode;
   if(mode){
@@ -704,6 +706,7 @@ function toggleMenu(mode){
 }
 function reset(){
   hardwareInput?.clearStir();
+  hardwareInput?.clearPlate();
   const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
   Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
@@ -721,6 +724,7 @@ function start(){
 }
 function phase(mode,id){
   hardwareInput?.clearStir();
+  hardwareInput?.clearPlate();
   state.view=mode;state.target=null;keys.clear();state.fx=[];state.toast=null;
   state.phase={id,left:phaseLimits[mode],cuts:0,nextCut:now,hit:-10,progress:0,flips:0,flipWindow:0,checkpoint:0,burn:0,toss:-10,route:0,integrity:100,tilt:0,vel:0,stable:0,surge:0,nextSurge:1.1,elapsed:0,done:false};
   updateControls();
@@ -754,6 +758,7 @@ function returnFromPhase(){
 }
 function backToMap(){
   hardwareInput?.clearStir();
+  hardwareInput?.clearPlate();
   state.view="map";state.phase=null;keys.clear();state.fx=[];state.target=null;
   updateControls();
 }
@@ -866,7 +871,8 @@ function cook(dt){
 function balance(dt){
   const p=state.phase;
   p.elapsed+=dt;p.surge=Math.max(0,p.surge-dt);
-  const input=+(keys.has("d")||keys.has("arrowright"))-+(keys.has("a")||keys.has("arrowleft"));
+  const plate=hardwareServeReady()?hardwareInput?.plate():null;
+  const input=plate?clamp(plate.roll,-1,1):+(keys.has("d")||keys.has("arrowright"))-+(keys.has("a")||keys.has("arrowleft"));
   const shock=Math.sin(p.elapsed*3.25)*.92+Math.cos(p.elapsed*7)*.42+.23;
   if(p.elapsed>=p.nextSurge){
     p.vel+=(Math.sin(p.elapsed*2.61)>0?1:-1)*.92;p.surge=.27;p.nextSurge+=1.45+Math.random()*.48;
@@ -877,7 +883,7 @@ function balance(dt){
   p.tilt=clamp(p.tilt+p.vel*dt,-1,1);
   if(p.route<1&&keys.has("e"))p.route=Math.min(1,p.route+dt*(.198-Math.abs(p.tilt)*.048));
   if(Math.abs(p.tilt)>.54)p.integrity-=dt*(17+Math.abs(p.tilt)*12);
-  const centered=Math.abs(p.tilt)<.19&&!keys.has("e");
+  const centered=Math.abs(p.tilt)<.19&&!keys.has("e")&&(!plate||Math.abs(plate.roll)<.19);
   if(p.route>=1)p.stable=centered?p.stable+dt:0;
   if(p.integrity<=0)conclude(false,"食材洒落 · 重新取料");
   else if(p.stable>=1.2)conclude(true,p.integrity>=90?"EXCELLENT · 稳盘送达":"GOOD · 已出餐");
@@ -975,6 +981,7 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   },
   onStir(){return !!hardwareWokReady();},
   onFlip(){if(hardwareWokReady())flip();}
+  ,onPlate(){return !!hardwareServeReady();}
 });
 function frameLoop(ms){
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
