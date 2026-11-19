@@ -611,17 +611,17 @@ function toiletDrawServe(t){
   rect(260,488,440,10,"#214b65");rect(263,491,434*p.route,4,"#f2ca76");text("路程 "+Math.floor(p.route*100)+"%  ·  完整度 "+Math.ceil(p.integrity)+"%",784,148,14,"#fff9e7");
 }
 function verticalChop(t){
-  const age=t-state.phase.hit,impact=clamp(1-age/.24,0,1),x=455,y=205+impact*64;
-  ctx.save();ctx.translate(x,y);
+  const age=t-state.phase.hit,impact=clamp(1-age/.24,0,1),x=455,y=290+impact*40;
+  ctx.save();ctx.translate(x,y+30);ctx.rotate(Math.PI);
   rect(-13,-73,26,61,"#372e38");rect(-9,-69,18,52,state.scene==="coffee"?"#aa6338":"#d18c50");rect(-5,-63,5,33,"#f5cd87");
   rect(-21,-15,42,10,"#6b8190");
   poly([[-23,-5],[25,-5],[25,72],[12,95],[-23,95]],"#365267");
   poly([[-18,0],[20,0],[20,70],[8,88],[-18,88]],"#dcf4f2");rect(-15,4,8,78,"#ffffff");rect(12,5,5,62,"#8ebdc5");ctx.restore();
   if(age>=0&&age<.3){
     const f=1-age/.3;ctx.save();ctx.globalAlpha=f;
-    ellipse(x,354,25+age*210,9+age*55,"#ffe7a0");ellipse(x,350,18+age*160,5+age*28,"#ffffff");
-    for(let i=0;i<9;i++){const a=Math.PI+i*Math.PI/8,r=26+age*230;path([[x+Math.cos(a)*r,350+Math.sin(a)*r*.6],[x+Math.cos(a)*(r+22*f),350+Math.sin(a)*(r+22*f)*.6]],i%2?"#fff9d4":"#ffc76f",4);}
-    rect(x-5,282,10,74,"#ffffff");ctx.restore();
+    ellipse(x,286,25+age*210,9+age*55,"#ffe7a0");ellipse(x,282,18+age*160,5+age*28,"#ffffff");
+    for(let i=0;i<9;i++){const a=Math.PI+i*Math.PI/8,r=26+age*230;path([[x+Math.cos(a)*r,282+Math.sin(a)*r*.6],[x+Math.cos(a)*(r+22*f),282+Math.sin(a)*(r+22*f)*.6]],i%2?"#fff9d4":"#ffc76f",4);}
+    rect(x-5,215,10,74,"#ffffff");ctx.restore();
   }
 }
 function drawChop(t){
@@ -958,7 +958,7 @@ function cutOnce(source="manual"){
   const p=state.phase;
   if(p.done||(source!=="hardware"&&now<p.nextCut))return;
   p.nextCut=now+.29;p.hit=now;p.cuts++;
-  burst(455,350,now,p.cuts%3?"#ffe5a1":"#fff6da",p.cuts%3?34:60);
+  burst(455,282,now,p.cuts%3?"#ffe5a1":"#fff6da",p.cuts%3?34:60);
   if(p.cuts===10)conclude(true,p.left>8?"EXCELLENT · 零件齐全":"GOOD · 零件齐全");
 }
 function flip(){

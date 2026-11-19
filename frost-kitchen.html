@@ -675,7 +675,7 @@ function drawChop(){
     oval(x,y+33,58,10,'#61335980');drawDish(selected,x,y,scale,j);
     const tagY=y+(reveal===3?54:45);box(x-50,tagY,100,27,C.aqua,'#133268');label(dishes[selected][1][j],x,tagY+14,15);
   }
-  g.save();g.translate(607,274+phase.swing*85);
+  g.save();g.translate(607,420+phase.swing*60);g.rotate(Math.PI);
   rect(-17,-97,34,81,'#172953');rect(-12,-92,24,69,'#366bb4');rect(-7,-84,7,44,'#9defff');rect(-28,-20,56,13,'#a8d4ed');
   poly([[-31,-7],[33,-7],[33,96],[16,126],[-31,126]],'#183858');
   poly([[-24,0],[26,0],[26,92],[10,117],[-24,117]],'#dcf4ff');rect(-20,6,11,104,'#ffffff');rect(16,7,7,82,'#8ebddf');snow(1,40,13,'#76bbdf');
