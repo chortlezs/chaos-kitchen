@@ -266,7 +266,7 @@ function themedStationArt(o,t,theme){
   if(theme==="coffee"){
     ellipse(x+4,y+9,w*.53,h*.48,"#2b1a14");ellipse(x,y+3,w*.54,h*.5,"#6f452f");ellipse(x,y-2,w*.49,h*.43,"#d4aa73");ellipse(x,y-4,w*.43,h*.36,type==="bin"?"#593426":"#8c5d3b");
     if(type==="bin"){for(let j=0;j<5;j++)coffeeBean(x-24+j*12,y-8+(j%2)*9,5+j%2,j*.7);sprite(o.dish,x,y-8,.62);}
-    if(type==="chop"){rect(x-31,y-21,62,27,"#7a4b31");rect(x-27,y-18,54,21,"#d8b075");knife(x+24,y-8,.22,-.7);}
+    if(type==="chop"){window.KitchenCookware?.board(ctx,x,y-10,.13,"coffee");knife(x+24,y-8,.22,-.7);}
     if(type==="wok")pan(x-9,y-12,.2);
     if(type==="serve"){rect(x-43,y-19,86,25,"#5d3a28");text("↑ 交单",x,y-8,15,"#fff0cf");}
     if(type==="trash")text("↺",x,y-7,24,"#f1d1a0");
@@ -296,9 +296,7 @@ function stationArt(o,t){
       sprite(o.dish,x,y-17,.75);
     }
     if(type==="chop"){
-      rect(x-17,y-32,9,13,"#82a7aa");rect(x+10,y-32,9,13,"#82a7aa");
-      ellipse(x,y+2,47,30,"#6b969d");ellipse(x,y-3,47,30,"#fffbed");ellipse(x,y-5,38,23,"#e7c992");
-      path([[x-23,y-13],[x+14,y-13]],"#f9e8bd",2);knife(x+18,y-7,.24,-.7);
+      window.KitchenCookware?.board(ctx,x,y-5,.16,"toilet");knife(x+18,y-7,.24,-.7);
     }
     if(type==="wok"){
       ellipse(x,y+8,47,27,"#456f81");ellipse(x,y+2,47,27,"#fff6df");ellipse(x,y-1,37,20,"#de8a68");
@@ -328,7 +326,7 @@ function stationArt(o,t){
   rect(x-w/2+7,y+h/2-8,w-14,4,"#3f63fd");
   led(x-w/2+12,y+h/2-13,3);
   if(type==="bin"){rect(x-33,y-17,66,31,"#14164e");sprite(o.dish,x,y-1,.69);}
-  if(type==="chop"){frame(x-43,y-31,86,48,"#ffdcb3","#a96147",5);rect(x-36,y-26,72,34,"#e7965d");knife(x+11,y-9,.33,-.94);}
+  if(type==="chop"){window.KitchenCookware?.board(ctx,x,y-10,.15,state.scene);knife(x+11,y-9,.33,-.94);}
   if(type==="wok"){ellipse(x-6,y-6,42,26,c.pink);pan(x-10,y-12,.24);}
   if(type==="serve"){for(let i=-1;i<=1;i++)plate(x+i*36,y-8,.135);}
   if(type==="trash"){rect(x-27,y-17,54,30,"#111842");text("↺",x,y-1,24,c.green);}
@@ -533,19 +531,7 @@ function drawChallengeHeader(title,sub,t){
   if(!state.practice)text("营业 "+timeText(state.time),883,146,14,state.time<25?c.red:c.light);
 }
 function board(){
-  const outer=[[234,145],[731,145],[772,179],[803,360],[768,396],[200,396],[161,370],[186,186]];
-  const outerCol=state.scene==="fridge"?"#315a73":state.scene==="coffee"?"#4a3026":"#282066",topCol=state.scene==="fridge"?"#9edbea":state.scene==="coffee"?"#b9824e":"#7b66df",innerCol=state.scene==="fridge"?"#d9f3f7":state.scene==="coffee"?"#8b603d":"#6450ce";
-  poly(outer,outerCol);poly(outer.map(([x,y])=>[x,y-10]),topCol);
-  path([...outer.map(([x,y])=>[x,y-10]),[234,135]],"#cfa8ff",3);
-  const inner=[[240,153],[722,153],[748,186],[773,346],[756,368],[217,368],[194,348],[211,183]];
-  poly(inner,innerCol);path([...inner,inner[0]],topCol,5);
-  for(let i=0;i<7;i++){rect(218-i*3,177+i*28,520+i*7,3,"#9a70ef");rect(219-i*3,180+i*28,519+i*7,1,"#2b20a2");}
-  path([[223,189],[251,158],[311,158]],c.light,3,12);
-  path([[649,158],[713,158],[740,186],[746,202]],c.light,3,12);
-  path([[208,326],[205,345],[225,362],[281,362]],c.light,3,12);
-  path([[747,328],[757,346],[742,361],[679,361]],c.light,3,12);
-  for(const [x,y] of [[213,158],[747,157],[182,354],[779,355]])screw(x,y);
-  hazard(295,387,69);hazard(600,387,69);led(437,388,9);
+  window.KitchenCookware?.board(ctx,480,275,1.1,state.scene);
 }
 function toiletNearBase(title,subtitle){
   rect(0,0,W,H,"#31536b");for(let y=20;y<H;y+=32)for(let x=20;x<W;x+=32)rect(x,y,30,30,(x/32+y/32)%2?"#386b80":"#3d7186");
@@ -570,8 +556,7 @@ function toiletDrawChop(t){
   const p=state.phase,hit=Math.max(0,1-(t-p.hit)*5.5);
   toiletNearBase("01 / 马桶盖砧板 · 十刀备菜","按住 E 上下切 · 食材逐步变成像素碎块");
   ctx.save();ctx.translate(hit>0?Math.sin(t*95)*hit*3:0,hit*2);
-  rect(154,178,652,244,"#31536b");rect(147,170,652,244,"#fff9e7");rect(158,180,630,224,"#e8d9b3");
-  for(let j=0;j<7;j++)rect(170,194+j*29,607,3,"#d3bf97");
+  window.KitchenCookware?.board(ctx,480,290,1.1,"toilet");
   sprite(p.id,364,290,2.7);
   for(let j=0;j<p.cuts;j++)toiletChip(p.id,490+(j%5)*44,263+Math.floor(j/5)*48,.85);
   ctx.restore();
