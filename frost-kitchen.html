@@ -650,7 +650,7 @@ function board(){
   oval(1080,365,23,19,'#76395f');snow(1080,365,15,'#ffecf0');
 }
 function drawChop(){
-  board();const cut=phase.cuts;
+  g.save();g.translate(Math.sin(now*95)*phase.swing*4,phase.swing*3);board();g.restore();const cut=phase.cuts;
   for(let i=0;i<17;i++){
     const xx=221+rnd(i+182)*768, yy=342+rnd(i+192)*194;
     oval(xx,yy,7+rnd(i)*10,3+rnd(i+17)*3,'#78e3ff94');
@@ -675,14 +675,14 @@ function drawChop(){
     oval(x,y+33,58,10,'#61335980');drawDish(selected,x,y,scale,j);
     const tagY=y+(reveal===3?54:45);box(x-50,tagY,100,27,C.aqua,'#133268');label(dishes[selected][1][j],x,tagY+14,15);
   }
-  g.save();g.translate(945-phase.swing*60,375+phase.swing*38);
-  if(artReady('knife')){g.rotate(-phase.swing*.12);fitArt('knife',0,0,395,321);}
-  else {g.rotate(-.61+phase.swing*.24);
-  poly([[-29,-157],[46,-97],[43,40],[-22,41],[-42,-71]],'#102556');
-  poly([[-27,-149],[41,-93],[37,34],[-22,35],[-36,-70]],'#bdcbff');
-  poly([[-27,-149],[9,-86],[-3,34],[-22,35],[-36,-70]],'#fcfdff');line([[-27,-149],[41,-93],[37,34]],'#f6ffff',3);
-  snow(4,-22,20,'#f4ffff');rect(-19,36,42,21,'#d5e7ff');rect(-17,57,38,76,'#183b9f');rect(-12,61,6,64,C.aqua);rect(-17,124,38,9,'#adccff');}
+  g.save();g.translate(607,274+phase.swing*85);
+  rect(-17,-97,34,81,'#172953');rect(-12,-92,24,69,'#366bb4');rect(-7,-84,7,44,'#9defff');rect(-28,-20,56,13,'#a8d4ed');
+  poly([[-31,-7],[33,-7],[33,96],[16,126],[-31,126]],'#183858');
+  poly([[-24,0],[26,0],[26,92],[10,117],[-24,117]],'#dcf4ff');rect(-20,6,11,104,'#ffffff');rect(16,7,7,82,'#8ebddf');snow(1,40,13,'#76bbdf');
   g.restore();
+  if(phase.swing>0){const f=phase.swing;g.save();g.globalAlpha=f;oval(607,472,34+(1-f)*140,12+(1-f)*34,'#a6eeff');oval(607,468,24+(1-f)*100,7+(1-f)*22,'#ffffff');
+    for(let i=0;i<9;i++){const a=Math.PI+i*Math.PI/8,r=35+(1-f)*170;line([[607+Math.cos(a)*r,472+Math.sin(a)*r*.6],[607+Math.cos(a)*(r+30*f),472+Math.sin(a)*(r+30*f)*.6]],i%2?'#ffffff':'#9deaff',5);}
+    rect(602,370,10,100,'#ffffff');g.restore();}
   box(433,590,414,43,C.aqua,'#0a2662');label('切菜进度   '+cut+' / 10 刀',640,612,24);
   meter(385,648,510,22,cut/10,'#69dfff',10);
 }
@@ -965,7 +965,7 @@ function move(dt){
 function cut(source='manual'){
   if(delay||(source!=='hardware'&&phase.beat>0))return;
   phase.cuts++;phase.beat=.22;phase.swing=1;
-  burst(550+phase.cuts*7,379,[2,5,8].includes(phase.cuts)?28:12);
+  burst(607,472,[2,5,8].includes(phase.cuts)?64:36);
   if(phase.cuts===10)complete(phase.left>10?'EXCELLENT':'GOOD');
 }
 function flip(){

@@ -575,11 +575,13 @@ function toiletChip(id,x,y,s=1,cooked=false){
 function toiletDrawChop(t){
   const p=state.phase,hit=Math.max(0,1-(t-p.hit)*5.5);
   toiletNearBase("01 / 马桶盖砧板 · 十刀备菜","按住 E 上下切 · 食材逐步变成像素碎块");
+  ctx.save();ctx.translate(hit>0?Math.sin(t*95)*hit*3:0,hit*2);
   rect(154,178,652,244,"#31536b");rect(147,170,652,244,"#fff9e7");rect(158,180,630,224,"#e8d9b3");
   for(let j=0;j<7;j++)rect(170,194+j*29,607,3,"#d3bf97");
   sprite(p.id,364,290,2.7);
   for(let j=0;j<p.cuts;j++)toiletChip(p.id,490+(j%5)*44,263+Math.floor(j/5)*48,.85);
-  ctx.save();ctx.translate(691-hit*67,267+hit*28);ctx.rotate(-.3+hit*.4);rect(-12,-68,24,111,"#31536b");rect(-8,-65,16,74,"#f8f9ef");rect(-6,9,12,39,"#a4694c");rect(-2,16,4,22,"#f3c36f");ctx.restore();
+  ctx.restore();
+  verticalChop(t);
   text(dishes[p.id].name+" · "+p.cuts+" / 10",480,448,20,"#fff9e7");
   rect(230,479,500,15,"#214b65");rect(233,482,494*p.cuts/10,9,"#f2ca76");
 }
@@ -608,18 +610,31 @@ function toiletDrawServe(t){
   text(danger?"盘子倾斜，快修正！":p.route>=1?"稳住，准备交单":"盘子平稳",480,474,19,danger?"#ffad83":"#fff9e7");
   rect(260,488,440,10,"#214b65");rect(263,491,434*p.route,4,"#f2ca76");text("路程 "+Math.floor(p.route*100)+"%  ·  完整度 "+Math.ceil(p.integrity)+"%",784,148,14,"#fff9e7");
 }
+function verticalChop(t){
+  const age=t-state.phase.hit,impact=clamp(1-age/.24,0,1),x=455,y=205+impact*64;
+  ctx.save();ctx.translate(x,y);
+  rect(-13,-73,26,61,"#372e38");rect(-9,-69,18,52,state.scene==="coffee"?"#aa6338":"#d18c50");rect(-5,-63,5,33,"#f5cd87");
+  rect(-21,-15,42,10,"#6b8190");
+  poly([[-23,-5],[25,-5],[25,72],[12,95],[-23,95]],"#365267");
+  poly([[-18,0],[20,0],[20,70],[8,88],[-18,88]],"#dcf4f2");rect(-15,4,8,78,"#ffffff");rect(12,5,5,62,"#8ebdc5");ctx.restore();
+  if(age>=0&&age<.3){
+    const f=1-age/.3;ctx.save();ctx.globalAlpha=f;
+    ellipse(x,354,25+age*210,9+age*55,"#ffe7a0");ellipse(x,350,18+age*160,5+age*28,"#ffffff");
+    for(let i=0;i<9;i++){const a=Math.PI+i*Math.PI/8,r=26+age*230;path([[x+Math.cos(a)*r,350+Math.sin(a)*r*.6],[x+Math.cos(a)*(r+22*f),350+Math.sin(a)*(r+22*f)*.6]],i%2?"#fff9d4":"#ffc76f",4);}
+    rect(x-5,282,10,74,"#ffffff");ctx.restore();
+  }
+}
 function drawChop(t){
   if(state.scene==="toilet"){toiletDrawChop(t);return;}
   const p=state.phase,d=dishes[p.id],last=Math.max(0,1-(t-p.hit)*5.5);
   drawChallengeHeader("01 / 分解砧板","按住 E 上下切 · 逐步拆出零件",t);
-  board();
+  ctx.save();ctx.translate(last>0?Math.sin(t*95)*last*3:0,last*2);board();ctx.restore();
   if(p.cuts<3){for(let i=0;i<31;i++){const a=i*2.39,r=8+(i*27)%56,x=390+Math.cos(a)*r,y=255+Math.sin(a)*r*.65;rect(x+Math.sin(t*3+i)*5,y,18+(i%4)*4,12+(i%3)*3,["#aa8bff","#d19dff","#776af4","#e0b1ff"][i%4]);}}
   else {
     const count=p.cuts>=9?3:p.cuts>=6?2:1;
     for(let i=0;i<count;i++){const x=303+i*84,y=252-12*Math.sin(i*3+last*3);sprite(p.id,x,y,1.85,i);text(d.parts[i],x,y+50,14,c.white);}
   }
-  knife(619-last*120,242+last*34,1.14,-.39+last*.66);
-  if(last>.28){path([[516,194],[473,222],[447,251],[437,283]],"#ffddff",5,13);path([[527,212],[492,233],[467,269]],c.pink,3,9);}
+  verticalChop(t);
   frame(339,404,282,40,c.light,"#101355");text(d.name+"  /  "+p.cuts+" / 10",480,424,19);
   bar(237,459,486,18,p.cuts/10,c.light,10);
 }
@@ -943,7 +958,7 @@ function cutOnce(source="manual"){
   const p=state.phase;
   if(p.done||(source!=="hardware"&&now<p.nextCut))return;
   p.nextCut=now+.29;p.hit=now;p.cuts++;
-  burst(348+Math.random()*130,260,now,p.cuts%3?c.light:c.pink,p.cuts%3?12:28);
+  burst(455,350,now,p.cuts%3?"#ffe5a1":"#fff6da",p.cuts%3?34:60);
   if(p.cuts===10)conclude(true,p.left>8?"EXCELLENT · 零件齐全":"GOOD · 零件齐全");
 }
 function flip(){
