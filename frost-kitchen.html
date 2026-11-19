@@ -85,7 +85,7 @@ const links=[
 const walkways=links.map(([a,b])=>[nodes[a],nodes[b]]);
 const stageNames = ['取冻品','切开','翻炒','端盘'];
 const titles = {chop:'01 / 冻品分解 · 切菜',wok:'02 / 霜火烹饪 · 颠锅',serve:'03 / 端盘挑战 · 冰滑失衡'};
-const limits = {chop:16,wok:23,serve:24};
+const limits = {chop:16,wok:35,serve:24};
 const safeTilt = .46;
 const balanceTrack = {x:359,width:562,safeWidth:126,maxTilt:1.18};
 function balanceMarker(tilt){
@@ -947,20 +947,20 @@ function cut(source='manual'){
 }
 function flip(){
   const p=phase;if(delay)return;
-  if(p.window<=0){p.burn=clamp(p.burn+16,0,100);say('时机未到 · 焦糊 +16%',C.red,.65);return;}
+  if(p.window<=0){p.burn=clamp(p.burn+5,0,100);say('稍早了 · 等待翻面提示',C.red,.65);return;}
   p.flips++;p.gate++;p.window=0;p.flipLift=1;
-  burst(653,371,28);say('翻面成功 '+p.flips+' / 2',C.gold,.68);
+  burst(653,371,90);say('翻面成功 '+p.flips+' / 2',C.gold,1);
 }
 function cook(dt){
   const p=phase,active=is('e')||(hardwareWokReady()&&hardwareInput?.stirring());
   p.flipLift=Math.max(0,p.flipLift-dt*2.3);
   if(p.window>0){
-    p.window-=dt;if(p.window<=0){fail('错过翻面窗口，冻品烧焦了');return;}
+    p.window-=dt;if(p.window<=0){p.burn=clamp(p.burn+16,0,100);p.window=4.5;say('再试一次 · 向上颠锅',C.gold,1);}
   }else if(active){
-    p.progress=Math.min(1,p.progress+dt*.115);
-    if(p.gate<2&&p.progress>=[.34,.72][p.gate]){p.progress=[.34,.72][p.gate];p.window=2.8;}
+    p.progress=Math.min(1,p.progress+dt/6);
+    if(p.gate<2&&p.progress>=[.34,.72][p.gate]){p.progress=[.34,.72][p.gate];p.window=4.5;}
   }
-  p.burn=clamp(p.burn+dt*(active?-6:7),0,100);
+  p.burn=clamp(p.burn+dt*(active?-6:4),0,100);
   if(p.burn>=100){fail('焦糊风险达到 100%，冻品烧焦了');return;}
   if(p.progress>=1&&p.flips===2)complete(p.burn<27?'EXCELLENT':'GOOD');
 }

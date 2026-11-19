@@ -579,7 +579,7 @@ function toiletDrawWok(t){
 }
 function toiletDrawServe(t){
   const p=state.phase,travel=p.route*1050,step=keys.has("e")?Math.round(Math.sin(t*13)*4):0,danger=Math.abs(p.tilt)>.54;
-  toiletNearBase("03 / 水流栈道 · 平稳端盘",p.route>=1?"到出餐口了！松开 E，保持水平 1.2 秒":"按住 E 前进 · A / D 反向修正盘子");
+  toiletNearBase("03 / 水流栈道 · 平稳端盘",p.route>=1?"到出餐口了！将盘子回正即可交单":"按住 E 前进 · A / D 反向修正盘子");
   rect(63,167,834,252,"#4c9bb1");ctx.save();ctx.beginPath();ctx.rect(63,167,834,252);ctx.clip();
   for(let j=0;j<7;j++)for(let i=0;i<13;i++)rect(64+((i*83-travel*.7+1000)%1000),184+j*29,41,7,j%2?"#79c8ce":"#b5e8db");
   for(let i=0;i<9;i++){const x=64+((i*142-travel+1150)%1150);rect(x,174,8,44,"#f8ebba");rect(x,375,8,39,"#f8ebba");}
@@ -664,7 +664,7 @@ function glove(x,y,side){
 function drawServe(t){
   if(state.scene==="toilet"){toiletDrawServe(t);return;}
   const p=state.phase, d=dishes[p.id], danger=Math.abs(p.tilt)>.54;
-  drawChallengeHeader(state.scene==="coffee"?"03 / 端盘上菜 · 热流扰动":"03 / 端盘上菜 · 电流干扰",p.route>=1?"松开 E · 将指针留在中心 1.2 秒":"按住 E 前进 · A / D 向反方向修正",t);
+  drawChallengeHeader(state.scene==="coffee"?"03 / 端盘上菜 · 热流扰动":"03 / 端盘上菜 · 电流干扰",p.route>=1?"将指针回到中心即可交单":"按住 E 前进 · A / D 向反方向修正",t);
   const vanish=[480,160], shift=p.tilt*35;
   poly([[433,162],[526,162],[735,405],[222,405]],"#0b123f");
   for(let i=0;i<11;i++){const f=((i/11+(p.route*9)%1/11)%1)**1.5;const ww=45+206*f;path([[vanish[0]-ww+shift*f,166+237*f],[vanish[0]+ww+shift*f,166+237*f]],i%4===0?"#4539ad":"#212459",2);}
@@ -682,7 +682,7 @@ function drawServe(t){
   for(let i=0;i<10;i++)rect(280+i*20,400,18,20,c.light);
   rect(446,400,68,20,"#a9ffda");rect(479,397,2,26,c.white);
   const x=480+p.tilt*191;rect(x-5,394,10,32,c.ink);rect(x-3,397,6,26,c.white);
-  text(p.route>=1?"稳盘 "+Math.min(1.2,p.stable).toFixed(1)+" / 1.2 秒":danger?(state.scene==="coffee"?"热流失衡！反向修正":"过电失衡！反向修正"):(state.scene==="coffee"?"烘焙热流 · ":"持续电流 · ")+d.name,480,455,18,danger?c.pink:c.white);
+  text(p.route>=1?"盘子回正即可交单":danger?(state.scene==="coffee"?"热流失衡！反向修正":"过电失衡！反向修正"):(state.scene==="coffee"?"烘焙热流 · ":"持续电流 · ")+d.name,480,455,18,danger?c.pink:c.white);
   frame(258,472,444,33,c.light,"#101345",8);
   text("路程 "+Math.floor(p.route*100)+"%    /    完整度 "+Math.ceil(p.integrity)+"%",480,490,17);
 }
@@ -714,7 +714,7 @@ function visuals(t){
     frame(317,122,326,49,f.color,"#080d40",9);text(f.text,480,146,19,f.color);
   }
 }
-const phaseLimits={chop:14,wok:22,serve:17};
+const phaseLimits={chop:14,wok:35,serve:17};
 const bridges=[164,282,406];
 const toiletRoutes=[
   [[260,180],[450,180],[450,194],[610,194],[610,180],[720,180]],
@@ -947,20 +947,21 @@ function flip(){
   const p=state.phase;
   if(p.done)return;
   p.toss=now;
-  if(p.flipWindow>0){p.flips++;p.flipWindow=0;p.checkpoint++;burst(468,246,now,c.yellow,25);toast("PERFECT · 翻面命中",c.yellow,.72);}
-  else {p.burn+=13;toast("时机错误 · 焦糊上升",c.red,.72);}
+  if(p.flipWindow>0){p.flips++;p.flipWindow=0;p.checkpoint++;burst(468,246,now,c.yellow,80);toast("PERFECT · 翻面命中",c.yellow,1);}
+  else {p.burn+=5;toast("稍早了 · 等待翻面提示",c.red,.72);}
 }
 function cook(dt){
   const p=state.phase;
   if(p.flipWindow>0){
     p.flipWindow-=dt;
-    if(p.flipWindow<=0){p.checkpoint++;p.burn+=42;toast("错过翻面 · 焦糊上升",c.red,1.1);}
+    if(p.flipWindow<=0){p.burn+=16;p.flipWindow=4.5;toast("再试一次 · 向上颠锅",c.red,1.1);}
   }else if(stirring()){
-    p.progress+=dt/7.7;
+    p.progress+=dt/6;
     const limit=[.34,.72][p.checkpoint];
-    if(limit!==undefined&&p.progress>=limit){p.progress=limit;p.flipWindow=2.8;}
-  }else p.burn+=dt*13;
-  if(p.progress>=1&&p.flips<2)p.burn+=dt*25;
+    if(limit!==undefined&&p.progress>=limit){p.progress=limit;p.flipWindow=4.5;}
+    p.burn=Math.max(0,p.burn-dt*3);
+  }else p.burn+=dt*5;
+  if(p.progress>=1&&p.flips<2)p.burn+=dt*8;
   if(p.burn>=100)conclude(false,"焦糊报废 · 重新取料");
   else if(p.progress>=1&&p.flips===2)conclude(true,p.burn<15?"EXCELLENT · 工件重组完成":"GOOD · 工件重组完成");
 }
@@ -983,7 +984,7 @@ function balance(dt){
   const centered=Math.abs(p.tilt)<.19&&!keys.has("e")&&(!plate||Math.abs(plate.roll)<.19);
   if(p.route>=1)p.stable=centered?p.stable+dt:0;
   if(p.integrity<=0)conclude(false,"食材洒落 · 重新取料");
-  else if(p.stable>=1.2)conclude(true,p.integrity>=90?"EXCELLENT · 稳盘送达":"GOOD · 已出餐");
+  else if(p.route>=1&&Math.abs(p.tilt)<.3)conclude(true,p.integrity>=90?"EXCELLENT · 稳盘送达":"GOOD · 已出餐");
 }
 function advance(dt){
   if(state.open)return;
