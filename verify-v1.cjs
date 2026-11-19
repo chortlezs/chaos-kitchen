@@ -34,7 +34,12 @@ for(const mode of ['chop','wok','serve']){
 g.keys.add('e');g.balance(.1);assert(g.state.phase.route>0,'E advances the plate route');
 g.selectScene('neon');assert.equal(g.dishes().length,6,'scene cannot switch during active play');
 g.state.open='menu';g.selectScene('neon');assert.equal(g.dishes().length,6);
-assert.equal(g.activeStations().length,10);g.start();g.map(0);
+assert.equal(g.activeStations().length,5);g.start();g.map(0);
+for(let id=0;id<6;id++){
+  element('dish-select').value=String(id);g.start();assert.equal(g.state.queue.length,1);assert.equal(g.state.queue[0].id,id);
+  assert.equal(g.activeStations().filter(o=>o.type==='bin').length,1);assert.equal(g.activeStations()[0].dish,id);
+  g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};g.returnFromPhase();assert.equal(g.state.open,'end');assert.equal(g.state.served,1);
+}
 g.state.open='menu';g.selectScene('fridge');assert.equal(g.state.scene,'fridge');assert.equal(g.dishes().length,6);g.map(0);
 g.state.open='menu';g.selectScene('coffee');assert.equal(g.state.scene,'coffee');assert.equal(g.dishes().length,6);g.map(0);
 assert(g.valid(g.state.player.x,g.state.player.y),'coffee spawn is walkable');

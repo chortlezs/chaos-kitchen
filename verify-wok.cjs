@@ -40,13 +40,13 @@ circle(true);stream.onerror();step(.1);assert.equal(g.state.phase.progress,atExp
 circle(true);g.toggleMenu('pause');g.toggleMenu(null);step(.1);
 assert.equal(g.state.phase.progress,atExpiry,'pause clears held stirring');
 
-g.practice('wok');flip();assert.equal(g.state.phase.burn,13,'early toss keeps the original penalty');
+g.practice('wok');flip();assert.equal(g.state.phase.burn,5,'early toss has a forgiving penalty');
 assert.equal(g.state.phase.flips,0);
 g.state.phase.flipWindow=2.8;
 const single={type:'motion',action:'flip',motion:'vertical',t_ms:++seq*100,event_id:String(seq)};
 stream.send(single);stream.send(single);
 assert.equal(g.state.phase.flips,1,'one toss is one F, including duplicate delivery');
-assert.equal(g.state.phase.burn,13,'duplicate flip cannot cause an out-of-window penalty');
+assert.equal(g.state.phase.burn,5,'duplicate flip cannot cause an out-of-window penalty');
 assert(!g.hardware.stirring(),'toss releases horizontal stirring');
 
 g.practice('wok');
