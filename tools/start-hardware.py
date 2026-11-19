@@ -44,7 +44,7 @@ def main():
                        "--workspace", str(args.workspace), "--project",
                        str(args.project or args.workspace / "projects" / "kitchen_link")]
             child = subprocess.Popen(command)
-        url = f"http://127.0.0.1:{args.web_port}/neon-chaos-kitchen.html?scene=toilet&esp=1"
+        url = f"http://127.0.0.1:{args.web_port}/?esp=1"
         print(f"V1 hardware game: {url}", flush=True)
         print("Keep this window open. Ctrl+C stops this V1 server.", flush=True)
         if not args.no_browser:

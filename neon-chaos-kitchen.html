@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>极限出餐｜赛博后厨</title>
 <link rel="stylesheet" href="hardware-chop.css">
+<link rel="stylesheet" href="kitchen-opening.css">
 <style>
+@layer legacyGame {
 *{box-sizing:border-box}body{margin:0;background:#05051a;color:#edfcff;font-family:"Courier New","PingFang SC","Microsoft Yahei",monospace;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);position:relative;aspect-ratio:16/9;background:#050523;overflow:hidden;container-type:inline-size}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030520b8;backdrop-filter:blur(3px)}[hidden]{display:none!important}.panel{width:63%;text-align:center;background:#080b2cf5;border:3px solid #31e8ff;box-shadow:0 0 0 5px #2025b4,0 0 0 8px #0c1035,0 0 36px #126fff80,inset 0 0 30px #1834aa88;padding:4cqw 3cqw;position:relative}.panel:before,.panel:after{content:"";position:absolute;width:8%;height:6px;background:#f456ff;box-shadow:0 0 13px #ff00eb;top:-4px}.panel:before{left:6%}.panel:after{right:6%}.tag{letter-spacing:.26em;color:#51efff;font-weight:bold;font-size:1.45cqw}.panel h1{font-size:6cqw;letter-spacing:.09em;margin:.08em 0 .23em;text-shadow:3px 4px #3122ac,0 0 20px #24caff}.panel p{font:600 1.65cqw/1.7 system-ui;margin:.45em 0 1.1em;color:#cbdbff}.buttons{display:flex;justify-content:center;gap:.9cqw;flex-wrap:wrap}button,select,input{font:700 1.45cqw system-ui;color:#e9faff;background:#0e1d57;border:2px solid #438fd8;border-radius:0;padding:.6em .85em}button{cursor:pointer}button:hover,button:focus-visible{background:#293993;border-color:#ff7bf8;outline:none}button.primary{color:#060b35;background:#35eaff;border-color:#baffff;box-shadow:4px 4px #273bc6;padding:.7em 1.4em}button.primary:hover{background:#fff}.small{margin-top:1.4cqw}.controls{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:flex;gap:.65cqw}.controls button{padding:.4em .65em;touch-action:none}.pause{position:absolute;right:1.2%;top:1.5%;padding:.25em .55em;font-family:inherit}.hint{font-size:1.12cqw;color:#a8c7f4;margin-top:1.3cqw}select{max-width:40%}input{width:76%;margin-bottom:1.3cqw;border-color:#3657b2;background:#0a143d}input::placeholder{color:#9db6e0}
 .scene-choice{display:flex;align-items:center;justify-content:center;gap:.7cqw;margin:0 0 1.1cqw;font:700 1.35cqw system-ui}.scene-choice button{font-size:1.25cqw;padding:.35em .7em}.scene-choice button.selected{background:#35eaff;color:#071044;border-color:#fff}
 body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 0 0 5px #7ab6bd,0 0 0 8px #22485f,0 0 35px #a5e0dd77}body.toilet-scene .panel h1{text-shadow:3px 4px #22485f}body.toilet-scene .panel p,body.toilet-scene .hint{color:#e5f4e8}body.toilet-scene button.primary{background:#f6d77f;border-color:#fff9e7;color:#31536b}body.toilet-scene .scene-choice button.selected{background:#f6d77f;color:#31536b;border-color:#fff9e7}
@@ -16,15 +18,21 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
 @media (hover:hover) and (pointer:fine){body.coffee-scene .controls,body.toilet-scene .controls{display:none}}
 @media (pointer:coarse){body.coffee-scene .controls{bottom:12%;gap:.45cqw}body.coffee-scene .controls button{background:#4a281eef;border-color:#e7b674;color:#fff0cc}}
+}
 </style>
+<link rel="stylesheet" href="kitchen-viewport.css">
+<link rel="stylesheet" href="kitchen-theme.css">
 </head>
 <body>
 <main>
+<canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
+<div class="pocket-order"></div>
 <div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
-<canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
+<canvas id="game" width="960" height="540" tabindex="-1" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
 <button class="pause" id="pause" hidden aria-label="暂停">Ⅱ</button>
+<button class="game-exit" id="game-exit" type="button" aria-label="退出到封面">退出</button>
 <div class="controls" id="controls" hidden></div>
 <div class="overlay" id="overlay">
 <section class="panel">
@@ -34,7 +42,7 @@ body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffe
 <div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="fridge">冰箱内部</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" data-scene="coffee">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
 <div class="coffee-levels" id="coffee-levels" aria-label="选择咖啡豆仓关卡" hidden></div>
-<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业 ↗</button><button id="resume" hidden>继续游戏</button></div>
+<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业</button><button id="resume" hidden>继续游戏</button><button id="opening-return" type="button">返回抽卡</button></div>
 <div class="buttons small" id="practice">
 <select id="dish-select" aria-label="练习菜品"></select>
 <button data-mode="chop">切菜练习</button><button data-mode="wok">颠锅练习</button><button data-mode="serve">端盘练习</button>
@@ -43,8 +51,57 @@ body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffe
 </section>
 </div>
 </main>
+<section class="kitchen-opening" id="kitchen-opening" aria-label="极限出餐 开局" hidden>
+  <div class="opening-shell">
+    <header class="opening-top">
+      <button class="opening-manual" id="opening-home" type="button" aria-label="退出到封面" hidden>退出</button>
+      <button class="opening-manual" id="opening-manual" type="button">手动选关 ↗</button>
+    </header>
+    <div class="opening-cover" id="opening-cover">
+      <div class="cover-worlds" aria-hidden="true">
+        <span class="cover-world world-freezer"></span>
+        <span class="cover-world world-water"></span>
+        <span class="cover-world world-coffee"></span>
+        <span class="cover-world world-computer"></span>
+      </div>
+      <h1 class="cover-headline" aria-label="CHAOS KITCHEN"><span>CHAOS</span> <span>KITCHEN</span></h1>
+      <div class="cover-hat" id="cover-hat"><img src="assets/cover-toque.webp" alt="橙色帽带的白色大厨师帽"></div>
+      <button class="opening-primary" id="opening-play" type="button">开始游戏</button>
+    </div>
+    <div class="opening-draw" id="opening-draw" hidden>
+      <div class="chef-chat">
+        <div class="chef-portrait" role="img" aria-label="小厨师"></div>
+        <div class="chef-line">
+          <h2 id="opening-draw-title">小厨师</h2>
+          <p id="chef-question" tabindex="-1" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="draw-picks">
+      <div class="chef-answers" id="chef-answers" aria-label="选择回答"></div>
+      <div class="opening-decks" hidden>
+        <button class="opening-card" id="opening-scene" type="button">
+          <span class="opening-card-label">场景卡</span>
+          <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+          <span class="opening-card-name">抽场景</span>
+        </button>
+        <button class="opening-card" id="opening-dish" type="button">
+          <span class="opening-card-label">菜品卡</span>
+          <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+          <span class="opening-card-name">抽菜品</span>
+        </button>
+      </div>
+      <p class="opening-sr" id="opening-result" role="status" aria-live="polite"></p>
+      <button class="opening-primary opening-cook" id="opening-cook" type="button" hidden disabled>
+        进入厨房 <span class="opening-arrow" aria-hidden="true">→</span>
+      </button>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="kitchen-viewport.js"></script>
 <script src="hardware-chop.js"></script>
 <script src="kitchen-cookware.js"></script>
+<script src="kitchen-opening.js"></script>
 <script>
 (() => {
 "use strict";
@@ -71,11 +128,12 @@ const toiletDishes = [
   {name:"堵塞失控空调",ingredient:"空调",parts:["面板","滤网","导风叶"],tone:"#68a9c2"}
 ];
 const fridgeDishes = [
-  {name:"冰脆咔哒订书机",parts:["冰封压柄","霜冻钉槽","冷藏底座"],tone:"#82c7de"},{name:"冻僵催单老板",parts:["冰壳假发","冻红脑袋","冷气大嘴"],tone:"#b3d9e7"},{name:"冰封积压文件夹",parts:["结霜封皮","冻住纸张","冰晶夹扣"],tone:"#90bbd8"},{name:"冻结卡纸打印机",parts:["冰盖","冻墨盒","霜纸托"],tone:"#9faed6"},{name:"霜冻弹窗键盘",parts:["冰键帽","冷轴体","冻外壳"],tone:"#77c7cb"},{name:"极寒失控空调",parts:["结霜面板","冰滤网","冷风叶"],tone:"#75b8d2"}
+  {name:"冰冻订书机",parts:["冰封压柄","霜冻钉槽","冷藏底座"],tone:"#82c7de"},{name:"冰冻老板",parts:["冰壳假发","冻红脑袋","冷气大嘴"],tone:"#b3d9e7"},{name:"冰冻文件夹",parts:["结霜封皮","冻住纸张","冰晶夹扣"],tone:"#90bbd8"},{name:"冰冻打印机",parts:["冰盖","冻墨盒","霜纸托"],tone:"#9faed6"},{name:"冰冻键盘",parts:["冰键帽","冷轴体","冻外壳"],tone:"#77c7cb"},{name:"冰冻空调",parts:["结霜面板","冰滤网","冷风叶"],tone:"#75b8d2"}
 ];
 const coffeeDishes = [
   {name:"咖啡咔哒订书机",parts:["烘焙压柄","咖啡钉槽","豆香底座"],tone:"#c66d62"},{name:"浓缩催单老板",parts:["油脂假发","浓缩脑袋","苦味大嘴"],tone:"#d08b5c"},{name:"豆渣积压文件夹",parts:["咖啡封皮","豆渣纸张","烘焙夹扣"],tone:"#d6a54b"},{name:"卡豆报错打印机",parts:["豆仓机盖","浓缩墨盒","滤纸托"],tone:"#8d789f"},{name:"爆豆弹窗键盘",parts:["烘焙键帽","咖啡轴体","豆壳外壳"],tone:"#638d79"},{name:"蒸汽失控空调",parts:["蒸汽面板","豆粉滤网","热风叶"],tone:"#6e96a0"}
 ];
+const sceneDishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes};
 let dishes=officeDishes;
 const bins=dishes.map((d,i)=>({x:155,y:148+i*55,w:96,h:48,type:"bin",dish:i,label:d.name}));
 const station=[
@@ -353,37 +411,49 @@ function map(t){
   trace([[856,317],[831,343],[622,343],[600,365],[600,439],[579,460]],c.pink,t,50);
   for(const o of all)stationArt(o,t);
   chef(state.player.x,state.player.y,t);
-  frame(24,16,539,75,c.light,"#0b1140",9);
-  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:4,left:142}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=32+i*174;frame(x,22,168,61,i? "#617fd6":c.light,"#111b61",7);sprite(o.id,x+31,49,.58);text(dishes[o.id].name,x+98,43,15);text(timeText(o.left),x+98,65,13,o.left<15?c.red:c.light);}
-  frame(585,18,294,56,c.pink,"#151044");
-  text("极限出餐  /  电路后厨",732,39,22);
-  text("OFFICE ARCADE",732,60,11,c.light);
-  frame(22,475,169,53,c.light,"#0c144a",10);bolt(44,500,12,c.yellow);
-  text(String(state.score).padStart(3,"0"),110,500,29,c.white);
-  frame(751,475,187,53,state.time<25?c.pink:c.light,"#0c144a",10);
-  text(timeText(state.time),845,491,25,state.time<25?c.red:c.white);
-  bar(772,507,144,8,state.time/180,state.time<25?c.pink:c.yellow,18);
-  frame(203,481,540,41,c.pink,"#0d1241",8);
-  const current=state.queue[0];
-  text(state.open==="menu"?"取料  →  切菜  →  颠锅  →  端盘":current?instructions(): "订单结算",473,501,16);
+  drawOrderHud();
   if(state.target){ellipse(state.target.x,state.target.y,7,3,c.light);}
 }
-function themedHud(theme){
-  const ice=theme==="fridge",dark=ice?"#294e68":"#3f281e",paper=ice?"#ecfbff":"#f2dfbf",soft=ice?"#c6edf4":"#d8b983",accent=ice?"#65bfd6":"#b97943";
-  rect(20,13,540,69,dark);const queue=state.queue.length?state.queue:state.scene==="coffee"?[{id:state.coffeeLevel,left:180}]:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,paper);rect(x+3,22,162,51,soft);sprite(o.id,x+31,46,.6);text(dishes[o.id].name,x+100,41,11,dark);text(timeText(o.left),x+100,62,13,o.left<15?"#c55b55":accent);}
-  if(!ice){text("第 "+(state.coffeeLevel+1)+" 关 · 单份订单",390,40,16,paper);text("取料 → 切菜 → 翻炒 → 端盘",390,62,11,soft);}
-  rect(600,14,344,61,dark);text("极限出餐",772,39,20,paper);text(ice?"冰箱内部":"咖啡机豆仓内部",772,61,11,soft);
-  rect(20,475,169,53,dark);text(String(state.score).padStart(3,"0"),103,501,29,paper);rect(751,475,187,53,dark);text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":paper);
-  rect(203,481,540,41,dark);text(state.open==="menu"?"取料 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,paper);
+function ticket(x,y,w,h){
+  rect(x,y,w,h,"#452115");
+  rect(x+2,y+2,w-4,h-4,"#fff7e8");
+  rect(x+2,y+2,w-4,3,"#f85e23");
+}
+function drawOrderHud(){
+  const ink="#452115", warm="#983916", urgent="#b0331e";
+  const single=state.scene==="coffee"||state.scene==="toilet"||state.orderDishId!=null;
+  const level=state.orderDishId??(state.scene==="coffee"?state.coffeeLevel:state.toiletLevel)??0;
+  const queue=state.queue.length?state.queue:single?[{id:level,left:180}]:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
+  ticket(20,13,540,69);
+  queue.forEach((order,i)=>{
+    const x=28+i*174;
+    sprite(order.id,x+31,46,.6);
+    text(dishes[order.id].name,x+100,40,12,ink);
+    text(timeText(order.left),x+100,62,13,order.left<15?urgent:warm);
+  });
+  if(single){
+    text("第 "+(level+1)+" 关 · 单份订单",391,39,16,ink);
+    text("取料 → 切菜 → 翻炒 → 端盘",391,62,12,warm);
+  }
+  const names={neon:"赛博办公室",coffee:"咖啡机豆仓",toilet:"马桶水箱",fridge:"冰封后厨"};
+  ticket(600,14,294,61);
+  text(names[state.scene],747,37,20,ink);
+  text("CHAOS KITCHEN",747,59,12,warm);
+  ticket(20,475,169,53);
+  text(String(state.score).padStart(3,"0"),103,502,29,ink);
+  ticket(751,475,187,53);
+  text(timeText(state.time),845,495,25,state.time<25?urgent:ink);
+  rect(772,515,144,4,"#edd6bc");
+  rect(772,515,144*state.time/180,4,"#f85e23");
+  ticket(203,481,540,41);
+  text(state.open==="menu"?"取料 → 切菜 → 翻炒 → 端盘":state.queue.length?instructions():"订单结算",473,502,15,ink);
 }
 function fridgeMap(t){
   rect(0,0,W,H,"#d9f1f5");for(let y=0;y<H;y+=28)for(let x=0;x<W;x+=28)rect(x,y,27,27,(x/28+y/28)%2?"#d4eef4":"#effbfc");
   rect(76,83,808,390,"#315a73");rect(86,93,788,370,"#eaf9fb");rect(98,105,764,346,"#b9e4ed");
   for(const y of [176,300,420]){rect(101,y,758,12,"#6eafc2");rect(105,y,750,5,"#efffff");}
   for(let i=0;i<12;i++){const x=122+(i*67)%720,y=122+(i%3)*118;poly([[x,y],[x+11,y+5],[x+7,y+17],[x-6,y+14],[x-10,y+4]],i%2?"#eaffff":"#91d4e5");}
-  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("fridge");rect(344,86,272,29,"#315a73");text("02 / 冰箱内部",480,101,15,"#eaffff");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#eaffff");
+  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);drawOrderHud();rect(344,86,272,29,"#315a73");text("02 / 冰箱内部",480,101,15,"#eaffff");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#eaffff");
 }
 function coffeeBean(x,y,s,a){
   ctx.save();ctx.translate(x,y);ctx.rotate(a);
@@ -454,7 +524,7 @@ function coffeeMap(t){
   for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);
   // 前沿在道路之后绘制，明确外壳包住内部平台的层级。
   ctx.save();ctx.strokeStyle="#ffd197";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,280,438,284,0,.15,Math.PI-.15);ctx.stroke();ctx.restore();
-  themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
+  drawOrderHud();rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
 }
 function toiletMap(t){
   rect(0,0,W,H,"#31536b");
@@ -489,14 +559,7 @@ function toiletMap(t){
   chef(state.player.x,state.player.y,t);
   // 顶部使用连续的冷白瓷面衬底，遮住背景与水箱在信息栏间露出的碎块。
   rect(0,0,W,84,"#e8f0e9");rect(0,81,W,3,"#719daf");
-  rect(20,13,540,69,"#31536b");
-  const queue=state.queue.length?state.queue:[{id:state.toiletLevel??0,left:180}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,"#fff9e8");rect(x+3,22,162,51,"#d9ece4");sprite(o.id,x+31,46,.65);text(dishes[o.id].name,x+100,41,12,"#31536b");text(timeText(o.left),x+100,62,13,o.left<15?"#c86655":"#39758a");}
-  text("第 "+((state.toiletLevel??0)+1)+" 关 · 单份订单",390,40,16,"#fff9e7");text("取料 → 切菜 → 翻炒 → 端盘",390,62,11,"#9fe0d8");
-  rect(600,14,344,61,"#31536b");text("极限出餐",772,39,20,"#fff9e7");text("冲水马桶内部",772,61,11,"#9fe0d8");
-  rect(20,475,169,53,"#31536b");text(String(state.score).padStart(3,"0"),103,501,29,"#fff9e7");
-  rect(751,475,187,53,"#31536b");text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":"#fff9e7");
-  rect(203,481,540,41,"#31536b");text(state.open==="menu"?"取菜 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,"#fff9e7");
+  drawOrderHud();
   if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f3d77c");
 }
 function instructions(){
@@ -520,17 +583,16 @@ function knife(x,y,s=1,angle=0){
 function drawChallengeHeader(title,sub,t){
   if(state.scene==="fridge"){rect(0,0,W,H,"#d9f2f6");for(let i=0;i<22;i++)rect((i*83)%W,(i*47)%H,5,13,"#efffff");}
   if(state.scene==="coffee"){rect(0,0,W,H,"#2d1b16");for(let i=0;i<20;i++)coffeeBean((i*91)%W,(i*59)%H,9+(i%3)*3,i*.5);}
-  const themed=state.scene==="fridge"?"#315a73":state.scene==="coffee"?"#4a3026":"#101047",accent=state.scene==="fridge"?"#8ed8ea":state.scene==="coffee"?"#c18a55":c.light;
-  frame(184,19,592,99,accent,themed,23);
-  frame(337,11,286,22,accent,themed,7);
-  text({fridge:"FROZEN SHELF / 冰箱后厨",coffee:"BEAN HOPPER / 豆仓后厨"}[state.scene]||"OFFICE ARCADE / 微型后厨",480,22,12,accent);
-  bolt(226,61,19,c.pink);bolt(734,61,19,c.pink);
-  text(title,480,60,29);
-  frame(263,83,433,34,c.pink,"#170f48",7);
-  text(sub,479,99,15,state.phase.left<5?c.red:"#ffb7f8");
-  frame(29,28,106,51,c.light,"#101443",7);
-  text("阶段剩余",81,41,12,c.light);text(timeText(state.phase.left),81,61,22,state.phase.left<5?c.red:c.white);
-  if(!state.practice)text("营业 "+timeText(state.time),883,146,14,state.time<25?c.red:c.light);
+  ticket(184,19,592,99);
+  ticket(337,11,286,22);
+  text("CHAOS KITCHEN",480,22,12,"#983916");
+  text(title,480,60,29,"#452115");
+  ticket(263,83,433,34);
+  text(sub,479,99,15,state.phase.left<5?"#b0331e":"#452115");
+  ticket(29,28,106,51);
+  text("阶段剩余",81,41,12,"#983916");
+  text(timeText(state.phase.left),81,61,22,state.phase.left<5?"#b0331e":"#452115");
+  if(!state.practice){ticket(824,131,117,30);text("营业 "+timeText(state.time),883,146,14,"#452115");}
 }
 function board(){
   const outer=[[234,145],[731,145],[772,179],[803,360],[768,396],[200,396],[161,370],[186,186]];
@@ -772,18 +834,19 @@ function toggleMenu(mode){
     get("menu-copy").innerHTML={
       menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:["coffee","toilet"].includes(state.scene)?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.scene==="coffee"?state.coffeeLevel:state.toiletLevel??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
+      end:state.orderDishId!==null?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.orderDishId].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
+    get("opening-return").hidden=mode==="pause"||!window.KitchenOpening;
     get("office-event").hidden=mode==="pause";
     get("scene-choice").hidden=mode==="pause";
-    get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
+    get("start").textContent=mode==="menu"?"开始营业":"重新营业";
     get("practice").hidden=mode==="pause";
     get("coffee-levels").hidden=true;
     if(state.scene==="coffee"){
       if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒";
-      get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
+      get("start").textContent=mode==="menu"?"开始营业":"重新营业";
     }
   }
   updateControls();
@@ -801,23 +864,32 @@ function reset(){
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   const spawn=state.scene==="coffee"?{x:228,y:444}:state.scene==="toilet"?{x:260,y:420}:{x:285,y:401};
-  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
+  Object.assign(state,{view:"map",time:180,score:0,queue:[],orderDishId:null,served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
 }
-function start(){
+function start(singleMeal=state.orderDishId!==null){
   reset();
   const event=get("office-event").value.trim();
   const officeTerms=[/订书机|装订|卡钉/,/老板|领导|上司|开会|催|被骂/,/文件夹|文件|文档|表格|归档/,/打印机|打印|复印|卡纸/,/键盘|打字|码字|敲键|开心/,/空调|冷气|太冷|太热|冻/,];
   const match=officeTerms.findIndex(term=>term.test(event));
   const manual=get("dish-select").value;
   const first=/^[0-5]$/.test(manual)?Number(manual):match<0&&/生气|烦|压力大/.test(event)?0:match;
-  if(["coffee","toilet","fridge"].includes(state.scene)){
-    const id=first>=0?first:Math.floor(Math.random()*6);
-    if(state.scene==="coffee"){state.coffeeLevel=id;state.queue=[{id,left:180}];toggleMenu(null);return;}
-    if(state.scene==="toilet"){state.toiletLevel=id;state.queue=[{id,left:180}];toggleMenu(null);return;}
-    const connectEsp=hardwareInput?.active||new URLSearchParams(window.location.search).get("esp")==="1";
-    hardwareInput?.disconnect();get("hardware-controls").hidden=true;
-    const frost=get("frost-experience");frost.src="frost-kitchen.html?level="+id+"&autostart=1"+(connectEsp?"&esp=1":"");
-    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;return;
+  if(singleMeal||state.scene!=="neon"){
+    const id=first>=0?first:Math.floor(Math.random()*dishes.length);
+    state.orderDishId=id;
+    if(state.scene==="fridge"){
+      const connectEsp=hardwareInput?.active||new URLSearchParams(window.location.search).get("esp")==="1";
+      reconnectHardware=Boolean(hardwareInput?.active);
+      hardwareInput?.disconnect();get("hardware-controls").hidden=true;
+      get("frost-back").textContent=drawnRound?"← 返回抽卡":"← 返回场景选择";
+      const frost=get("frost-experience");frost.src="frost-kitchen.html?level="+id+"&autostart=1"+(connectEsp?"&esp=1":"");
+      frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;
+      return;
+    }
+    if(state.scene==="coffee")state.coffeeLevel=id;
+    if(state.scene==="toilet")state.toiletLevel=id;
+    state.queue=[{id,left:180}];
+    toggleMenu(null);
+    return;
   }
   const order=dishes.map((_,i)=>i);
   for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
@@ -1049,17 +1121,17 @@ canvas.addEventListener("pointerdown",e=>{
 function sceneQuery(scene){
   const query=new URLSearchParams(window.location.search);query.set("scene",scene);return "?"+query;
 }
-function selectScene(scene){
+function selectScene(scene,{updateUrl=true}={}){
   if(!state.open||state.open==="pause")return;
   get("hardware-controls").hidden=false;
   get("frost-experience").hidden=true;get("frost-back").hidden=true;canvas.hidden=false;menu.hidden=false;
-  state.scene=["neon","fridge","toilet","coffee"].includes(scene)?scene:"neon";
-  dishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes}[state.scene];
+  state.scene=Object.hasOwn(sceneDishes,scene)?scene:"neon";
+  dishes=sceneDishes[state.scene];
   document.body.classList.toggle("toilet-scene",state.scene==="toilet");
   document.body.classList.toggle("fridge-scene",state.scene==="fridge");document.body.classList.toggle("coffee-scene",state.scene==="coffee");
   document.querySelector(".tag").textContent={neon:"⚡ OFFICE ARCADE / NEON KITCHEN",fridge:"FROZEN SHELF / ICE KITCHEN",toilet:"PORCELAIN BOWL / PIXEL KITCHEN",coffee:"BEAN HOPPER / MICRO KITCHEN"}[state.scene];
   document.title="极限出餐｜"+{neon:"赛博办公室",fridge:"冰箱内部",toilet:"冲水马桶内部",coffee:"咖啡机豆仓内部"}[state.scene];
-  if(window.history?.replaceState)window.history.replaceState(null,"",sceneQuery(state.scene));
+  if(updateUrl&&window.history?.replaceState)window.history.replaceState(null,"",sceneQuery(state.scene));
   for(const button of document.querySelectorAll("[data-scene]"))button.classList.toggle("selected",button.dataset.scene===state.scene);
   get("dish-select").replaceChildren();
   const automatic=document.createElement("option");automatic.value="auto";automatic.textContent="根据心情匹配 / 随机";get("dish-select").append(automatic);
@@ -1068,14 +1140,52 @@ function selectScene(scene){
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
   reset();toggleMenu("menu");
 }
-get("frost-back").onclick=()=>{get("frost-experience").src="about:blank";state.open="menu";selectScene("neon");};
-get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
+let drawnRound=false,reconnectHardware=false;
+get("frost-back").onclick=()=>{
+  get("frost-experience").src="about:blank";state.open="menu";
+  selectScene(drawnRound?"fridge":"neon",{updateUrl:!drawnRound});
+  if(reconnectHardware)hardwareInput?.connect();
+  reconnectHardware=false;
+  if(drawnRound)opening?.show("draw");
+  drawnRound=false;
+};
+get("start").onclick=()=>start();get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
 get("dish-select").onchange=()=>{const value=get("dish-select").value;if(state.scene==="coffee"&&/^[0-5]$/.test(value))state.coffeeLevel=Number(value);};
-for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
+for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>{drawnRound=false;selectScene(button.dataset.scene);};
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
 const requestedScene=new URLSearchParams(window.location.search).get("scene");
-selectScene(["neon","fridge","toilet","coffee"].includes(requestedScene)?requestedScene:"toilet");
+const hasRequestedScene=Object.hasOwn(sceneDishes,requestedScene);
+selectScene(hasRequestedScene?requestedScene:"toilet",{updateUrl:false});
+const opening=window.KitchenOpening?.bind({
+  game:document.querySelector("main"),
+  dishes:sceneDishes,
+  openManual(){
+    drawnRound=false;
+    state.open="menu";
+    selectScene(state.scene,{updateUrl:false});
+  },
+  launch(scene,dish){
+    state.open="menu";
+    drawnRound=true;
+    selectScene(scene,{updateUrl:false});
+    get("dish-select").value=String(dish);
+    start(true);
+    if(scene!=="fridge")canvas.focus({preventScroll:true});
+  }
+});
+get("opening-return").onclick=()=>opening?.show("draw");
+get("game-exit").onclick=()=>{
+  const frost=get("frost-experience");
+  if(!frost.hidden)frost.src="about:blank";
+  state.open="menu";
+  drawnRound=false;
+  selectScene(state.scene,{updateUrl:false});
+  if(reconnectHardware)hardwareInput?.connect();
+  reconnectHardware=false;
+  opening.show("cover");
+};
+if(!hasRequestedScene)opening?.show("cover");
 if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   button:get("hardware-connect"),status:get("hardware-status"),
   onChop(){
@@ -1085,13 +1195,21 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   onFlip(){if(hardwareWokReady())flip();}
   ,onPlate(){return !!hardwareServeReady();}
 });
+const updateViewport=window.KitchenViewport?.bind(canvas,()=>{
+  const id=state.phase?.id??state.queue[0]?.id;
+  if(id==null)return "";
+  if(state.view==="map"&&state.queue.length)return instructions();
+  return dishes[id].name+" · "+({chop:"切菜",wok:"翻炒",serve:"端盘"})[state.view];
+});
 function frameLoop(ms){
+  if(canvas.parentElement?.inert){requestAnimationFrame(frameLoop);return;}
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
   advance(dt);
   if(state.view==="map")map(now);
   else {circuitry(now,true);trim(now);({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);}
   visuals(now);
+  updateViewport?.(ms);
   requestAnimationFrame(frameLoop);
 }
 requestAnimationFrame(frameLoop);

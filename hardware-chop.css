@@ -1,3 +1,13 @@
-.hardware-controls{position:absolute;left:1%;bottom:1%;z-index:22;display:flex;align-items:center;gap:.5em;max-width:47%;padding:.4em .6em;background:#071530ed;border:1px solid #78d9ed;color:#e9faff;font:600 clamp(10px,1.05cqw,14px)/1.4 system-ui;border-radius:5px}
-.hardware-controls button{flex:none;font:inherit;padding:.35em .5em;background:#123768;border:1px solid #78d9ed;color:#e9faff;cursor:pointer;border-radius:3px}
-.hardware-controls button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.hardware-controls {
+  position: absolute;
+  left: 1%;
+  bottom: 1%;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  max-width: 47%;
+  padding: .4em .6em;
+  font: 600 clamp(11px, 1.05cqw, 14px)/1.4 system-ui;
+}
+.hardware-controls button { flex: none; font: inherit; padding: .35em .6em; }

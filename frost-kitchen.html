@@ -6,6 +6,7 @@
 <title>冰箱 RPG · 冰封后厨</title>
 <link rel="stylesheet" href="hardware-chop.css">
 <style>
+@layer legacyGame {
 *{box-sizing:border-box}body{margin:0;background:#020b26;color:#f4fbff;font:700 16px system-ui,sans-serif;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);aspect-ratio:16/9;position:relative;overflow:hidden;container-type:inline-size;background:#05154b}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}button{font:inherit;cursor:pointer;color:inherit;background:#112762;border:1px solid #78e7ff;border-radius:7px;touch-action:none}button:hover,button:focus-visible{background:#2357a0;outline:2px solid #ddfcff}button.primary{background:#99efff;color:#061840;border:2px solid #e8ffff;box-shadow:0 4px #1871b4,0 0 22px #5ce8ff80}button.primary:hover{background:#defaff}button:disabled{opacity:.5;cursor:default}[hidden]{display:none!important}.screen{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,#020d34e3 14%,#081a4a45 76%);padding:4cqw}.panel{width:min(72cqw,960px);padding:2.3cqw 3cqw;background:linear-gradient(155deg,#122c65f5,#07163ff7 62%);border:2px solid #89eaff;border-radius:15px;box-shadow:0 0 0 5px #18368bb3,0 0 36px #3adaff81,inset 0 0 24px #238bde50;text-align:center}.kicker{letter-spacing:.2em;color:#80e9ff;font-size:1.13cqw}h1{font-size:6cqw;line-height:1;margin:.16em 0 .18em;letter-spacing:.05em;text-shadow:0 4px #2d61bb,0 0 20px #31bdffb0}p{font-size:1.5cqw;color:#c9e9ff;margin:.65em 0}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:.65cqw;margin:1.3cqw 0}.choices button{display:flex;align-items:center;gap:.7cqw;justify-content:flex-start;text-align:left;padding:.5cqw .65cqw;font-size:1.24cqw;min-height:4.2cqw}.choices button[aria-pressed=true]{background:#22629a;border-color:#eaffff;box-shadow:inset 0 0 12px #52ecff62,0 0 10px #50b9ff9e}.choices canvas{flex:none;width:3.3cqw;height:3.3cqw;object-fit:contain;image-rendering:pixelated}.actions{display:flex;justify-content:center;gap:.65cqw;flex-wrap:wrap;margin:1.1cqw 0 .3cqw}.actions button{padding:.55em 1em;font-size:1.36cqw}.hint{font-size:1.1cqw;color:#9ac9ed}.pause{position:absolute;right:1.7%;top:2%;padding:.32em .7em;font-size:1.25cqw;z-index:1}.touch{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:none;gap:.5cqw}.touch button{font-size:2cqw;padding:.36em .9em;background:#0b2859f5}.touch button:active{background:#2c80b7}@media(pointer:coarse){.touch:not([hidden]){display:flex}}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
  
 .screen{background:radial-gradient(ellipse at 50% 53%,#040e30cc 12%,#05225351 66%,#01073028)}
@@ -17,13 +18,19 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 .choices button:nth-child(3n+1){border-left:3px solid #fc83ea}.choices button:nth-child(3n+2){border-left:3px solid #68edff}.choices button:nth-child(3n+3){border-left:3px solid #ffbf6e}
 .choices button canvas{width:3.8cqw;height:3.7cqw;object-fit:contain}
 .choices button:hover,.choices button:focus-visible{background:linear-gradient(140deg,#236ad2,#4529a8);outline:1px solid #b1f7ff}
+}
 </style>
+<link rel="stylesheet" href="kitchen-viewport.css">
+<link rel="stylesheet" href="kitchen-theme.css">
 </head>
 <body>
 <main>
+<canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
+<div class="pocket-order"></div>
 <div class="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
 <canvas width="1280" height="720" id="game" tabindex="-1" aria-label="冰箱厨房游戏画面"></canvas>
 <button class="pause" id="pause" aria-label="暂停" hidden>Ⅱ</button>
+<button class="game-exit" id="game-exit" type="button" aria-label="退出到封面" hidden>退出</button>
 <div class="touch" id="touch" hidden></div>
 <div class="screen" id="screen">
 <section class="panel" role="dialog" aria-labelledby="title">
@@ -45,6 +52,7 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 </div>
 <div class="sr" id="live" aria-live="polite"></div>
 </main>
+<script src="kitchen-viewport.js"></script>
 <script src="hardware-chop.js"></script>
 <script src="kitchen-cookware.js"></script>
 <script>
@@ -612,29 +620,40 @@ function meter(x,y,w,h,v,color=C.aqua,n=0){
     rect(x+i*width+1,y,width-3,2,filled?'#edffff':'#71aff4');
   }
 }
+function ticket(x,y,w,h){
+  rect(x,y,w,h,'#452115');
+  rect(x+2,y+2,w-4,h-4,'#fff7e8');
+  rect(x+2,y+2,w-4,3,'#f85e23');
+}
+function ticketText(value,x,y,size,color='#452115',align='center'){
+  g.font='800 '+size+'px system-ui,sans-serif';
+  g.textAlign=align;g.textBaseline='middle';g.fillStyle=color;
+  g.fillText(value,x,y);
+}
 function drawMap(){
   paintMapFurniture();
   drawFridge(false);
   g.drawImage(mapFurniture,0,0);
   penguin(1050,351,1.1);
   stations.forEach(displayStation);chef();
-  box(26,20,292,113,C.aqua,'#0a2359');
-  label('当前订单  ·  1 / 1',48,42,17,'#9feaff','left');drawDish(selected,77,90,.65);
-  label(dishes[selected][0],126,81,25,C.ice,'left');label('下一步  '+(stageNames[step]||'已交单'),126,111,15,C.gold,'left');
-  box(1033,20,172,70,C.aqua,'#10265a');label('营业倒计时',1119,38,14,'#9ee9ff');label(timeText(clock),1119,65,29,clock<21?C.red:C.ice);
-  box(28,651,328,44,C.aqua,'#0a2359');label('点击工作台自动前往 · WASD 移动',192,674,16);
+  ticket(26,20,292,113);
+  ticketText('当前订单 · 1 / 1',48,42,17,'#983916','left');drawDish(selected,77,90,.65);
+  ticketText(dishes[selected][0],126,81,25,'#452115','left');
+  ticketText('下一步  '+(stageNames[step]||'已交单'),126,111,15,'#983916','left');
+  ticket(1033,20,172,70);ticketText('营业倒计时',1119,38,14);
+  ticketText(timeText(clock),1119,65,29,clock<21?'#b0331e':'#452115');
+  ticket(28,651,328,44);ticketText('点击工作台自动前往 · WASD 移动',192,674,16);
 }
 function closeHeader(){
-  box(428,19,424,33,C.aqua,'#092662');
-  for(const x of [418,862]){oval(x,35,21,21,'#1466cb');oval(x,35,17,17,'#1bd2ff');oval(x,35,14,14,'#147ad4');snow(x,35,11);}
-  label('OFFICE ARCADE / FREEZER KITCHEN',640,36,15,C.aqua);
-  label(titles[scene],640,78,35);
+  ticket(396,19,488,125);
+  ticketText('CHAOS KITCHEN / 冰封后厨',640,36,15,'#983916');
+  ticketText(titles[scene],640,78,35);
   const controls={chop:'按住 E 上下切开冰壳 · 共 10 刀',wok:'平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面',serve:'按住 E 前进 · A / D 压向相反方向'};
-  box(396,102,488,42,C.aqua,'#092766');label(controls[scene],640,124,21);
-  box(1047,72,168,75,C.aqua,'#10265a');label('本步倒计时',1131,94,14,'#91eaff');
-  label(timeText(phase.left),1131,124,27,phase.left<6?C.red:C.ice);
-  box(33,91,204,53,C.aqua,'#10265a');drawDish(selected,61,117,.35);label(dishes[selected][0],144,118,18);
-  if(!practice){box(33,151,142,31,C.aqua,'#10265a');label('营业 '+timeText(clock),104,167,14,clock<16?C.red:C.ice);}
+  ticketText(controls[scene],640,124,21);
+  ticket(1047,72,168,75);ticketText('本步倒计时',1131,94,14);
+  ticketText(timeText(phase.left),1131,124,27,phase.left<6?'#b0331e':'#452115');
+  ticket(33,91,204,53);drawDish(selected,61,117,.35);ticketText(dishes[selected][0],144,118,18);
+  if(!practice){ticket(33,151,142,31);ticketText('营业 '+timeText(clock),104,167,14);}
 }
 function board(){
   if(paintArt('board',163,247,984,331))return;
@@ -1063,10 +1082,11 @@ for(const [i,card] of Array.from($('choices').children).entries()){
   });
   card.prepend(menuIcon(i));
 }
+const updateViewport=window.KitchenViewport?.bind(canvas,()=>dishes[selected][0]+" · "+(stageNames[step]||"已交单"));
 function frame(ms){
   const dt=last?Math.min((ms-last)/1000,.045):0;last=ms;
   if(!overlay||overlay==='menu')now+=dt;
-  tick(dt);render();requestAnimationFrame(frame);
+  tick(dt);render();updateViewport?.(ms);requestAnimationFrame(frame);
 }
 if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   button:$('hardware-connect'),status:$('hardware-status'),
@@ -1078,6 +1098,14 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   onPlate(){return !!hardwareServeReady();}
 });
 const launchParams=new URLSearchParams(window.location.search);
+if(window.parent===window){
+  $('game-exit').hidden=false;
+  $('game-exit').onclick=()=>{
+    const entry=new URL('neon-chaos-kitchen.html',window.location.href);
+    if(hardwareInput?.active)entry.searchParams.set('esp','1');
+    window.location.replace(entry.href);
+  };
+}
 if(launchParams.get('autostart')==='1'){
   const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;start();
 }else refreshMenu();

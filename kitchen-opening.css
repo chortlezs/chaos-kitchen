@@ -1,0 +1,436 @@
+.kitchen-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  color: var(--ink);
+  background: radial-gradient(#ecc7ad 0.75px, transparent 0.75px) 0 0 / 16px 16px, var(--cream);
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+}
+
+.opening-shell {
+  width: min(100% - 96px, 1280px);
+  margin-inline: auto;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+.opening-top {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--line);
+}
+
+.kitchen-opening button {
+  color: var(--ink);
+  font-family: inherit;
+  touch-action: manipulation;
+}
+
+.kitchen-opening button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 5px;
+}
+
+.kitchen-opening .opening-manual {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+.opening-manual span { margin-left: 6px; }
+.kitchen-opening .opening-manual:hover { background: #ffe1c8; }
+
+.kitchen-opening .opening-primary {
+  min-height: 53px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  background: var(--orange);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px var(--ink);
+  padding: 10px 14px 10px 19px;
+  font-size: 17px;
+  font-weight: 900;
+  transition: transform 120ms, box-shadow 120ms, background 120ms;
+}
+
+.kitchen-opening .opening-primary:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px var(--ink);
+  background: #ff8958;
+}
+
+.kitchen-opening .opening-primary:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px var(--ink);
+}
+
+.opening-arrow {
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  width: 31px;
+  height: 29px;
+  font: 900 22px/1 system-ui, sans-serif;
+}
+
+.opening-draw {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 5vh, 60px) 0;
+}
+
+.opening-decks {
+  width: min(100%, 512px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(15px, 4vw, 44px);
+}
+
+.kitchen-opening .opening-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-width: 0;
+  aspect-ratio: 4 / 5;
+  isolation: isolate;
+  justify-items: center;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(10px, 1.9vw, 22px) 6px;
+  border: 3px solid var(--ink);
+  background: var(--orange);
+  box-shadow: 5px 5px 0 var(--paper), 7px 7px 0 var(--ink);
+  transition: transform 140ms, box-shadow 140ms;
+}
+
+.opening-card::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  z-index: -1;
+  border: 2px dashed #ffe2c5;
+}
+
+.kitchen-opening .opening-card:not([aria-disabled="true"]):hover {
+  background: #ff8756;
+  transform: translateY(-4px) rotate(-1deg);
+}
+
+.kitchen-opening .opening-card[data-revealed] {
+  background: var(--paper);
+  cursor: default;
+  animation: opening-reveal 260ms ease-out;
+}
+
+.opening-card[data-revealed]::before { border-color: #ffc6a3; }
+
+.opening-card-label {
+  white-space: nowrap;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 4px 9px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.opening-card-art {
+  display: grid;
+  place-items: center;
+  width: min(67%, 140px);
+  aspect-ratio: 1;
+  background: #ffbd86;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px var(--ink);
+}
+
+.opening-card[data-revealed] .opening-card-art { background: #ffe3c9; }
+.opening-card-art canvas { width: 84%; height: auto; }
+
+.opening-card-name {
+  font-size: clamp(14px, 2vw, 20px);
+  font-weight: 900;
+  min-height: 2em;
+  display: grid;
+  place-items: center;
+}
+
+.opening-cook { margin-top: clamp(22px, 4vh, 38px); }
+
+.kitchen-opening .opening-primary:disabled {
+  background: #f8dfca;
+  color: #775641;
+  border-color: #b6947c;
+  box-shadow: 3px 3px #b6947c;
+  cursor: default;
+}
+
+.opening-primary:disabled .opening-arrow { border-color: #b6947c; }
+
+.opening-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes opening-reveal {
+  from { transform: perspective(560px) rotateY(-75deg) translateY(-4px); }
+  to { transform: perspective(560px) rotateY(0); }
+}
+
+
+.kitchen-opening[data-page="cover"] {
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 61% 44%, #fff5cceb 2%, #ffe0ac80 40%, transparent 72%),
+    repeating-conic-gradient(from -8deg at 61% 44%, #ffb371 0 9deg, #ffc992 9deg 18deg);
+}
+.kitchen-opening[data-page="cover"]::after {
+  content: "";
+  position: absolute;
+  inset: auto -3% -2vh;
+  height: clamp(28px, 6vh, 62px);
+  transform: rotate(-1.2deg);
+  background: conic-gradient(#f76b30 25%, #fff4da 0 50%, #f76b30 0 75%, #fff4da 0) 0 0 / 36px 36px;
+  pointer-events: none;
+}
+
+.opening-top { gap: 12px; }
+.opening-manual:last-child { margin-left: auto; }
+[data-page="cover"] .opening-top { position: relative; z-index: 3; border: 0; }
+.opening-cover {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.cover-headline {
+  position: absolute;
+  z-index: 1;
+  left: 11%;
+  top: 44%;
+  margin: 0;
+  transform: translateY(-50%) rotate(-6deg) skew(-3deg);
+  color: #fff9e8;
+  font: 1000 clamp(54px, min(11vw, 20vh), 180px)/.85 Impact, "Arial Black", sans-serif;
+  letter-spacing: -.035em;
+  -webkit-text-stroke: clamp(3px,.6vw,9px) #482318;
+  paint-order: stroke fill;
+  text-shadow: .03em .05em #482318, .05em .095em #a53e1b, .065em .13em #562516;
+}
+.cover-headline span { display: block; }
+.cover-headline span + span { margin-left: .16em; color: #ffe381; }
+.cover-hat, .cover-world {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cover-hat {
+  left: 64%;
+  top: 46%;
+  width: min(39vw, 64vh);
+  aspect-ratio: 1;
+  z-index: 2;
+}
+.cover-hat img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(5px 10px 0 #7f351e51);
+  animation: toque-hover 3.7s ease-in-out infinite alternate;
+}
+.cover-world {
+  aspect-ratio: 1;
+  background-image: url("assets/cover-worlds.webp");
+  background-size: 200% 200%;
+  filter: drop-shadow(3px 5px 0 #732b2240);
+  transform: translate(-50%, -50%) rotate(var(--tilt));
+}
+.world-freezer { left: 13%; top: 14%; width: min(18vw, 28vh); --tilt: -9deg; background-position: left top; }
+.world-water { left: 87%; top: 24%; width: min(18vw, 32vh); --tilt: 9deg; background-position: right top; }
+.world-coffee { left: 21%; top: 81%; width: min(23vw, 32vh); --tilt: -5deg; background-position: left bottom; }
+.world-computer { left: 84%; top: 76%; width: min(29vw, 42vh); --tilt: 6deg; background-position: right bottom; }
+.opening-cover.is-launching { z-index: 2; }
+.is-launching .cover-hat img { animation-play-state: paused; }
+.is-launching #opening-play { visibility: hidden; }
+@keyframes toque-hover {
+  from { transform: translateY(1%) rotate(-4deg); }
+  to { transform: translateY(-2%) rotate(2deg); }
+}
+.kitchen-opening #opening-play {
+  position: absolute;
+  bottom: max(9%, env(safe-area-inset-bottom));
+  left: 50%;
+  translate: -50% 0;
+  z-index: 2;
+  justify-content: center;
+  min-width: clamp(160px, 18vw, 240px);
+  padding: .58em 1.6em;
+  background: var(--paper);
+  font-size: clamp(18px, 2.2vw, 28px);
+  letter-spacing: .08em;
+  border-width: 3px;
+  box-shadow: 4px 5px var(--ink);
+}
+.chef-answers button small {
+  display: block;
+  margin-top: 4px;
+  color: #7a482d;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-aspect-ratio: 1/1) {
+  .cover-headline { left: 23%; top: 23%; font-size: min(15vw, 12vh); }
+  .cover-hat { left: 52%; top: 51%; width: min(65vw, 38vh); }
+  .world-freezer { left: 11%; top: 15%; width: 23vw; }
+  .world-water { left: 86%; top: 37%; width: 23vw; }
+  .world-coffee { left: 15%; top: 69%; width: 28vw; }
+  .world-computer { left: 80%; top: 74%; width: 36vw; }
+}
+.chef-chat {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  width: min(100%, 570px);
+  margin-bottom: clamp(16px, 3vh, 32px);
+}
+.chef-portrait {
+  flex: none;
+  width: clamp(72px, 12vw, 116px);
+  aspect-ratio: 1;
+  background: #ffb16a url("assets/kitchen-cover.webp") 50% 38% / 330% auto;
+  border: 3px solid var(--ink);
+  box-shadow: 3px 3px var(--ink);
+  image-rendering: pixelated;
+}
+.chef-line {
+  position: relative;
+  flex: 1;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px #ed986e;
+  padding: clamp(12px, 2.3vw, 24px);
+}
+.chef-line::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-left: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  background: var(--paper);
+  transform: rotate(45deg);
+}
+.chef-line h2 { margin: 0 0 6px; font-size: 14px; color: #9a3b15; }
+.chef-line p { margin: 0; font-size: clamp(16px, 2vw, 22px); font-weight: 800; line-height: 1.55; }
+.chef-line p:focus { outline: none; }
+.chef-answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, 570px);
+}
+.kitchen-opening .chef-answers button {
+  min-height: 48px;
+  padding: 10px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 3px 3px var(--ink);
+  font-size: 16px;
+}
+.kitchen-opening .chef-answers button:hover { background: #ffbf90; }
+.opening-card-name { font-size: clamp(13px, 1.5vw, 18px); padding-inline: 4px; }
+@media (max-width: 760px) {
+  .opening-shell { width: calc(100% - 36px); }
+  .opening-top { min-height: 60px; }
+  .opening-decks { max-width: 420px; }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .opening-top { min-height: 48px; }
+  .opening-draw { padding-block: 10px 16px; }
+  .chef-portrait { width: 54px; }
+  .chef-chat { margin-bottom: 12px; }
+  .chef-line { padding: 6px 13px; }
+  .chef-line h2 { margin: 0; }
+  .chef-line p { font-size: 15px; }
+  .opening-decks { width: min(78vw, 370px); }
+  .kitchen-opening .opening-card { aspect-ratio: 1.5; padding: 8px 6px; gap: 4px; }
+  .opening-card-art { width: 44px; }
+  .opening-card-label { font-size: 12px; padding: 1px 5px; }
+  .opening-card-name { min-height: 1.4em; }
+  .opening-cook { margin-top: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kitchen-opening button, .cover-hat img { transition: none !important; animation: none !important; }
+}
+
+[data-page="draw"] .opening-top {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--cream);
+}
+#opening-home:not([hidden]) { margin-left: auto; order: 1; }
+#opening-home:not([hidden]) + #opening-manual { margin-left: 0; }
+.opening-draw {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  align-content: center;
+  align-items: start;
+  gap: clamp(24px, 7vw, 112px);
+}
+.opening-draw .chef-chat {
+  display: grid;
+  justify-items: start;
+  width: 100%;
+  margin: 0;
+  gap: 14px;
+}
+.opening-draw .chef-portrait { width: clamp(100px, 14vw, 186px); transform: rotate(-3deg); }
+.opening-draw .chef-line { width: 100%; }
+.opening-draw .chef-line::before { left: 35px; top: -7px; transform: rotate(135deg); }
+.draw-picks { min-width: 0; padding-top: clamp(32px, 8vh, 85px); }
+.draw-picks .chef-answers { width: 100%; }
+.draw-picks .chef-answers button { padding: 14px 18px; text-align: left; }
+.draw-picks .opening-decks { margin-left: 0; }
+.draw-picks .opening-cook { margin-top: 20px; }
+@media (min-aspect-ratio: 1/1) and (min-height: 541px) {
+  .opening-draw { align-content: start; padding-top: clamp(32px, 10vh, 120px); }
+}
+@media (max-aspect-ratio: 1/1), (max-width: 610px) {
+  .opening-draw {
+    grid-template-columns: 1fr;
+    align-content: start;
+    padding-top: clamp(22px, 6vh, 60px);
+    gap: 24px;
+  }
+  .opening-draw .chef-chat { display: flex; align-items: flex-start; gap: 12px; }
+  .opening-draw .chef-portrait { width: clamp(64px, 18vw, 106px); }
+  .opening-draw .chef-line::before { top: 24px; left: -7px; transform: rotate(45deg); }
+  .draw-picks { padding: 0 6px 0 clamp(6px, 3vw, 28px); }
+  .draw-picks .chef-answers button { padding: 10px; }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .opening-draw { align-content: start; gap: 4vw; }
+  .opening-draw .chef-portrait { width: 74px; }
+  .draw-picks { padding-top: 16px; }
+}
