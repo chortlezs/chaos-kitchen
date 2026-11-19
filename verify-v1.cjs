@@ -16,7 +16,7 @@ const document={
 };
 const window={location:{search:'?scene=toilet'},addEventListener:noop};
 const sandbox={document,window,requestAnimationFrame:noop,URLSearchParams,Math,console};
-const html=fs.readFileSync('neon-chaos-kitchen.html','utf8');
+const html=fs.readFileSync('neon-chaos-kitchen.html','utf8').replace(/\r\n/g,'\n');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('requestAnimationFrame(frameLoop);\n})();',
   'globalThis.test={state,selectScene,start,phase,map,drawChop,drawWok,drawServe,balance,returnFromPhase,activeStations,valid,routeTo,walk,inReach,dishes:()=>dishes,keys};\n})();');
 vm.runInNewContext(script,sandbox);
