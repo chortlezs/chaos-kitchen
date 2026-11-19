@@ -14,6 +14,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 #frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
 .coffee-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;margin:1.2cqw 0}.coffee-levels button{background:#62381f;border-color:#dca368;color:#fff0ce;text-align:left;padding:.8em .6em;font-size:1.2cqw}.coffee-levels button:hover,.coffee-levels button[aria-pressed=true]{background:#a15d2b;border-color:#ffe5ac}.coffee-levels small{display:block;color:#e9bf85;font-size:.95cqw;margin-top:.35em}
 body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
+body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{background:#4c3022;border-color:#c58d52;color:#fff0cd;box-shadow:none}body.coffee-scene button:hover,body.coffee-scene button:focus-visible{background:#805133;border-color:#ffe0a0}body.coffee-scene .panel:before,body.coffee-scene .panel:after{background:#dfb16d;box-shadow:none}body.coffee-scene .hardware-controls{background:#35231cee;border-color:#bc8a57;color:#f6ddb5}body.coffee-scene .hardware-controls button{background:#65402b;border-color:#d9aa6b;color:#fff0cd}
 @media (hover:hover) and (pointer:fine){body.coffee-scene .controls,body.toilet-scene .controls{display:none}}
 @media (pointer:coarse){body.coffee-scene .controls{bottom:12%;gap:.45cqw}body.coffee-scene .controls button{background:#4a281eef;border-color:#e7b674;color:#fff0cc}}
 </style>
@@ -119,17 +120,18 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
 const hit=(p,o)=>Math.abs(p.x-o.x)<o.w/2 && Math.abs(p.y-o.y)<o.h/2;
-function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
-function poly(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();}
-function path(points,color,width=2,glow=0){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=glow;ctx.lineJoin="miter";ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();ctx.restore();}
-function ellipse(x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
-function text(s,x,y,size=16,color=c.white,align="center"){ctx.font='bold '+size+'px "Courier New","PingFang SC","Microsoft Yahei",monospace';ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline="middle";ctx.fillText(s,Math.round(x),Math.round(y));}
+function sceneColor(color){return state.scene==="coffee"?({"#38dfff":"#e8bc79","#ff47e8":"#dca15e","#ffb7f8":"#f1d2a0","#ffb6f6":"#f1d2a0","#aa8bff":"#a96b42","#d19dff":"#e1b479","#776af4":"#744832","#e0b1ff":"#f2d7a4","#201267":"#39251c","#222b9b":"#69442c","#0b123f":"#40291d","#4539ad":"#b77c46","#212459":"#735034","#a64a88":"#a87442","#e16a51":"#ca8b50","#a9ffda":"#e6c58a","#522357":"#8b572e","#f650cb":"#cf8854","#121642":"#3e281d","#121253":"#3e281d"}[color]||color):color;}
+function rect(x,y,w,h,color){ctx.fillStyle=sceneColor(color);ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
+function poly(points,color){ctx.fillStyle=sceneColor(color);ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();}
+function path(points,color,width=2,glow=0){color=sceneColor(color);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=state.scene==="coffee"?0:glow;ctx.lineJoin="miter";ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();ctx.restore();}
+function ellipse(x,y,rx,ry,color){ctx.fillStyle=sceneColor(color);ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
+function text(s,x,y,size=16,color=c.white,align="center"){ctx.font='bold '+size+'px "Courier New","PingFang SC","Microsoft Yahei",monospace';ctx.fillStyle=sceneColor(color);ctx.textAlign=align;ctx.textBaseline="middle";ctx.fillText(s,Math.round(x),Math.round(y));}
 function cut(x,y,w,h,k=10){return [[x+k,y],[x+w-k,y],[x+w,y+k],[x+w,y+h-k],[x+w-k,y+h],[x+k,y+h],[x,y+h-k],[x,y+k]];}
-function frame(x,y,w,h,accent=c.light,fill="#0a1150",k=10){const pts=cut(x,y,w,h,k);poly(pts,fill);path([...pts,pts[0]],"#1b36c5",7);path([...pts,pts[0]],accent,2,8);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#c5faff",1);}
+function frame(x,y,w,h,accent=c.light,fill="#0a1150",k=10){const pts=cut(x,y,w,h,k);if(state.scene==="coffee"){poly(pts,"#4c3022");path([...pts,pts[0]],"#271a14",6);path([...pts,pts[0]],"#c58d52",3);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#f4d29c",2);return;}poly(pts,fill);path([...pts,pts[0]],"#1b36c5",7);path([...pts,pts[0]],accent,2,8);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#c5faff",1);}
 function led(x,y,n,color=c.pink){for(let i=0;i<n;i++){rect(x+i*8,y,5,5,color);rect(x+i*8+1,y+1,3,2,c.white);}}
 function hazard(x,y,w){rect(x,y,w,9,"#161639");for(let i=0;i<w-7;i+=12)poly([[x+i+5,y],[x+i+12,y],[x+i+5,y+9],[x+i-2,y+9]],c.yellow);}
 function screw(x,y){rect(x-5,y-4,10,8,c.ink);rect(x-3,y-3,6,6,"#c3d6ff");rect(x-3,y,6,2,"#4654a6");}
-function bar(x,y,w,h,v,accent=c.light,segments=20){frame(x-4,y-4,w+8,h+8,c.light,"#09072e",7);for(let i=0;i<segments;i++){const ww=w/segments;rect(x+i*ww,y,ww-2,h,i/segments<v?accent:"#1b245c");if(i/segments<v)rect(x+i*ww,y+1,ww-2,2,"#baf6ff");}}
+function bar(x,y,w,h,v,accent=c.light,segments=20){frame(x-4,y-4,w+8,h+8,c.light,"#09072e",7);for(let i=0;i<segments;i++){const ww=w/segments,coffee=state.scene==="coffee";rect(x+i*ww,y,ww-2,h,i/segments<v?(coffee?"#e8ae61":accent):(coffee?"#35251d":"#1b245c"));if(i/segments<v)rect(x+i*ww,y+1,ww-2,2,coffee?"#ffe2aa":"#baf6ff");}}
 function trace(points,color,t,offset){path(points,"#090c38",16);path(points,color,8,11);path(points,"#d3faff",2);let lengths=[],sum=0;for(let i=1;i<points.length;i++){sum+=Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]);lengths.push(sum);}for(let q=0;q<3;q++){let at=(t*88+offset+q*sum/3)%sum;const i=lengths.findIndex(v=>v>=at);if(i<0)continue;const prev=lengths[i-1]||0, f=(at-prev)/(lengths[i]-prev),a=points[i],b=points[i+1];rect(a[0]+(b[0]-a[0])*f-3,a[1]+(b[1]-a[1])*f-3,7,7,c.white);}}
 const traces=[
   [[0,125],[48,125],[73,100],[73,37],[110,0]],[[0,463],[56,463],[76,443],[76,167],[101,142]],
@@ -154,7 +156,7 @@ function circuitry(t,near){
   }
 }
 function battery(x,y,accent){rect(x+5,y-5,14,6,"#f3e8ff");rect(x,y,24,51,c.ink);rect(x+3,y+2,18,46,"#252dce");rect(x+5,y+5,4,39,accent);rect(x+2,y+3,20,5,c.yellow);rect(x+2,y+43,20,5,c.yellow);bolt(x+14,y+24,9,c.white);}
-function bolt(x,y,k,color){poly([[x+1*k,y-1*k],[x-.66*k,y+.1*k],[x-.08*k,y+.1*k],[x-.5*k,y+1*k],[x+1*k,y-.26*k],[x+.37*k,y-.26*k]],color);}
+function bolt(x,y,k,color){if(state.scene==="coffee"){coffeeBean(x,y,k*.65,-.4);return;}poly([[x+1*k,y-1*k],[x-.66*k,y+.1*k],[x-.08*k,y+.1*k],[x-.5*k,y+1*k],[x+1*k,y-.26*k],[x+.37*k,y-.26*k]],color);}
 function fan(x,y,s,t){frame(x-s/2,y-s/2,s,s,"#879cff","#20358c",5);ellipse(x,y,s*.39,s*.39,"#07062e");ctx.save();ctx.translate(x,y);ctx.rotate(t*3.5);for(let i=0;i<5;i++){ctx.rotate(Math.PI*2/5);poly([[0,0],[s*.12,-s*.32],[s*.27,-s*.29],[s*.3,-s*.16],[s*.23,-s*.05]],"#075de4");path([[s*.12,-s*.29],[s*.22,-s*.24],[s*.24,-s*.15]],c.light,3);}ctx.restore();ellipse(x,y,s*.12,s*.12,"#2524af");bolt(x,y,s*.095,c.yellow);for(const xx of [-1,1])for(const yy of [-1,1])screw(x+xx*(s/2-8),y+yy*(s/2-8));}
 function screen(x,y,w,h,t){frame(x,y,w,h,"#6ac8ff","#111444",5);led(x+10,y+10,3);rect(x+9,y+21,w-18,2,"#1c50c5");for(let i=0;i<7;i++){const n=1+Math.floor(3*(.5+.5*Math.sin(t*3+i*1.8)))+i%2;for(let j=0;j<n;j++)rect(x+13+i*8,y+h-10-j*5,6,3,c.light);}bolt(x+w-25,y+h*.6,17,c.pink);}
 function trim(t){
@@ -642,6 +644,7 @@ function drawWok(t){
   text(d.name+"   /   焦糊风险 "+Math.round(p.burn)+"%",480,489,17,p.burn>59?c.red:"#ffb6f6");
 }
 function arc(x,y,x2,y2,t,accent,seed){
+  if(state.scene==="coffee"){for(let i=0;i<3;i++){const a=(t*.7+i*.33)%1;ellipse(x+(x2-x)*a,y+(y2-y)*a-8*Math.sin(a*Math.PI),3,3,"#efc482");}return;}
   const pts=[];
   for(let i=0;i<9;i++){const f=i/8,dy=i>0&&i<8?Math.round(Math.sin(i*48.3+Math.floor(t*10)*2.9+seed)*18):0;pts.push([snap(x+(x2-x)*f),snap(y+(y2-y)*f+dy)]);}
   path(pts,accent,5,13);path(pts,"#edfaff",1.5);
@@ -661,7 +664,7 @@ function glove(x,y,side){
 function drawServe(t){
   if(state.scene==="toilet"){toiletDrawServe(t);return;}
   const p=state.phase, d=dishes[p.id], danger=Math.abs(p.tilt)>.54;
-  drawChallengeHeader("03 / 端盘上菜 · 电流干扰",p.route>=1?"松开 E · 将指针留在中心 1.2 秒":"按住 E 前进 · A / D 向反方向修正",t);
+  drawChallengeHeader(state.scene==="coffee"?"03 / 端盘上菜 · 热流扰动":"03 / 端盘上菜 · 电流干扰",p.route>=1?"松开 E · 将指针留在中心 1.2 秒":"按住 E 前进 · A / D 向反方向修正",t);
   const vanish=[480,160], shift=p.tilt*35;
   poly([[433,162],[526,162],[735,405],[222,405]],"#0b123f");
   for(let i=0;i<11;i++){const f=((i/11+(p.route*9)%1/11)%1)**1.5;const ww=45+206*f;path([[vanish[0]-ww+shift*f,166+237*f],[vanish[0]+ww+shift*f,166+237*f]],i%4===0?"#4539ad":"#212459",2);}
@@ -679,7 +682,7 @@ function drawServe(t){
   for(let i=0;i<10;i++)rect(280+i*20,400,18,20,c.light);
   rect(446,400,68,20,"#a9ffda");rect(479,397,2,26,c.white);
   const x=480+p.tilt*191;rect(x-5,394,10,32,c.ink);rect(x-3,397,6,26,c.white);
-  text(p.route>=1?"稳盘 "+Math.min(1.2,p.stable).toFixed(1)+" / 1.2 秒":danger?"过电失衡！反向修正":"持续电流 · "+d.name,480,455,18,danger?c.pink:c.white);
+  text(p.route>=1?"稳盘 "+Math.min(1.2,p.stable).toFixed(1)+" / 1.2 秒":danger?(state.scene==="coffee"?"热流失衡！反向修正":"过电失衡！反向修正"):(state.scene==="coffee"?"烘焙热流 · ":"持续电流 · ")+d.name,480,455,18,danger?c.pink:c.white);
   frame(258,472,444,33,c.light,"#101345",8);
   text("路程 "+Math.floor(p.route*100)+"%    /    完整度 "+Math.ceil(p.integrity)+"%",480,490,17);
 }
@@ -1084,7 +1087,7 @@ function frameLoop(ms){
   if(!state.open||state.open==="menu")now+=dt;
   advance(dt);
   if(state.view==="map")map(now);
-  else {circuitry(now,true);trim(now);({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);}
+  else {if(state.scene!=="coffee"){circuitry(now,true);trim(now);}({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);}
   visuals(now);
   requestAnimationFrame(frameLoop);
 }
