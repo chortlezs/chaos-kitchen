@@ -44,6 +44,7 @@ body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffe
 </div>
 </main>
 <script src="hardware-chop.js"></script>
+<script src="kitchen-cookware.js"></script>
 <script>
 (() => {
 "use strict";
@@ -258,13 +259,7 @@ function plate(x,y,s=1){
   ellipse(x,y-5*s,79*s,23*s,"#a5bafe");
 }
 function pan(x,y,s=1){
-  frame(x+139*s,y-12*s,119*s,22*s,c.pink,"#17154b",6);
-  rect(x+164*s,y-4*s,75*s,4*s,"#7356ff");led(x+175*s,y-9*s,5,c.pink);
-  ellipse(x,y+20*s,163*s,67*s,"#040724");ellipse(x,y+14*s,160*s,66*s,c.pink);
-  ellipse(x,y+8*s,161*s,65*s,"#161f92");ellipse(x,y-6*s,164*s,65*s,"#5adfff");
-  ellipse(x,y-8*s,157*s,59*s,"#b8f4ff");ellipse(x,y-8*s,152*s,55*s,"#26217f");
-  ellipse(x,y+2*s,140*s,44*s,"#3b2d9d");ellipse(x,y+8*s,122*s,33*s,"#4a3499");
-  for(let i=0;i<7;i++)rect(x+(-105+i*33)*s,y+(i%2?27:-26)*s,5*s,3*s,"#8263bc");
+  window.KitchenCookware?.draw(ctx,x,y,s,state.scene);
 }
 function themedStationArt(o,t,theme){
   const {x,y,w,h,type}=o,isIce=theme==="fridge",dark=isIce?"#315a73":"#4a3026",edge=isIce?"#8fd8ea":"#a8784d",fill=isIce?"#e7f8fb":"#ead3ad",accent=isIce?"#9edbea":"#c78b4d";
@@ -272,7 +267,7 @@ function themedStationArt(o,t,theme){
     ellipse(x+4,y+9,w*.53,h*.48,"#2b1a14");ellipse(x,y+3,w*.54,h*.5,"#6f452f");ellipse(x,y-2,w*.49,h*.43,"#d4aa73");ellipse(x,y-4,w*.43,h*.36,type==="bin"?"#593426":"#8c5d3b");
     if(type==="bin"){for(let j=0;j<5;j++)coffeeBean(x-24+j*12,y-8+(j%2)*9,5+j%2,j*.7);sprite(o.dish,x,y-8,.62);}
     if(type==="chop"){rect(x-31,y-21,62,27,"#7a4b31");rect(x-27,y-18,54,21,"#d8b075");knife(x+24,y-8,.22,-.7);}
-    if(type==="wok"){ellipse(x-5,y-8,35,18,"#2d1d17");ellipse(x-5,y-11,27,13,"#6c4935");rect(x+25,y-13,24,7,"#4a2c20");}
+    if(type==="wok")pan(x-9,y-12,.2);
     if(type==="serve"){rect(x-43,y-19,86,25,"#5d3a28");text("↑ 交单",x,y-8,15,"#fff0cf");}
     if(type==="trash")text("↺",x,y-7,24,"#f1d1a0");
     const coffeeLabel=type==="bin"?dishes[o.dish].name.replace(/^(咖啡|浓缩|豆渣|卡豆|爆豆|蒸汽)/,""):type==="chop"?"滤篮砧板":type==="wok"?"烘焙炒台":type==="serve"?"出餐滤杯":"豆渣回收";
@@ -307,8 +302,7 @@ function stationArt(o,t){
     }
     if(type==="wok"){
       ellipse(x,y+8,47,27,"#456f81");ellipse(x,y+2,47,27,"#fff6df");ellipse(x,y-1,37,20,"#de8a68");
-      ellipse(x-3,y-6,31,17,"#31536b");ellipse(x-3,y-10,26,13,"#6da4ab");ellipse(x-3,y-12,19,8,"#a0d4cc");
-      rect(x+25,y-13,25,8,"#895a43");ellipse(x-22,y+18,3,3,"#f0bd69");
+      pan(x-5,y-10,.21);ellipse(x-22,y+18,3,3,"#f0bd69");
     }
     if(type==="serve"){
       rect(x-28,y+5,10,20,"#739ca0");rect(x+18,y+5,10,20,"#739ca0");
@@ -590,7 +584,7 @@ function toiletDrawWok(t){
   toiletNearBase("02 / 迷你电磁炉 · 翻炒",need?"现在向上颠 / 按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面");
   rect(199,200,562,258,"#fff9e7");rect(219,215,522,225,"#80b9c2");rect(246,234,468,190,"#31536b");
   const shake=stirring()?Math.sin(t*18)*5:0,y=321-Math.sin(jump*Math.PI)*45;
-  ellipse(475+shake,y+24,193,70,"#31536b");ellipse(475+shake,y+13,187,65,"#91bdc2");ellipse(475+shake,y+3,172,55,"#537d89");rect(647+shake,y-4,110,26,"#a66e53");
+  pan(475+shake,y,1.12);
   for(let j=0;j<9;j++){const a=t*(stirring()?5:1)+j*2.2,x=375+(j%3)*98+Math.round(Math.sin(a)*7),yy=y-26+Math.floor(j/3)*26-Math.sin(jump*Math.PI)*(35+j%3*9);toiletChip(p.id,x,yy,1.15,p.progress>.45||p.flips>0);}
   text("翻面 "+p.flips+" / 2",813,222,18,"#fff9e7");text("焦糊风险 "+Math.round(p.burn)+"%",480,461,17,p.burn>60?"#ffae91":"#fff9e7");
   rect(230,480,500,15,"#214b65");rect(233,483,494*p.progress,9,"#f2ca76");
