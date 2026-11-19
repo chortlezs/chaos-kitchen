@@ -21,6 +21,7 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 </head>
 <body>
 <main>
+<button id="scene-back" type="button" style="position:absolute;left:1.2%;top:2%;z-index:5;padding:.4em .7em;font-size:1.1cqw">← 返回选厨房</button>
 <div class="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
 <canvas width="1280" height="720" id="game" tabindex="-1" aria-label="冰箱厨房游戏画面"></canvas>
 <button class="pause" id="pause" aria-label="暂停" hidden>Ⅱ</button>
@@ -1064,6 +1065,8 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   onPlate(){return !!hardwareServeReady();}
 });
 const launchParams=new URLSearchParams(window.location.search);
+$('scene-back').hidden=Boolean(window.frameElement);
+$('scene-back').onclick=()=>{window.location.href='neon-chaos-kitchen.html?scene=fridge'+(launchParams.get('esp')==='1'?'&esp=1':'');};
 if(launchParams.get('autostart')==='1'){
   const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;start();
 }else refreshMenu();

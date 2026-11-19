@@ -24,6 +24,7 @@ body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffe
 <canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
+<button class="frost-back" id="scene-back" type="button" hidden>← 返回选厨房</button>
 <button class="pause" id="pause" hidden aria-label="暂停">Ⅱ</button>
 <div class="controls" id="controls" hidden></div>
 <div class="overlay" id="overlay">
@@ -734,6 +735,7 @@ function wanted(){
 }
 function toast(message,color=c.light,seconds=1.65){state.toast={text:message,color,until:now+seconds};}
 function updateControls(){
+  get("scene-back").hidden=state.open==="menu"||!get("frost-experience").hidden;
   const bar=get("controls");
   const sets={map:[["w","↑"],["a","←"],["s","↓"],["d","→"],[" ","空格 · 操作"]],chop:[["e","E · 切菜"]],wok:[["e","E · 翻炒"],["f","F · 翻面"]],serve:[["a","A · 左"],["e","E · 前进"],["d","D · 右"]]};
   bar.replaceChildren(...sets[state.view].map(([key,label])=>{
@@ -1053,7 +1055,14 @@ function selectScene(scene){
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
   reset();toggleMenu("menu");
 }
-get("frost-back").onclick=()=>{get("frost-experience").src="about:blank";state.open="menu";selectScene("neon");};
+function returnToKitchenMenu(){
+  get("frost-experience").src="about:blank";get("frost-experience").hidden=true;get("frost-back").hidden=true;
+  get("hardware-controls").hidden=false;canvas.hidden=false;
+  reset();toggleMenu("menu");
+}
+get("frost-back").textContent="← 返回选厨房";
+get("frost-back").onclick=returnToKitchenMenu;
+get("scene-back").onclick=returnToKitchenMenu;
 get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
 get("dish-select").onchange=()=>{const value=get("dish-select").value;if(state.scene==="coffee"&&/^[0-5]$/.test(value))state.coffeeLevel=Number(value);};
 for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
