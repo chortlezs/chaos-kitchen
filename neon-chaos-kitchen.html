@@ -32,7 +32,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <section class="panel">
 <div class="tag">⚡ OFFICE ARCADE / NEON KITCHEN</div>
 <h1 id="menu-title">极限出餐</h1>
-<p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单</p>
+<p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒</p>
 <div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="fridge">冰箱内部</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" data-scene="coffee">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
 <div class="coffee-levels" id="coffee-levels" aria-label="选择咖啡豆仓关卡" hidden></div>
@@ -108,7 +108,7 @@ const activeStations=()=>state?.scene==="coffee"?[
   {x:650,y:230,w:116,h:86,type:"chop",label:"马桶盖砧板"},
   {x:780,y:140,w:132,h:61,type:"serve",label:"出餐窗口"},
   {x:780,y:400,w:82,h:65,type:"trash",label:"刷桶回收"}
-]:all;
+]:state?.scene==="neon"?[{...bins[2],dish:state.neonLevel??0,label:officeDishes[state.neonLevel??0].name},...station]:all;
 const keys=new Set();
 const menu=get("overlay");
 const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
@@ -352,10 +352,10 @@ function map(t){
   trace([[254,111],[254,143],[277,167],[277,215],[236,256],[236,400],[264,429],[403,429]],c.light,t,80);
   trace([[691,109],[691,238],[729,276],[729,358],[686,401],[686,463]],c.light,t,90);
   trace([[856,317],[831,343],[622,343],[600,365],[600,439],[579,460]],c.pink,t,50);
-  for(const o of all)stationArt(o,t);
+  for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
   frame(24,16,539,75,c.light,"#0b1140",9);
-  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:4,left:142}];
+  const queue=state.queue.length?state.queue:[{id:state.neonLevel??0,left:180}];
   for(let i=0;i<queue.length;i++){const o=queue[i],x=32+i*174;frame(x,22,168,61,i? "#617fd6":c.light,"#111b61",7);sprite(o.id,x+31,49,.58);text(dishes[o.id].name,x+98,43,15);text(timeText(o.left),x+98,65,13,o.left<15?c.red:c.light);}
   frame(585,18,294,56,c.pink,"#151044");
   text("极限出餐  /  电路后厨",732,39,22);
@@ -760,9 +760,9 @@ function toggleMenu(mode){
     const title={menu:"极限出餐",pause:"营业暂停",end:"营业结算",practice:"练习结算"}[mode];
     get("menu-title").textContent=title;
     get("menu-copy").innerHTML={
-      menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
+      menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:["coffee","toilet"].includes(state.scene)?(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.scene==="coffee"?state.coffeeLevel:state.toiletLevel??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道":"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
+      end:(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.scene==="coffee"?state.coffeeLevel:state.scene==="toilet"?state.toiletLevel??0:state.neonLevel??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
@@ -809,10 +809,8 @@ function start(){
     const frost=get("frost-experience");frost.src="frost-kitchen.html?level="+id+"&autostart=1"+(connectEsp?"&esp=1":"");
     frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;return;
   }
-  const order=dishes.map((_,i)=>i);
-  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
-  if(first>=0&&first<order.length){order.splice(order.indexOf(first),1);order.unshift(first);}
-  state.queue=order.slice(0,3).map((id,i)=>({id,left:82+i*43}));
+  const id=first>=0?first:Math.floor(Math.random()*6);state.neonLevel=id;
+  state.queue=[{id,left:180}];
   toggleMenu(null);
 }
 function phase(mode,id){
