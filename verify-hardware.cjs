@@ -44,7 +44,7 @@ for(let i=7;i<=10;i++){g.step(.18);send();assert.equal(g.state.phase.cuts,i);}
 assert.equal(g.state.phase.done.success,true,'ten hardware cuts complete the normal challenge');
 send();assert.equal(g.state.phase.cuts,10,'completion animation cannot gain extra cuts');
 
-for(const scene of ['neon','coffee','toilet']){
+for(const scene of ['neon','coffee','toilet','fridge']){
   g.state.open='menu';g.selectScene(scene);g.practice('chop');send();
   assert.equal(g.state.phase.cuts,1,scene+' shares hardware input');
 }

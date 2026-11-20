@@ -96,3 +96,35 @@ main .panel :is(.scene-choice, .buttons, .actions) { justify-content: flex-start
 @media (max-width: 650px) {
   main :is(.screen, .overlay):has(:is(.scene-choice, .choices):not([hidden])) { padding-inline: 14px; }
 }
+
+/* In-game controls inherit the same material skin as the canvas. Cover assets stay unchanged. */
+body.fridge-scene main { --cream:#eff6ef; --paper:#f9fcf6; --orange:#b7d4d9; --ink:#36596b; --focus:#719aa9; }
+body.neon-scene main { --cream:#101443; --paper:#101b4a; --orange:#3142a0; --ink:#d8f9ff; --focus:#38dfff; }
+body.toilet-scene main { --cream:#fffdf0; --paper:#f6fff5; --orange:#b5dad4; --ink:#315568; --focus:#71a9b5; }
+body.coffee-scene main { --cream:#fff0d3; --paper:#fff7e7; --orange:#d5a06c; --ink:#5b3824; --focus:#ac754a; }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main .panel h1 { text-shadow:none; }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main .panel { box-shadow:4px 4px var(--orange),7px 7px var(--ink); }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main .hardware-controls button { background:var(--orange); }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main button:not(:disabled):hover { background:var(--orange); }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main .panel :is(p,.hint,small,.tag,.kicker) { color:var(--ink); }
+body:is(.fridge-scene,.toilet-scene,.coffee-scene) main :is(button,input,select) { border-color:var(--ink);color:var(--ink); }
+body.neon-scene main .panel { box-shadow:4px 4px #283acd,7px 7px #38dfff; }
+body.neon-scene main .panel :is(p,.hint,small,.tag,.kicker) { color:#a9e5f2; }
+body.neon-scene main .panel h1 { text-shadow:2px 3px #283acd; }
+body.neon-scene main button:not(:disabled):hover { background:#283acd; }
+body.neon-scene main .hardware-controls button { background:#3142a0; }
+main #game:focus { outline:none; }
+body:is(.neon-scene,.fridge-scene,.toilet-scene,.coffee-scene) main .pocket-order {
+  color:var(--ink);background:var(--cream);border-color:var(--ink);
+}
+
+/* Shared entry/menu branding is orange, regardless of the selected kitchen. */
+body main:has(#overlay:not([hidden])), body main #overlay {
+  --cream:#fff7e8; --paper:#fffdf5; --orange:#f85e23;
+  --ink:#452115; --line:#e8b99a; --focus:#a73b0b;
+}
+body main #overlay .panel { box-shadow:5px 5px #f98b51,8px 8px var(--ink); }
+body main #overlay .panel h1 { color:var(--ink);text-shadow:2px 3px #ffb785; }
+body main #overlay .panel :is(p,.hint,small) { color:#6a4632; }
+body main #overlay .panel :is(.tag,.kicker) { color:#91390c; }
+body main #overlay button:not(:disabled):hover { background:#ffc18f; }

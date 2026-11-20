@@ -18,7 +18,7 @@ const window={location:{search:'?scene=toilet'},addEventListener:noop};
 const sandbox={document,window,requestAnimationFrame:noop,URLSearchParams,Math,console};
 const html=fs.readFileSync('neon-chaos-kitchen.html','utf8').replace(/\r\n/g,'\n');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('requestAnimationFrame(frameLoop);\n})();',
-  'globalThis.test={state,selectScene,start,phase,map,drawChop,drawWok,drawServe,balance,returnFromPhase,activeStations,valid,routeTo,walk,inReach,dishes:()=>dishes,keys};\n})();');
+  'globalThis.test={state,selectScene,start,practice,phase,map,drawChop,drawWok,drawServe,balance,returnFromPhase,activeStations,valid,routeTo,walk,inReach,toiletRoutes,dishes:()=>dishes,keys};\n})();');
 vm.runInNewContext(script,sandbox);
 const g=sandbox.test;
 assert.equal(g.state.scene,'toilet');
@@ -72,6 +72,18 @@ for(let id=0;id<6;id++){
 }
 console.log('PASS: all six coffee levels finish after their selected single meal.');
 g.state.open='menu';g.selectScene('toilet');
+const toiletSpawn={...g.state.player},angle=.7;
+g.state.player={x:480+340*Math.cos(angle),y:285+175*Math.sin(angle)};
+const inner={x:480+280*Math.cos(angle),y:285+135*Math.sin(angle)};
+assert(!g.valid(480+310*Math.cos(angle),285+155*Math.sin(angle)),'gap between rings is not walkable');
+g.walk(inner.x-g.state.player.x,inner.y-g.state.player.y);
+assert(Math.hypot(g.state.player.x-inner.x,g.state.player.y-inner.y)>20,'large movement cannot jump between rings');
+assert(g.valid(g.state.player.x,g.state.player.y),'feet stay on the narrow path');
+g.state.player=toiletSpawn;
+for(const points of g.toiletRoutes)for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],steps=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1]));
+  for(let n=0;n<=steps;n++)assert(g.valid(a[0]+(b[0]-a[0])*n/steps,a[1]+(b[1]-a[1])*n/steps),'visible toilet loop must remain open');
+}
 for(const stop of g.activeStations()){
   const route=g.routeTo(stop);assert(route.length||g.inReach(stop),'toilet station reachable: '+stop.type);
   for(const point of route){

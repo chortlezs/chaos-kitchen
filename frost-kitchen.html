@@ -21,7 +21,7 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 }
 </style>
 <link rel="stylesheet" href="kitchen-viewport.css">
-<link rel="stylesheet" href="kitchen-theme.css">
+<link rel="stylesheet" href="kitchen-theme.css?v=20261120-orange-entry-2">
 </head>
 <body>
 <main>
@@ -138,7 +138,7 @@ const keys = new Set();
 const water = [];
 const sparks = [];
 let selected = 0, scene = 'map', overlay = 'menu', practice = false, step = 0;
-let clock = 100, phase, now = 0, last = 0, toast, delay = 0, result;
+let clock = 180, phase, now = 0, last = 0, toast, delay = 0, result;
 let hardwareInput=null;
 function hardwareWokReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='wok'&&phase&&!delay;}
 function hardwareServeReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='serve'&&phase&&!delay;}
@@ -689,6 +689,12 @@ function drawChop(){
   box(433,590,414,43,C.aqua,'#0a2662');label('切菜进度   '+cut+' / 10 刀',640,612,24);
   meter(385,648,510,22,cut/10,'#69dfff',10);
 }
+function frostPanel(x,y,w,h,warning=false){
+  const pts=[[x+8,y],[x+w-8,y],[x+w,y+8],[x+w,y+h-8],[x+w-8,y+h],[x+8,y+h],[x,y+h-8],[x,y+8]];
+  poly(pts,warning?'#fff0d5':'#eff8f7');line([...pts,pts[0]],warning?'#bc8153':'#82aeba',2);
+  line([[x+11,y+5],[x+w-11,y+5]],'#ffffff',2);
+  for(const xx of [x+9,x+w-9])rect(xx,y+h-9,3,3,'#c2dce0');
+}
 function drawWok(){
   const p=phase;
   for(let i=0;i<13;i++){
@@ -697,10 +703,12 @@ function drawWok(){
     oval(640+side*(239+cycle*166)+Math.sin(now*3+i)*27,542-cycle*133,20+cycle*33,8+cycle*19,'#d1eaff');g.restore();
   }
   const shaking=(is('e')?Math.sin(now*23)*.025:0)+p.flipLift*.105;
-  oval(641,565,303,37,'#0c245c');oval(641,543,291,25,'#10b5fa');
-  for(let i=0;i<24;i++){
-    const x=374+23*i,h=15+rnd(i)*26+Math.sin(now*20+i)*8;
-    poly([[x-13,546],[x+13,546],[x+9,548-h],[x,553-h*.7],[x-7,550-h*.85]],i%3===1?'#dcffff':'#31eaff');
+  // 磨砂白金属炉座和霜边，替换蓝色发光能量环。
+  oval(641,565,303,37,'#456c8070');oval(641,549,291,27,'#7394a3');oval(641,540,291,25,'#e4eeeb');
+  oval(641,536,254,17,'#a1b9be');oval(641,534,225,12,'#c98457');
+  for(let i=0;i<12;i++){
+    const x=384+46*i;
+    rect(x,546,4,7+i%3*3,'#c2dce0');rect(x-3,547,10,2,'#f7fffc');
   }
   g.save();g.translate(636,395-p.flipLift*44);g.rotate(shaking);
   window.KitchenCookware?.draw(g,0,-12,2.05,'fridge');
@@ -713,18 +721,19 @@ function drawWok(){
     const k=(rnd(j+51)+now*(.3+rnd(j)*.21))%1;
     const x=(rnd(j+21)-.5)*620, y=53-k*(70+p.flipLift*74);
     g.save();g.globalAlpha=.2+(1-k)*.8;
-    sparkle(x,y,2+rnd(j+904)*7,[C.gold,C.pink,C.aqua,C.ice][j%4]);g.restore();
+    sparkle(x,y,2+rnd(j+904)*7,['#f4d4a0','#d69465','#b7d9de','#fff9e9'][j%4]);g.restore();
   }
   if(merge>.67){
     g.save();g.globalAlpha=clamp((merge-.67)/.22,0,1);drawDish(selected,0,-p.flipLift*65,2);g.restore();
   }
   g.restore();
-  box(983,183,169,47,C.aqua,'#102762');label('翻面 '+p.flips+' / 2',1067,207,22);
-  if(p.window>0){box(466,174,348,53,C.gold,'#66305d');label('F  翻面！  '+p.window.toFixed(1)+' 秒',640,201,27,C.gold);}
-  label('炒制进度',298,595,20,C.ice,'left');meter(293,615,694,20,p.progress,C.gold);
-  for(const t of [.34,.72]){rect(293+694*t-2,605,4,40,C.ice);}
-  box(500,652,280,37,p.burn>55?C.red:C.aqua,'#14284f');
-  label('焦糊风险  '+Math.round(p.burn)+'%',640,671,20,p.burn>55?C.red:C.gold);
+  frostPanel(983,183,169,47);ticketText('翻面 '+p.flips+' / 2',1067,207,22,'#36596b');
+  if(p.window>0){frostPanel(466,174,348,53,true);ticketText('F  翻面！  '+p.window.toFixed(1)+' 秒',640,201,27,'#93572e');}
+  ticketText('炒制进度',298,595,20,'#36596b','left');
+  rect(290,612,700,26,'#789aa6');rect(293,615,694,20,'#e6f1ed');rect(296,618,688*clamp(p.progress,0,1),14,'#d5ad70');
+  for(const t of [.34,.72]){rect(293+694*t-1,609,2,32,'#7494a0');}
+  frostPanel(500,652,280,37,p.burn>55);
+  ticketText('焦糊风险  '+Math.round(p.burn)+'%',640,671,20,p.burn>55?'#a05b3d':'#36596b');
 }
 function waterFloor(){
   for(let i=0;i<7;i++){
@@ -734,11 +743,11 @@ function waterFloor(){
   }
   for(const x of [311,969]){
     const inner=x===311?1:-1,kick=phase.sign===inner?phase.kick:0;
-    box(x-32,439,64,30,C.aqua,'#19488a');line([[x-19,452],[x+20,452]],'#d2fcff',4);
+    frostPanel(x-32,439,64,30);line([[x-19,452],[x+20,452]],'#9ab8c0',3);
     for(let j=0;j<3;j++){
       const reach=40+kick*95+j*14;
       const drop=4+j*4;
-      line([[x,453],[x+inner*reach*.37,434-drop],[x+inner*reach*.68,441-drop],[x+inner*reach,465-j*6]],j?'#8ce9ff8c':'#4bdcff8c',j?1.5:4);
+      line([[x,453],[x+inner*reach*.37,434-drop],[x+inner*reach*.68,441-drop],[x+inner*reach,465-j*6]],j?'#dfeee99c':'#a5c6cd8c',j?1.5:4);
     }
     if(kick>.16)sparkle(x+inner*25,441,7+kick*13,'#d1fbff');
   }
@@ -746,32 +755,48 @@ function waterFloor(){
 }
 function drawServe(){
   const p=phase;
+  // 冰箱玻璃搁架的前进透视：白色导轨与滑过的磨砂纹，不使用发光传送带。
+  poly([[566,223],[714,223],[1010,530],[270,530]],'#a8c5cd');
+  poly([[575,229],[705,229],[988,523],[292,523]],'#e1eeeb');
+  line([[566,223],[270,530]],'#789da9',4);line([[714,223],[1010,530]],'#789da9',4);
+  for(let i=0;i<12;i++){
+    const f=((i/12+p.progress*1.8)%1)**1.5,y=230+290*f,w=65+280*f;
+    line([[640-w,y],[640+w,y]],i%3?'#b9d3d8':'#ffffff',2);
+  }
   waterFloor();oval(640,482,245,31,'#041d51a6');
   g.save();g.translate(640+Math.sin(now*9)*p.kick*10,370+Math.sin(now*(is('e')?11:3))*4);g.rotate(p.tilt*.31);
-  if(!paintArt('plate',-320,-116,640,257)){
-  oval(0,27,306,107,'#3855a9');oval(0,13,310,110,'#79c6f2');oval(0,0,310,112,'#effcff');oval(0,1,285,95,'#658ed2');oval(0,4,277,88,'#c2e6fb');
-  oval(0,10,248,70,'#afcef5');snow(-244,-6,16,'#247ac6');snow(245,-6,16,'#247ac6');
-  frost(-232,66,461,162,40);
+  // 使用代码白瓷盘，避免旧图片中自带的霓虹手臂和盘沿。
+  oval(0,27,306,107,'#6c8b98');oval(0,13,310,110,'#c7d9da');oval(0,0,310,112,'#fffef7');oval(0,1,285,95,'#dce7e3');oval(0,4,277,88,'#f5f8f1');
+  snow(-244,-6,14,'#99bac4');snow(245,-6,14,'#99bac4');
+  for(const side of [-1,1]){
+    g.save();g.translate(side*253,57);g.scale(side,1);
+    poly([[-39,92],[-34,26],[-19,1],[7,-7],[29,7],[35,87]],'#688d9e');
+    poly([[-31,87],[-27,29],[-13,7],[6,0],[22,12],[27,85]],'#dce7e3');
+    rect(-33,59,62,27,'#afc8cf');rect(-28,63,52,4,'#ffffff');
+    poly([[-23,39],[-25,8],[-16,-17],[-3,-24],[10,-20],[14,-2],[27,-10],[38,-2],[36,13],[17,40]],'#7d9fab');
+    poly([[-16,34],[-18,8],[-10,-11],[0,-17],[5,-14],[7,10],[26,-3],[30,2],[28,11],[13,33]],'#f3f6ef');
+    line([[-10,26],[-9,7],[-3,-6]],'#ccdcd9',3);snow(-1,73,7,'#7d9fab');g.restore();
   }
   const slide=p.tilt*50;oval(slide,30,165,24,'#5682c58c');drawDish(selected,slide,0,3.2);
   g.restore();
   const warning=p.kick>.25?'脚下打滑！':'路程 100% 即出餐';
-  box(482,542,316,39,p.kick>.25?C.gold:C.aqua,'#10285e');label(warning,640,562,20,p.kick>.25?C.gold:C.ice);
-  box(241,590,94,34,C.aqua,'#10285e');label('A 向左',288,608,17);
-  box(945,590,94,34,C.aqua,'#10285e');label('D 向右',992,608,17);
-  box(350,589,580,38,C.aqua,'#10285e');
+  frostPanel(482,542,316,39,p.kick>.25);ticketText(warning,640,562,20,p.kick>.25?'#965d3c':'#36596b');
+  frostPanel(241,590,94,34);ticketText('A 向左',288,608,17,'#36596b');
+  frostPanel(945,590,94,34);ticketText('D 向右',992,608,17,'#36596b');
+  frostPanel(350,589,580,38);
   const {x:barX,width:barW}=balanceTrack, safeLeft=balanceMarker(-safeTilt), safeRight=balanceMarker(safeTilt);
   const danger=g.createLinearGradient(barX,0,barX+barW,0);
-  ['#e52476','#ff696e','#ffca4c','#fffb8a','#fffb8a','#ffca4c','#ff696e','#e52476'].forEach((c,i)=>danger.addColorStop(i/7,c));
+  ['#bb806b','#d5a288','#dbbc94','#d8dfcb','#d8dfcb','#dbbc94','#d5a288','#bb806b'].forEach((c,i)=>danger.addColorStop(i/7,c));
   rect(barX,598,barW,20,danger);
-  rect(safeLeft,598,safeRight-safeLeft,20,gradient(598,20,'#b5ff65','#46d42c'));
+  rect(safeLeft,598,safeRight-safeLeft,20,gradient(598,20,'#dcebdc','#92b5a1'));
   for(const x of [safeLeft,safeRight])rect(x-1,596,2,24,'#f3ffbc');
   rect(barX,598,barW,3,'#ffffff8a');
   const indicator=balanceMarker(p.tilt);
-  box(indicator-8,589,16,38,C.ice,'#50d4ff',4);
-  box(293,647,694,43,C.aqua,'#10285e');
-  label('路程 '+Math.round(p.progress*100)+'%',375,669,18);meter(450,662,325,14,p.progress,C.aqua,10);
-  label('完整度 '+Math.ceil(p.integrity)+'%',883,669,18,p.integrity<36?C.red:C.gold);
+  frostPanel(indicator-8,589,16,38);rect(indicator-2,596,4,24,'#527a8c');
+  frostPanel(293,647,694,43);
+  ticketText('路程 '+Math.round(p.progress*100)+'%',375,669,18,'#36596b');
+  rect(450,662,325,14,'#c3d6d8');rect(452,664,321*p.progress,10,'#799fab');
+  ticketText('完整度 '+Math.ceil(p.integrity)+'%',883,669,18,p.integrity<36?'#a05b3d':'#36596b');
 }
 function particles(){
   for(let i=0;i<crystalsOnEdges.length;i++){
@@ -788,8 +813,9 @@ function particles(){
   }
   if(toast){
     const near=scene!=='map',y=near?223:630;
-    box(442,y-21,396,42,toast.color,'#0b245c');
-    label(toast.text,640,y,21,toast.color);
+    const warning=toast.color===C.red||toast.color===C.gold;
+    frostPanel(442,y-21,396,42,warning);
+    ticketText(toast.text,640,y,21,warning?'#965d3c':'#36596b');
   }
 }
 function render(){
@@ -817,6 +843,7 @@ function button(text,callback,style=''){
 }
 function refreshMenu(){
   const menu=$('screen'),choices=$('choices'),actions=$('actions');
+  if(overlay==='shared'){menu.hidden=true;$('pause').hidden=true;$('touch').hidden=true;return;}
   menu.hidden=overlay==='';$('pause').hidden=!!overlay;$('touch').hidden=!!overlay;
   if(!overlay){syncTouch();return;}
   choices.hidden=overlay!=='menu';
@@ -850,11 +877,11 @@ function syncTouch(){
   }));
 }
 function home(){
-  scene='map';overlay='menu';practice=false;step=0;clock=100;player={...spawn};
+  scene='map';overlay='menu';practice=false;step=0;clock=180;player={...spawn};
   target=null;toast=null;water.length=0;sparks.length=0;clearKeys();refreshMenu();
 }
 function start(mode=null){
-  scene='map';overlay='';practice=mode||false;step=0;clock=100;
+  scene='map';overlay='';practice=mode||false;step=0;clock=180;
   player={...spawn};target=null;toast=null;delay=0;result=null;evaluations=[];clearKeys();
   water.length=0;sparks.length=0;
   if(mode)enter(mode);
@@ -864,8 +891,22 @@ function start(mode=null){
 function enter(mode){
   scene=mode;delay=0;toast=null;clearKeys();target=null;water.length=0;sparks.length=0;
   phase={left:limits[mode],cuts:0,swing:0,beat:0,progress:0,flips:0,gate:0,window:0,burn:0,flipLift:0,tilt:0,velocity:0,kick:0,sign:1,pulses:0,jet:0,spray:0,integrity:100};
+  if(window.parent!==window){overlay='shared';clearKeys();window.parent.postMessage({type:'frost-minigame',mode,id:selected,clock},window.location.origin);}
   refreshMenu();
 }
+window.addEventListener('message',event=>{
+  if(event.origin!==window.location.origin||event.source!==window.parent||event.data?.type!=='frost-minigame-result'||overlay!=='shared')return;
+  overlay='';refreshMenu();const result=event.data;
+  canvas.focus?.({preventScroll:true});
+  if(Number.isFinite(result.clock))clock=Math.max(0,Math.min(180,result.clock));
+  if(!result.success){
+    if(clock<=0){fail(result.label);return;}
+    // 与共用关卡一致：失败丢失当前食材，返回地图重新领取。
+    step=0;scene='map';phase=null;delay=0;evaluations=[];clearKeys();refreshMenu();say(result.label.includes('重新取料')?result.label:result.label+' · 重新取料',C.gold,1.65);return;
+  }
+  if(scene==='serve'){finish(true,dishes[selected][0]+' · 已出餐 · '+Math.ceil(result.integrity)+'% 完整度');return;}
+  complete(result.label.startsWith('EXCELLENT')?'EXCELLENT':'GOOD');
+});
 function finish(ok,message){
   result={ok,message};overlay='result';clearKeys();refreshMenu();
 }
@@ -1096,7 +1137,9 @@ if(window.parent===window){
 $('scene-back').hidden=Boolean(window.frameElement);
 $('scene-back').onclick=()=>{window.location.href='neon-chaos-kitchen.html?scene=fridge'+(launchParams.get('esp')==='1'?'&esp=1':'');};
 if(launchParams.get('autostart')==='1'){
-  const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;start();
+  const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;
+  const practiceMode=launchParams.get('practice');
+  start(['chop','wok','serve'].includes(practiceMode)?practiceMode:null);
 }else refreshMenu();
 requestAnimationFrame(frame);
 
