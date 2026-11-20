@@ -500,7 +500,7 @@ function bridge(){
   for(const [offset,color,width] of [
     [13,'#071344cf',laneWidth+14],[8,'#152664',laneWidth+10],
     [0,'#182881',laneWidth+8],[0,'#95d5ff',laneWidth+3],
-    [0,'#3459ab',laneWidth-3],[0,'#467bce',laneWidth-12]
+    [0,'#6899d6',laneWidth-3],[0,'#82b8ef',laneWidth-12]
   ]){
     for(const [[x,y],[u,v]] of walkways)line([[x,y+offset],[u,v+offset]],color,width);
   }
@@ -508,8 +508,8 @@ function bridge(){
     const len=Math.hypot(u-x,v-y);
     g.save();g.translate(x,y);g.rotate(Math.atan2(v-y,u-x));
     for(let d=37;d<len-36;d+=46){
-      rect(d,-18,2,34,'#315caa');
-      rect(d+3,-18,9,2,'#83c0ef');
+      rect(d,-18,2,34,'#5d8ac3');
+      rect(d+3,-18,9,2,'#b5e2fc');
       if(d%3===1)rect(d-4,18,11,2,'#aee7f9');
     }
     g.restore();
