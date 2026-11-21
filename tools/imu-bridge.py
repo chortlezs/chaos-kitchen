@@ -10,20 +10,21 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import queue
 import re
 import subprocess
 import sys
 import threading
 import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import ThreadingHTTPServer
 from pathlib import Path
+
+from motion_sse import EventHub, Handler
 
 
 EVENT_RE = re.compile(r"(?:MOTION_EVENT|IMU_SAMPLE)\s+(\{.*\})")
 
 
-class EventPump:
+class EventPump(EventHub):
     def __init__(self, python: str, workspace: Path, project: Path) -> None:
         self.workspace = workspace
         self.command = [
@@ -39,36 +40,10 @@ class EventPump:
             "--grep",
             "EVENT",
         ]
-        self.clients: set[queue.Queue[str]] = set()
-        self.lock = threading.Lock()
+        super().__init__()
         self.process: subprocess.Popen[str] | None = None
         self.started_ns = time.time_ns()
         self.stopped = threading.Event()
-
-    def add_client(self) -> queue.Queue[str]:
-        client: queue.Queue[str] = queue.Queue(maxsize=32)
-        with self.lock:
-            self.clients.add(client)
-        return client
-
-    def remove_client(self, client: queue.Queue[str]) -> None:
-        with self.lock:
-            self.clients.discard(client)
-
-    def broadcast(self, payload: dict) -> None:
-        message = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-        with self.lock:
-            clients = list(self.clients)
-        for client in clients:
-            try:
-                client.put_nowait(message)
-            except queue.Full:
-                # A slow browser must not stop the log reader or the device.
-                try:
-                    client.get_nowait()
-                    client.put_nowait(message)
-                except queue.Empty:
-                    pass
 
     def run(self) -> None:
         while not self.stopped.is_set():
@@ -127,52 +102,9 @@ class EventPump:
         if self.process and self.process.poll() is None:
             self.process.terminate()
 
+    def health(self) -> dict:
+        return {"ok": True, "source": "esp-iris"}
 
-class Handler(BaseHTTPRequestHandler):
-    pump: EventPump
-
-    def do_OPTIONS(self) -> None:  # noqa: N802
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-
-    def do_GET(self) -> None:  # noqa: N802
-        if self.path == "/health":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(b'{"ok":true,"source":"esp-iris"}\n')
-            return
-        if self.path != "/events":
-            self.send_error(404)
-            return
-        client = self.pump.add_client()
-        self.send_response(200)
-        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
-        self.send_header("Cache-Control", "no-cache")
-        self.send_header("Connection", "keep-alive")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        try:
-            self.wfile.write(b": connected\n\n")
-            self.wfile.flush()
-            while True:
-                try:
-                    message = client.get(timeout=10)
-                except queue.Empty:
-                    self.wfile.write(b": heartbeat\n\n")
-                    self.wfile.flush()
-                    continue
-                self.wfile.write(f"data: {message}\n\n".encode("utf-8"))
-                self.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError, OSError):
-            pass
-        finally:
-            self.pump.remove_client(client)
-
-    def log_message(self, *_args: object) -> None:
-        return
 
 
 def main() -> int:

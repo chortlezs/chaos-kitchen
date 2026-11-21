@@ -34,7 +34,37 @@ http://127.0.0.1:8767/neon-chaos-kitchen.html?scene=toilet&esp=1
 网关连通时显示「网关已连接 · 等待动作」，实际收到事件后才显示「动作已收到」。
 这两种状态不应被理解成独立的板子在线检测。
 
-## 其他电脑 / 手动启动
+## BLE 无线玩法
+
+先通过 USB 安装包含 `app_ble` 的 `kitchen_link` 固件，再使用蓝牙启动入口。
+普通 `启动V1硬件游戏.cmd` 继续使用 USB；两个入口不要同时运行。
+
+1. 开启 Windows 蓝牙，给板子充电并开机。
+2. 首次在本仓库目录安装接收依赖：
+
+   ```powershell
+   & D:\anaconda3\python.exe -m pip install -r tools/requirements-ble.txt
+   ```
+
+3. 双击 `启动V1蓝牙游戏.cmd`。程序自动扫描和连接，无需先在 Windows 设置配对。
+4. 页面显示「蓝牙已连接」后进入练习；确认收到动作后可拔掉电脑 USB 数据线。
+5. 板子仍需电池供电并保持开机。掉电/断线后会自动搜索重连，旧动作不会补发。
+6. 结束时在启动窗口按 Ctrl+C，等待蓝牙断开后再关板子。
+
+如果附近有多块 Kitchen 板子，用完整 Wi-Fi MAC 指定本次设备（与 BLE 地址不同）：
+
+```powershell
+& D:\anaconda3\python.exe tools/start-hardware.py --transport ble --device-mac 1c2904d089b2
+```
+
+`http://127.0.0.1:8766/health` 的 `source=ble` 表示使用 BLE 接收器；
+`connected=true` 才表示板子已连接，`last_event_age_ms` 表示最近动作心跳的年龄。
+断线会立即清除网页的翻炒和倾斜输入。协议与 UUID 见 `firmware/app_ble/README.md`。
+无线固件需要把 `app_ble` 组件加入工程，`main` 在 NVS 初始化后、动作采样启动前调用
+`app_ble_start()`；`main` 与 `app_motion` 的组件依赖均需加入 `app_ble`。
+同时合并 `firmware/sdkconfig.application.defaults` 的 NimBLE 设置并更新有效 sdkconfig。
+
+## USB 手动启动
 
 需要 Python 3.10+、官方 esp-mosaico-vibe 工具工作区，以及运行配套固件的 ESP-Mosaico。
 ESP-IDF 仅编译固件时需要，玩网页时不需要加载编译环境。
@@ -96,6 +126,7 @@ MOTION_EVENT {"action":"chop","cycle":"down_up","t_ms":12345,"gx":0,"gy":0,"gz":
 ```powershell
 node verify-hardware.cjs
 node verify-wok.cjs
+node verify-plate.cjs
 node verify-v1.cjs
 node verify.cjs
 python -m py_compile tools/imu-bridge.py tools/start-hardware.py

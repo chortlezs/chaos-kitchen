@@ -17,5 +17,13 @@ clock+=100;assert.equal(input.plate(),null,'plate input expires without a fresh 
 events[0].send({type:'motion',action:'plate',motion:'tilt',roll:-.45,t_ms:200,event_id:'p2'});
 assert.equal(input.plate().roll,-.45);
 input.clearPlate();assert.equal(input.plate(),null);
+events[0].send({type:'motion',action:'plate',motion:'tilt',roll:.3,t_ms:300,event_id:'p3'});
+events[0].send({type:'link',transport:'ble',state:'disconnected',connected:false});
+assert.equal(input.plate(),null,'BLE disconnect clears held tilt immediately');
+assert.equal(status.at(-1),'bleScanning');
+events[0].send({type:'link',transport:'ble',state:'connected',connected:true});
+assert.equal(status.at(-1),'bleConnected');
+events[0].send({type:'motion',action:'plate',motion:'tilt',roll:.3,t_ms:400,event_id:'p4'});
+events[0].onerror();assert.equal(input.plate(),null,'SSE errors clear tilt immediately');
 input.disconnect();assert.equal(input.active,false);
 console.log('PASS: plate roll transport, expiry, sign changes, clear and disconnect.');

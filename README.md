@@ -36,6 +36,11 @@
 
 固件源码、安装前提、跨电脑启动方法及已知限制见 [硬件接入说明](hardware/README.md)。
 
+BLE 无线版本：安装含 `app_ble` 的固件后，使用 `启动V1蓝牙游戏.cmd`。
+电脑需开启蓝牙并安装 `tools/requirements-ble.txt`；接收器会自动连接板子，
+页面显示「蓝牙已连接」后可使用电池供电玩游戏。原 USB 启动入口继续保留。
+首次配置与指定设备的方法见 [BLE 无线玩法](hardware/README.md#ble-无线玩法)。
+
 验证：`node --check dist/game.js`、`node --check dist/challenges.js`；`node verify.cjs` 验证完整订单（两次翻面及主动平衡）、三种近景绘制、错过翻面烧焦、错误时机惩罚、不保持平衡洒菜、未切食材拒绝下锅、订单队列、碰撞和营业结束。
 
 V1 验证：`node verify-v1.cjs`；硬件切菜验证：`node verify-hardware.cjs`；颠锅验证：`node verify-wok.cjs`；出餐倾斜验证：浏览器检查端盘阶段的左右倾斜修正（持续翻炒、停止/断线释放、阶段隔离、翻面窗口与完整烹饪）。

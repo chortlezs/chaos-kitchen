@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "app_motion.h"
+#include "app_ble.h"
 #include "chop_cycle.h"
 #include "wok_gesture.h"
 
@@ -35,6 +36,7 @@ static void emit_sample(float ax, float ay, float az, float gx, float gy, float 
 
 static void emit_chop(float ax, float ay, float az, float gx, float gy, float gz)
 {
+    app_ble_publish(APP_BLE_CHOP, false, 0, 'x');
     ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"chop\",\"cycle\":\"down_up\",\"t_ms\":%lld,\"ax\":%.3f,\"ay\":%.3f,\"az\":%.3f,\"gx\":%.1f,\"gy\":%.1f,\"gz\":%.1f}",
              (long long)(esp_timer_get_time() / 1000),
              ax, ay, az, gx, gy, gz);
@@ -42,6 +44,7 @@ static void emit_chop(float ax, float ay, float az, float gx, float gy, float gz
 
 static void emit_wok(bool active)
 {
+    app_ble_publish(APP_BLE_WOK, active, 0, 'x');
     ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"wok\",\"motion\":\"circle\",\"active\":%s,\"t_ms\":%lld}",
              active ? "true" : "false", (long long)(esp_timer_get_time() / 1000));
 }
@@ -55,6 +58,7 @@ static void emit_plate(float ax, float ay, float az)
     // tilting the board left must move the cursor left, so invert the sensor sign.
     const float roll_rad = -(use_x ? tilt_x : tilt_y);
     const float roll = fmaxf(-1.0f, fminf(1.0f, roll_rad / 0.7853981634f));
+    app_ble_publish(APP_BLE_PLATE, false, roll, use_x ? 'x' : 'y');
     ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"plate\",\"motion\":\"tilt\",\"roll\":%.3f,\"axis\":\"%s\",\"t_ms\":%lld}",
              roll, use_x ? "x" : "y", (long long)(esp_timer_get_time() / 1000));
 }
@@ -93,6 +97,7 @@ static void motion_task(void *arg)
             }
             was_stirring = action.stirring;
             if (action.flip) {
+                app_ble_publish(APP_BLE_FLIP, false, 0, 'x');
                 ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"flip\",\"motion\":\"vertical\",\"t_ms\":%lld}",
                          (long long)(now_us / 1000));
             }

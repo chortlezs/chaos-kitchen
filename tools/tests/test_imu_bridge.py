@@ -4,7 +4,10 @@ import io
 import json
 from pathlib import Path
 import unittest
+import sys
 from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
 spec = importlib.util.spec_from_file_location("imu_bridge", Path(__file__).parents[1] / "imu-bridge.py")
 bridge = importlib.util.module_from_spec(spec)

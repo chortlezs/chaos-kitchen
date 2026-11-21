@@ -28,11 +28,16 @@
       catch (_) { onStatus("unavailable"); return; }
       source = stream;
       stream.onopen = () => { if (source === stream) onStatus("waiting"); };
-      stream.onerror = () => { if (source === stream) { clearStir(); onStatus("retrying"); } };
+      stream.onerror = () => { if (source === stream) { clearStir(); clearPlate(); onStatus("retrying"); } };
       stream.onmessage = message => {
         if (source !== stream) return;
         let packet;
         try { packet = JSON.parse(message.data); } catch (_) { return; }
+        if (packet?.type === "link" && packet.transport === "ble") {
+          if (!packet.connected) { clearStir(); clearPlate(); }
+          onStatus(packet.connected ? "bleConnected" : packet.state === "ambiguous" ? "bleAmbiguous" : "bleScanning");
+          return;
+        }
         if (!packet || packet.type !== "motion" || !Number.isFinite(packet.t_ms) || packet.t_ms < 0) return;
         const chop = packet.action === "chop" && packet.cycle === "down_up";
         const stir = packet.action === "wok" && packet.motion === "circle" && typeof packet.active === "boolean";
@@ -71,6 +76,8 @@
     const labels = {
       disconnected: "键盘 / 触屏可用", connecting: "正在连接本地网关…",
       waiting: "网关已连接 · 等待动作", receiving: "动作已收到 · 一下一上一刀",
+      bleConnected: "蓝牙已连接 · 等待动作", bleScanning: "正在搜索并重连蓝牙板子…",
+      bleAmbiguous: "发现多块板子 · 请指定设备",
       stirring: "画圈翻炒中 · 停止即松开 E", stopped: "翻炒已停止 · 继续画圈",
       flip: "上颠已收到 · 翻面一次",
       plate: "盘面修正已收到",

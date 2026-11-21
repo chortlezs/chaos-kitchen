@@ -3,7 +3,9 @@ import argparse
 import functools
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import urllib.error
@@ -11,11 +13,14 @@ import urllib.request
 import webbrowser
 
 
-def bridge_ready(port):
+def bridge_ready(port, transport='usb'):
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=2) as response:
             result = json.load(response)
-            return result.get("ok") is True and result.get("source") == "esp-iris"
+            expected = 'ble' if transport == 'ble' else 'esp-iris'
+            if result.get('ok') is True and result.get('source') != expected:
+                raise RuntimeError('Port 8766 is using another transport. Stop the previous hardware launcher first.')
+            return result.get("ok") is True and result.get("source") == expected
     except (OSError, ValueError, urllib.error.URLError):
         return False
 
@@ -27,9 +32,20 @@ def main():
     parser.add_argument("--workspace", type=Path, default=Path(r"C:\esp-mosaico-vibe"))
     parser.add_argument("--project", type=Path)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument('--transport', choices=('usb', 'ble'), default='usb')
+    parser.add_argument('--device-mac', help='Select the BLE board by its Wi-Fi MAC')
     args = parser.parse_args()
     if args.bridge_port != 8766:
         parser.error("The game currently uses local bridge port 8766.")
+    if args.transport == 'ble':
+        try:
+            import bleak  # noqa: F401
+        except ImportError:
+            parser.error('Install BLE dependencies: python -m pip install -r tools/requirements-ble.txt')
+    try:
+        reuse_bridge = bridge_ready(args.bridge_port, args.transport)
+    except RuntimeError as error:
+        parser.error(str(error))
     root = Path(__file__).resolve().parent.parent
     try:
         server = ThreadingHTTPServer(("127.0.0.1", args.web_port),
@@ -38,15 +54,20 @@ def main():
         print(f"Cannot start V1 web server: {error}. Close the previous V1 launcher or choose --web-port.")
         return 1
     child = None
+    server.daemon_threads = True
     try:
-        if not bridge_ready(args.bridge_port):
+        if not reuse_bridge:
             command = [sys.executable, str(root / "tools" / "imu-bridge.py"),
                        "--workspace", str(args.workspace), "--project",
                        str(args.project or args.workspace / "projects" / "kitchen_link")]
-            child = subprocess.Popen(command)
+            if args.transport == 'ble':
+                command = [sys.executable, str(root / 'tools' / 'ble-bridge.py')]
+                if args.device_mac:
+                    command += ['--device-mac', args.device_mac]
+            child = subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
         url = f"http://127.0.0.1:{args.web_port}/neon-chaos-kitchen.html?scene=toilet&esp=1"
         print(f"V1 hardware game: {url}", flush=True)
-        print("Keep this window open. Ctrl+C stops this V1 server.", flush=True)
+        print(f"Transport: {args.transport}. Keep this window open. Ctrl+C stops this V1 server.", flush=True)
         if not args.no_browser:
             webbrowser.open(url)
         server.serve_forever()
@@ -55,8 +76,15 @@ def main():
     finally:
         server.server_close()
         if child is not None and child.poll() is None:
-            child.terminate()
-            child.wait(timeout=5)
+            try:
+                if os.name == 'nt':
+                    child.send_signal(signal.CTRL_BREAK_EVENT)
+                else:
+                    child.send_signal(signal.SIGINT)
+                child.wait(timeout=24)
+            except (OSError, subprocess.TimeoutExpired):
+                child.terminate()
+                child.wait(timeout=5)
     return 0
 
 

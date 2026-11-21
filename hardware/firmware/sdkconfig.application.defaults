@@ -7,3 +7,10 @@ CONFIG_ESP_IRIS_HEALTH_TIMEOUT_MS=45000
 # The pinned S31 SHA accelerator aborts while hashing flash-mapped GSP data.
 # Keep full SHA-256 resource verification through the software implementation.
 # CONFIG_MBEDTLS_HARDWARE_SHA is not set
+
+# Independent BLE gameplay transport; keep ESP-Iris on HS USB.
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+CONFIG_BT_NIMBLE_ROLE_OBSERVER=n
