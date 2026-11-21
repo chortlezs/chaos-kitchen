@@ -89,9 +89,13 @@
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  function drawMark(canvas, mark) {
+  function drawMark(canvas, mark, theme) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (Number.isInteger(mark) && theme && window.KitchenItems) {
+      window.KitchenItems.draw(ctx, theme, mark, canvas.width / 2, canvas.height / 2, .44);
+      return;
+    }
     for (const [color, x, y, width, height] of marks[mark]) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, width, height);
@@ -114,9 +118,29 @@
     const question = get("chef-question");
     const answers = get("chef-answers");
     const decks = draw.querySelector(".opening-decks");
+    const steps = draw.querySelectorAll(".opening-steps li");
     const home = get("opening-home");
     let pool = null;
-    let hatRush = null;
+    let coverTransition = null;
+    drawMark(draw.querySelector(".draw-medallion canvas"), "hat");
+    const worlds = draw.querySelectorAll("[data-world]");
+    const readout = get("draw-readout");
+    function updateAtlas(){
+      worlds.forEach(world => {
+        const id = world.dataset.world;
+        world.dataset.state = id === scene?.id ? "selected" :
+          !pool || (!scene && pool.scenes.some(option => option.id === id)) ? "available" : "dimmed";
+      });
+      draw.dataset.world = scene?.id ?? "";
+    }
+
+    function showStep(activeStep) {
+      draw.dataset.step = activeStep;
+      steps.forEach((step, index) => {
+        if (index === activeStep) step.setAttribute("aria-current", "step");
+        else step.removeAttribute("aria-current");
+      });
+    }
 
     function ask(line, choices, respond) {
       question.textContent = line;
@@ -124,13 +148,27 @@
       answers.replaceChildren(...choices.map(choice => {
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = choice.label;
+        const title = document.createElement("strong");
+        title.textContent = choice.label;
+        const icons = document.createElement("span");
+        icons.className = "draw-option-icons";
+        icons.setAttribute("aria-hidden", "true");
+        for (const value of choice.scenes ?? choice.dishes) {
+          const icon = document.createElement("canvas");
+          icon.width = icon.height = 32;
+          drawMark(icon,value);
+          icons.append(icon);
+        }
+        button.append(icons,title);
         if (choice.scenes) {
           const destinations = document.createElement("small");
           destinations.textContent = choice.scenes.map(id => scenes.find(scene => scene.id === id).name).join(" / ");
           button.append(destinations);
         }
-        button.onclick = () => respond(choice);
+        button.onclick = () => {
+          window.KitchenAudio?.cue("select","cover");
+          respond(choice);
+        };
         return button;
       }));
       question.focus({ preventScroll: true });
@@ -144,12 +182,17 @@
       cook.hidden = true;
       cook.disabled = true;
       result.textContent = "";
+      readout.hidden = true;
+      updateAtlas();
+      showStep(0);
       ask("开锅啦！今天想吃什么口感？", cravings, craving => {
+        showStep(1);
         ask(craving.reply + " 今天上班什么状态？", moods, mood => {
           pool = recommendCards(mood, craving);
           answers.hidden = true;
           decks.hidden = false;
           cook.hidden = false;
+          showStep(2);
           question.textContent = mood.reply + " 两叠各翻一张吧！";
           renderCards();
           sceneCard.focus({ preventScroll: true });
@@ -157,24 +200,39 @@
       });
     }
 
-    function renderCard(card, name, mark) {
+    function renderCard(card, name, mark, theme) {
       const revealed = mark !== "mystery";
+      card.dataset.skin = theme ?? (revealed ? mark : "");
+      if (revealed && !card.hasAttribute("data-revealed") &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        card.animate?.([
+          { transform: "perspective(550px) rotateY(-89deg) scale(.91)", filter: "brightness(1.75)" },
+          { transform: "perspective(550px) rotateY(12deg) scale(1.045)", offset: .74 },
+          { transform: "perspective(550px) rotateY(0) scale(1)" }
+        ], { duration: 440, easing: "cubic-bezier(.2,.75,.23,1)" });
+      }
       card.toggleAttribute("data-revealed", revealed);
       card.setAttribute("aria-disabled", String(revealed));
       card.querySelector(".opening-card-name").textContent = name;
-      drawMark(card.querySelector("canvas"), mark);
+      drawMark(card.querySelector("canvas"), mark, theme);
     }
 
     function renderCards() {
       const dishName = dish === null ? null : scene ? dishes[scene.id][dish].name : foods[dish];
       renderCard(sceneCard, scene?.name ?? pool.scenes.map(option => option.name).join(" / "), scene?.id ?? "mystery");
-      renderCard(dishCard, dishName ?? pool.dishes.map(id => foods[id]).join(" / "), dish ?? "mystery");
+      renderCard(dishCard, dishName ?? pool.dishes.map(id => foods[id]).join(" / "), dish ?? "mystery", scene?.id ?? pool.scenes[0].id);
       cook.disabled = !scene || dish === null;
+      decks.dataset.reveals = Number(Boolean(scene)) + Number(dish !== null);
+      updateAtlas();
+      readout.hidden = false;
+      readout.textContent = cook.disabled ? (scene ? "再翻菜品卡" : dish !== null ? "再翻场景卡" : "翻开两张卡，确定本局的厨房和菜品") :
+        `${scene.name} · ${dishName}`;
       if (!cook.disabled) question.textContent = "走，去" + scene.name + "做「" + dishName + "」！";
       result.textContent = [scene?.name, dishName].filter(Boolean).join(" · ");
     }
 
     function show(screen) {
+      window.KitchenAudio?.sync("cover",screen);
       opening.hidden = false;
       game.inert = true;
       cover.hidden = screen !== "cover";
@@ -201,7 +259,7 @@
     }
 
     function exitOpening() {
-      hatRush?.cancel();
+      coverTransition?.cancel();
       show("cover");
     }
     home.onclick = exitOpening;
@@ -213,33 +271,33 @@
     };
     play.onclick = async () => {
       if (play.disabled) return;
+      window.KitchenAudio?.unlock?.();
+      window.KitchenAudio?.cue("start","cover");
       const manual = get("opening-manual");
-      const hat = get("cover-hat");
+      const art = get("cover-art");
       play.disabled = manual.disabled = true;
       home.hidden = false;
       cover.classList.add("is-launching");
       try {
-        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && hat.animate) {
-          const box = hat.getBoundingClientRect();
-          const stage = cover.getBoundingClientRect();
-          const dx = stage.left + stage.width / 2 - (box.left + box.width / 2);
-          const dy = stage.top + stage.height / 2 - (box.top + box.height / 2);
-          const centered = `translate(-50%, -50%) translate(${dx}px, ${dy}px)`;
-          const zoom = 4 * Math.max(stage.width, stage.height) / box.width;
-          const rush = hat.animate([
-            { transform: "translate(-50%, -50%) scale(1)" },
-            { transform: "translate(-50%, -55%) rotate(-7deg) scale(.88)", offset: .22 },
-            { transform: centered + " scale(1.24)", offset: .62 },
-            { transform: centered + " scale(" + zoom + ")" }
-          ], { duration: 720, easing: "cubic-bezier(.45,0,.75,.6)", fill: "forwards" });
-          hatRush = rush;
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && art.animate) {
+          const { width, height } = art.getBoundingClientRect();
+          const dx = -.155 * width;
+          const dy = .08 * height;
+          const centered = `translate(${dx}px, ${dy}px)`;
+          const rush = art.animate([
+            { transform: "scale(1)" },
+            { transform: "scale(1.025)", offset: .22 },
+            { transform: centered + " scale(2.2)", offset: .62 },
+            { transform: centered + " scale(5.5)", opacity: .15 }
+          ], { duration: 680, easing: "cubic-bezier(.45,0,.75,.6)", fill: "forwards" });
+          coverTransition = rush;
           try {
             await rush.finished;
           } catch (error) {
             if (error.name === "AbortError") return;
             throw error;
           } finally {
-            hatRush = null;
+            coverTransition = null;
             rush.cancel();
           }
         }
@@ -251,17 +309,20 @@
       }
     };
     get("opening-manual").onclick = () => {
+      window.KitchenAudio?.cue("select","cover");
       hide();
       openManual();
       get("start").focus();
     };
     sceneCard.onclick = () => {
       if (scene) return;
+      window.KitchenAudio?.cue("card","cover");
       scene = sample(pool.scenes);
       renderCards();
     };
     dishCard.onclick = () => {
       if (dish !== null) return;
+      window.KitchenAudio?.cue("card","cover");
       dish = sample(pool.dishes);
       renderCards();
     };

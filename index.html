@@ -9,7 +9,11 @@
 <body>
   <p>正在打开「极限出餐」……</p>
   <script>
-    location.replace(`neon-chaos-kitchen.html${location.search}${location.hash}`);
+    const game = new URL('neon-chaos-kitchen.html', location.href);
+    game.search = location.search;
+    game.searchParams.set('build', 'excellent-vocoder-1');
+    game.hash = location.hash;
+    location.replace(game.href);
   </script>
   <noscript>请启用 JavaScript，<a href="neon-chaos-kitchen.html">打开游戏</a>。</noscript>
 </body>

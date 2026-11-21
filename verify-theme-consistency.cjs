@@ -60,7 +60,7 @@ const frost=fs.readFileSync('frost-kitchen.html','utf8');
 const childEnter=frost.slice(frost.indexOf('function enter(mode){'),frost.indexOf('function finish(ok,message){'));
 const childMessages=[],childSent=[],parent={postMessage:data=>childSent.push(data)};
 const child={window:{parent,location:{origin:'http://localhost'},addEventListener:(_,fn)=>childMessages.push(fn)},
-  scene:'map',delay:0,toast:null,target:null,water:[],sparks:[],phase:null,overlay:'',clock:160,selected:2,step:1,evaluations:[],
+  scene:'map',delay:0,toast:null,target:null,water:[],sparks:[],phase:null,overlay:'',clock:160,selected:2,step:1,evaluations:[],stageFx:null,
   limits:{chop:14,wok:35,serve:17},canvas:{focus:noop},clearKeys:noop,refreshMenu:noop,
   dishes:[['a'],['b'],['冰冻文件夹']],C:{gold:'#abc'},say:noop,
   complete:grade=>child.evaluations.push(grade),finish:(ok,message)=>child.result={ok,message},fail:message=>child.result={ok:false,message}};
