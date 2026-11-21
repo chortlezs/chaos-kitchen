@@ -17,6 +17,7 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 <body>
 <main>
 <div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
+<div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="run-route" aria-live="polite"></span></div>
 <canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
@@ -35,10 +36,12 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 <button data-mode="chop">切菜练习</button><button data-mode="wok">颠锅练习</button><button data-mode="serve">端盘练习</button>
 </div>
 <div class="hint" id="menu-hint">WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停</div>
+<label class="foot-option"><input id="foot-mode" type="checkbox">脚踝小跑移动 · 固定路线到站操作</label>
 </section>
 </div>
 </main>
 <script src="hardware-chop.js"></script>
+<script src="foot-input.js?v=20261121-2"></script>
 <script>
 (() => {
 "use strict";
@@ -96,6 +99,11 @@ const keys=new Set();
 const menu=get("overlay");
 const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
 let hardwareInput=null;
+let footInput=null;
+const footMode=()=>get("foot-mode").checked===true&&state.scene!=="fridge";
+get("foot-mode").checked=new URLSearchParams(window.location.search).get("foot")==="1";
+const cycleDistance=48; // Game-route pixels per complete ankle cycle, not physical metres.
+function clearRunInput(){state.runBudget=0;state.moving=false;}
 function hardwareWokReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="wok"&&state.phase&&!state.phase.done;}
 function stirring(){return keys.has("e")||(hardwareWokReady()&&hardwareInput?.stirring());}
 function hardwareServeReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="serve"&&state.phase&&!state.phase.done;}
@@ -462,6 +470,7 @@ function toiletMap(t){
   if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f3d77c");
 }
 function instructions(){
+  if(footMode())return "原地小跑沿黄色路线前进 · 到站后停止跑动，完成工序";
   const held=state.held, name=dishes[state.queue[0].id].name;
   if(!held)return "取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
   if(state.scene==="coffee")return name+"  →  "+["左上方 · 滤篮砧板","右侧 · 烘焙炒台","下方偏左 · 出餐滤杯"][held.stage];
@@ -671,6 +680,9 @@ function wanted(){
 function toast(message,color=c.light,seconds=1.65){state.toast={text:message,color,until:now+seconds};}
 function updateControls(){
   const bar=get("controls");
+  if(footMode()&&state.view==="map"){
+    bar.replaceChildren();bar.hidden=true;get("pause").hidden=!!state.open;return;
+  }
   const sets={map:[["w","↑"],["a","←"],["s","↓"],["d","→"],[" ","空格 · 操作"]],chop:[["e","E · 切菜"]],wok:[["e","E · 翻炒"],["f","F · 翻面"]],serve:[["a","A · 左"],["e","E · 前进"],["d","D · 右"]]};
   bar.replaceChildren(...sets[state.view].map(([key,label])=>{
     const button=document.createElement("button");
@@ -683,6 +695,7 @@ function updateControls(){
   get("pause").hidden=!!state.open;
 }
 function toggleMenu(mode){
+  clearRunInput();
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   state.open=mode; keys.clear(); state.moving=false;
@@ -708,7 +721,7 @@ function reset(){
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
-  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[]});
+  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[],runBudget:0,runJourney:null,footCycles:0});
 }
 function start(){
   reset();
@@ -723,6 +736,7 @@ function start(){
   toggleMenu(null);
 }
 function phase(mode,id){
+  clearRunInput();state.runJourney=null;
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   state.view=mode;state.target=null;keys.clear();state.fx=[];state.toast=null;
@@ -757,6 +771,7 @@ function returnFromPhase(){
   if(!state.queue.length)toggleMenu("end");
 }
 function backToMap(){
+  clearRunInput();state.runJourney=null;
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   state.view="map";state.phase=null;keys.clear();state.fx=[];state.target=null;
@@ -827,6 +842,7 @@ function target(goal){
   if(route.length){state.target={goal,route,x:goal.x,y:goal.y};}
 }
 function move(dt){
+  if(footMode()){moveByRunning(dt);return;}
   const dx=+(keys.has("d")||keys.has("arrowright"))-+(keys.has("a")||keys.has("arrowleft"));
   const dy=+(keys.has("s")||keys.has("arrowdown"))-+(keys.has("w")||keys.has("arrowup"));
   const speed=(keys.has("shift")?237:155)*dt;
@@ -839,6 +855,53 @@ function move(dt){
   const x=next.x-state.player.x,y=next.y-state.player.y,n=Math.hypot(x,y);
   if(n<=speed+1){if(valid(next.x,next.y))Object.assign(state.player,next);route.shift();}
   else walk(x/n*speed,y/n*speed);
+}
+function planRunRoute(){
+  if(!state.queue.length)return;
+  const kind=wanted(),id=state.queue[0].id;
+  const goal=activeStations().find(o=>o.type===kind&&(kind!=="bin"||o.dish===id));
+  if(!goal)return;
+  const route=routeTo(goal);
+  if(!route.length&&!inReach(goal)){
+    get("run-route").textContent="路线暂不可达 · 请重新开始";return;
+  }
+  const points=[state.player,...route];
+  const distance=points.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-points[i].x,p.y-points[i].y),0);
+  state.target={goal,route,x:goal.x,y:goal.y};
+  state.runJourney={distance,traveled:0};
+}
+function moveByRunning(dt){
+  state.moving=false;
+  if(!state.target)planRunRoute();
+  if(!state.target)return;
+  const {goal,route}=state.target;
+  const journey=state.runJourney;
+  const percent=journey.distance?Math.min(99,Math.floor(journey.traveled/journey.distance*100)):100;
+  get("run-route").textContent=`前往${goal.type==="bin"?"取料处":goal.label} · ${percent}% · ${state.footCycles} 次`;
+  if(!route.length||inReach(goal)){
+    state.target=null;state.runJourney=null;clearRunInput();
+    activate(goal);return;
+  }
+  if(document.hidden||!footInput?.connected){clearRunInput();return;}
+  let budget=Math.min(state.runBudget||0,155*dt);
+  while(budget>0&&route.length){
+    const next=route[0],dx=next.x-state.player.x,dy=next.y-state.player.y,n=Math.hypot(dx,dy);
+    if(n<.01){route.shift();continue;}
+    const amount=Math.min(budget,n,2),before={...state.player};
+    walk(dx/n*amount,dy/n*amount);
+    const moved=Math.hypot(state.player.x-before.x,state.player.y-before.y);
+    if(moved<.001){clearRunInput();state.target=null;state.runJourney=null;break;}
+    state.moving=true;journey.traveled+=moved;
+    state.runBudget=Math.max(0,state.runBudget-amount);budget-=amount;
+    if(Math.hypot(next.x-state.player.x,next.y-state.player.y)<.05)route.shift();
+  }
+}
+function drawRunRoute(){
+  if(!footMode()||state.view!=="map"||!state.target)return;
+  ctx.save();ctx.globalAlpha=.65;
+  ctx.setLineDash([5,7]);
+  path([[state.player.x,state.player.y],...state.target.route.map(p=>[p.x,p.y])],c.yellow,3);
+  ctx.restore();
 }
 function cutOnce(source="manual"){
   const p=state.phase;
@@ -919,6 +982,7 @@ function input(k,down){
     return;
   }
   if(state.open||keys.has(k))return;
+  if(footMode()&&state.view==="map"&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"," "].includes(k))return;
   keys.add(k);
   if(state.view==="map"&&k===" "){const o=nearStation();if(o)activate(o);else toast("靠近工作台后按空格");}
   if(state.view==="chop"&&k==="e")cutOnce();
@@ -935,7 +999,7 @@ window.addEventListener("blur",()=>{if(!state.open)toggleMenu("pause");});
 canvas.addEventListener("pointerdown",e=>{
   if(state.open)return;
   const box=canvas.getBoundingClientRect(),p={x:(e.clientX-box.left)*W/box.width,y:(e.clientY-box.top)*H/box.height,w:0,h:0};
-  if(state.view==="map")target(activeStations().find(o=>hit(p,o))||p);
+  if(state.view==="map"){if(!footMode())target(activeStations().find(o=>hit(p,o))||p);}
   else if(state.view==="chop")cutOnce();
 });
 function sceneQuery(scene){
@@ -944,6 +1008,8 @@ function sceneQuery(scene){
 function selectScene(scene){
   if(!state.open||state.open==="pause")return;
   get("hardware-controls").hidden=scene==="fridge";
+  get("foot-controls").hidden=scene==="fridge"||!get("foot-mode").checked;
+  get("foot-mode").disabled=scene==="fridge";
   if(scene==="fridge"){
     state.scene="fridge";dishes=fridgeDishes;
     const frost=get("frost-experience");
@@ -966,6 +1032,7 @@ function selectScene(scene){
   get("dish-select").replaceChildren();
   dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
+  if(footMode())get("menu-hint").textContent="原地小跑沿路线前进 · 到站自动操作 · 手持板完成工序 · Esc 暂停";
   reset();toggleMenu("menu");
 }
 get("frost-back").onclick=()=>{state.open="menu";selectScene("neon");};
@@ -984,11 +1051,40 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   onFlip(){if(hardwareWokReady())flip();}
   ,onPlate(){return !!hardwareServeReady();}
 });
+if(window.KitchenFoot){
+  footInput=window.KitchenFoot.create({
+    onCycle(packet){
+      if(!footMode()||document.hidden||state.open||state.view!=="map"||state.practice)return false;
+      if(!state.target)planRunRoute();
+      if(!state.target)return false;
+      state.footCycles+=packet.cycles;
+      state.runBudget=Math.min((state.runBudget||0)+packet.cycles*cycleDistance,cycleDistance*2);
+      return true;
+    },
+    onLost:clearRunInput,
+    onStatus(status){
+      const labels={disabled:"脚踝小跑已关闭",connecting:"正在连接脚踝传感器…",connected:"脚踝已连接 · 原地小跑前进",
+        running:"小跑周期已收到",retrying:"脚踝连接中断 · 正在重连",ambiguous:"发现多个脚部传感器",unsupported:"浏览器不支持脚部连接"};
+      get("foot-status").textContent=labels[status];
+    }
+  });
+  get("foot-mode").onchange=()=>{
+    clearRunInput();state.target=null;state.runJourney=null;
+    get("foot-controls").hidden=!footMode();
+    if(footMode())footInput.connect();else footInput.disconnect();
+    get("menu-hint").textContent=footMode()?"原地小跑沿路线前进 · 到站自动操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
+    updateControls();
+  };
+  if(footMode())footInput.connect();
+  window.addEventListener("pagehide",()=>footInput.disconnect());
+}else if(footMode()){
+  get("foot-status").textContent="脚部模块未加载 · 请按 Ctrl+Shift+R 刷新";
+}
 function frameLoop(ms){
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
   advance(dt);
-  if(state.view==="map")map(now);
+  if(state.view==="map"){map(now);drawRunRoute();}
   else {circuitry(now,true);trim(now);({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);}
   visuals(now);
   requestAnimationFrame(frameLoop);

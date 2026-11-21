@@ -34,10 +34,12 @@ def main():
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument('--transport', choices=('usb', 'ble'), default='usb')
     parser.add_argument('--device-mac', help='Select the BLE board by its Wi-Fi MAC')
+    parser.add_argument('--foot', action='store_true', help='Enable calibrated ankle jogging and fixed routes')
+    parser.add_argument('--foot-calibration', type=Path)
     args = parser.parse_args()
     if args.bridge_port != 8766:
         parser.error("The game currently uses local bridge port 8766.")
-    if args.transport == 'ble':
+    if args.transport == 'ble' or args.foot:
         try:
             import bleak  # noqa: F401
         except ImportError:
@@ -47,13 +49,27 @@ def main():
     except RuntimeError as error:
         parser.error(str(error))
     root = Path(__file__).resolve().parent.parent
+    foot_profile = args.foot_calibration or root / '.hardware-runtime' / 'foot-calibration.json'
+    reuse_foot = False
+    if args.foot:
+        if not foot_profile.is_file():
+            parser.error('Ankle calibration missing: supply --foot-calibration <profile.json>.')
+        profile = json.loads(foot_profile.read_text(encoding='utf-8'))
+        try:
+            with urllib.request.urlopen('http://127.0.0.1:8768/health', timeout=2) as response:
+                health = json.load(response)
+            if health.get('source') != 'xiao-ble' or health.get('calibration_identity') != profile.get('identity'):
+                parser.error('Port 8768 is occupied by a different sensor bridge.')
+            reuse_foot = True
+        except (OSError, ValueError, urllib.error.URLError):
+            pass
     try:
         server = ThreadingHTTPServer(("127.0.0.1", args.web_port),
                                      functools.partial(SimpleHTTPRequestHandler, directory=str(root)))
     except OSError as error:
         print(f"Cannot start V1 web server: {error}. Close the previous V1 launcher or choose --web-port.")
         return 1
-    child = None
+    children = []
     server.daemon_threads = True
     try:
         if not reuse_bridge:
@@ -64,8 +80,13 @@ def main():
                 command = [sys.executable, str(root / 'tools' / 'ble-bridge.py')]
                 if args.device_mac:
                     command += ['--device-mac', args.device_mac]
-            child = subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0)
+            children.append(subprocess.Popen(command, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0))
+        if args.foot and not reuse_foot:
+            children.append(subprocess.Popen([sys.executable,str(root/'tools'/'foot-bridge.py'),
+                '--calibration',str(foot_profile)],creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0))
         url = f"http://127.0.0.1:{args.web_port}/neon-chaos-kitchen.html?scene=toilet&esp=1"
+        if args.foot:
+            url += '&foot=1'
         print(f"V1 hardware game: {url}", flush=True)
         print(f"Transport: {args.transport}. Keep this window open. Ctrl+C stops this V1 server.", flush=True)
         if not args.no_browser:
@@ -75,16 +96,17 @@ def main():
         pass
     finally:
         server.server_close()
-        if child is not None and child.poll() is None:
-            try:
-                if os.name == 'nt':
-                    child.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    child.send_signal(signal.SIGINT)
-                child.wait(timeout=24)
-            except (OSError, subprocess.TimeoutExpired):
-                child.terminate()
-                child.wait(timeout=5)
+        for child in children:
+            if child.poll() is None:
+                try:
+                    if os.name == 'nt':
+                        child.send_signal(signal.CTRL_BREAK_EVENT)
+                    else:
+                        child.send_signal(signal.SIGINT)
+                    child.wait(timeout=24)
+                except (OSError, subprocess.TimeoutExpired):
+                    child.terminate()
+                    child.wait(timeout=5)
     return 0
 
 

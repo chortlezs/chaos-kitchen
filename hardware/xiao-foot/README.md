@@ -7,9 +7,53 @@ notifications at 50 Hz. It does not wait for a USB serial connection at startup.
 BLE transmission runs in its own FreeRTOS worker. A one-frame overwrite queue
 keeps the newest telemetry and prevents radio congestion from blocking sampling.
 
-This stage collects data. Running classification and automatic routes require
-actual ankle-mounted calibration and are not implemented by this acquisition firmware.
+The firmware sends raw samples; the calibrated host detector in `tools/jog_detector.py`
+classifies jogging and `tools/foot-bridge.py` publishes complete ankle cycles.
 With one ankle sensor, a complete cycle measures that foot, rather than both feet.
+
+## Jogging game (local)
+
+Use the same ankle, wearing direction and secure enclosure as the calibration.
+Power the XIAO from a battery or a power bank with continuous low-current output;
+the USB cable need not connect to the PC. BLE carries the telemetry.
+
+```powershell
+# Uses this PC's ignored .hardware-runtime/foot-calibration.json profile.
+.\启动V1体感跑步游戏.cmd
+# Or explicitly select a wearer-specific calibration profile:
+python tools/start-hardware.py --transport ble --foot --foot-calibration <profile.json>
+# Start only the foot bridge when the existing game server is already running:
+python tools/foot-bridge.py --calibration .hardware-runtime/foot-calibration.json
+```
+
+Open `http://127.0.0.1:8767/neon-chaos-kitchen.html?scene=toilet&esp=1&foot=1`.
+Select **脚踝小跑移动** and start a normal order. The fixed route visits the correct
+ingredient bin, chopping board, wok and serving window. Arrival activates each
+station automatically. Each accepted ankle cycle credits 48 game-route pixels;
+this is a game distance, not a measurement of physical metres. Direction keys and
+map clicks do not move the avatar in this mode. Cooking still uses the hand board.
+Turn off the checkbox in the menu to restore the original map controls.
+Supported classic scenes: toilet, neon office and coffee. The separate Frost
+Kitchen iframe does not use this route mode.
+
+The foot bridge uses localhost port 8768, independently of the hand bridge on
+8766. It checks the sensor identity against the calibration before accepting data.
+Two consecutive jogging intervals are required before crediting their complete
+cycles. Slow marching, stationary rotation without acceleration variation, stale
+data, reconnection gaps, menus and paused/hidden pages cannot accumulate movement.
+Routes discard leftover credit at arrival; it cannot spill into cooking or the
+next leg. Link loss clears movement immediately. Closing the launcher stops the
+foot bridge it created, while a reused bridge remains with its original owner.
+
+The local wearer profile is not committed. Its cadence and swing axis depend on
+placement; another wearer or mounting orientation needs new labelled calibration.
+The observed calibration on 2026-11-21 had about 48 Hz telemetry, slow marching
+cycles around 1.25 seconds and jogging cycles around 0.68 seconds. Replay separated
+those actions, but this is not a universal gait classifier; fast marching and
+other periodic motions still need separate evaluation.
+
+Checks: `node verify-foot.cjs` and
+`python -m unittest discover -s tools/tests -p "test_*.py"`.
 
 ## Pinned local tools
 
@@ -71,8 +115,9 @@ BLE address observed on this PC: `D3:5E:F1:12:F2:F2`.
   angular-rate peak 321.3 degrees/second.
 - Stationary gyro bias is measurable and must be calibrated before classification.
 - Raw CSV, baseline and acceptance JSON are in ignored `.hardware-runtime/foot-*`.
-- The board is currently USB powered; battery-only and ankle-running validation
-  remain for the next stage.
+- Power-bank/USB-powered wireless telemetry and ankle-mounted labelled slow
+  marching, jogging and stopping were recorded subsequently. Battery-cell power
+  itself has not been tested. Raw recordings and the wearer profile remain local.
 
 ## BLE protocol
 

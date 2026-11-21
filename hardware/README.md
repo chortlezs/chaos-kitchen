@@ -90,7 +90,9 @@ python -m http.server 8767 --bind 127.0.0.1
 
 脚踝佩戴的 XIAO nRF52840 Sense 使用独立 Arduino 固件；开发环境、六轴采集、
 USB/BLE 记录命令见 [XIAO 脚部传感器说明](xiao-foot/README.md)。
-该采集阶段用于后续原地小跑校准，暂不改变游戏移动逻辑。
+已完成脚踝佩戴校准，并通过独立的本地 BLE 网关接入原地小跑和固定路线。
+运行「启动V1体感跑步游戏.cmd」，使用本机保存的校准文件；到站后自动进入工序。
+详见上面的 XIAO 说明。手持板仍控制切菜、颠锅与端盘。
 
 `firmware/app_motion/` 保存本次已在设备验证的采集组件（含往返识别器）。
 在官方工具创建的 `kitchen_link` 工程中放到 `components/app_motion/`，
