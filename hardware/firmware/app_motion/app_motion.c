@@ -2,8 +2,10 @@
 
 #include "app_motion.h"
 #include "chop_cycle.h"
+#include "wok_gesture.h"
 
 #include <stdbool.h>
+#include <math.h>
 #include <stdint.h>
 
 #include "bsp/esp_mosaico.h"
@@ -18,6 +20,8 @@ static const char *TAG = "app_motion";
 enum {
     SAMPLE_PERIOD_MS = 10,
     SAMPLE_LOG_PERIOD_MS = 500,
+    WOK_HEARTBEAT_MS = 100,
+    PLATE_HEARTBEAT_MS = 50,
 };
 
 static TaskHandle_t s_task;
@@ -36,12 +40,35 @@ static void emit_chop(float ax, float ay, float az, float gx, float gy, float gz
              ax, ay, az, gx, gy, gz);
 }
 
+static void emit_wok(bool active)
+{
+    ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"wok\",\"motion\":\"circle\",\"active\":%s,\"t_ms\":%lld}",
+             active ? "true" : "false", (long long)(esp_timer_get_time() / 1000));
+}
+
+static void emit_plate(float ax, float ay, float az)
+{
+    const float tilt_x = atan2f(ax, sqrtf(ay * ay + az * az));
+    const float tilt_y = atan2f(ay, sqrtf(ax * ax + az * az));
+    const bool use_x = fabsf(tilt_x) >= fabsf(tilt_y);
+    // The physical serving motion is mirrored relative to the browser cursor:
+    // tilting the board left must move the cursor left, so invert the sensor sign.
+    const float roll_rad = -(use_x ? tilt_x : tilt_y);
+    const float roll = fmaxf(-1.0f, fminf(1.0f, roll_rad / 0.7853981634f));
+    ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"plate\",\"motion\":\"tilt\",\"roll\":%.3f,\"axis\":\"%s\",\"t_ms\":%lld}",
+             roll, use_x ? "x" : "y", (long long)(esp_timer_get_time() / 1000));
+}
+
 static void motion_task(void *arg)
 {
     (void)arg;
     TickType_t last_wake = xTaskGetTickCount();
     int64_t last_sample_log_us = 0;
     chop_cycle_t cycle = {0};
+    wok_gesture_t wok = {0};
+    bool was_stirring = false;
+    int64_t last_wok_log_us = 0;
+    int64_t last_plate_log_us = 0;
 
     while (true) {
         float ax = 0.0f, ay = 0.0f, az = 0.0f;
@@ -58,8 +85,26 @@ static void motion_task(void *arg)
             if (chop_cycle_update(&cycle, now_us, gx, gy, gz)) {
                 emit_chop(ax, ay, az, gx, gy, gz);
             }
+            const wok_result_t action = wok_gesture_update(&wok, now_us, ax, ay, az, gx, gy, gz);
+            if (action.stirring != was_stirring ||
+                (action.stirring && now_us - last_wok_log_us >= WOK_HEARTBEAT_MS * 1000LL)) {
+                emit_wok(action.stirring);
+                last_wok_log_us = now_us;
+            }
+            was_stirring = action.stirring;
+            if (action.flip) {
+                ESP_LOGI(TAG, "MOTION_EVENT {\"action\":\"flip\",\"motion\":\"vertical\",\"t_ms\":%lld}",
+                         (long long)(now_us / 1000));
+            }
+            if (now_us - last_plate_log_us >= PLATE_HEARTBEAT_MS * 1000LL) {
+                emit_plate(ax, ay, az);
+                last_plate_log_us = now_us;
+            }
         } else {
             cycle = (chop_cycle_t){0};
+            wok = (wok_gesture_t){0};
+            if (was_stirring) emit_wok(false);
+            was_stirring = false;
         }
         vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(SAMPLE_PERIOD_MS));
     }
@@ -85,7 +130,7 @@ esp_err_t app_motion_start(void)
         s_imu_ready = false;
         return ESP_ERR_NO_MEM;
     }
-    ESP_LOGI(TAG, "BMI270 motion sampler started at %d Hz; chop=down_up cycle-v2", 1000 / SAMPLE_PERIOD_MS);
+    ESP_LOGI(TAG, "BMI270 motion sampler started at %d Hz; chop=down_up cycle-v2; wok=circle flip=vertical wok-v2", 1000 / SAMPLE_PERIOD_MS);
     return ESP_OK;
 }
 

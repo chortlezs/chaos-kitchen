@@ -23,7 +23,7 @@ class BridgeTests(unittest.TestCase):
                                        "text": "MOTION_EVENT " + json.dumps(payload)}) + "\n")
         with patch.object(bridge.subprocess, "Popen") as process:
             process.return_value.stdout = io.StringIO("".join(records))
-            pump.run()
+            pump.read_once()
         event = json.loads(client.get_nowait())
         self.assertEqual(event["cycle"], "down_up")
         self.assertEqual(event["type"], "motion")
@@ -39,6 +39,12 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(json.loads(client.get_nowait())["t_ms"], 68)
         pump.remove_client(client)
         self.assertNotIn(client, pump.clients)
+
+    def test_reader_reconnects_after_an_unexpected_end(self):
+        pump = bridge.EventPump("python", Path("workspace"), Path("project"))
+        with patch.object(pump, "read_once") as reader, patch.object(pump.stopped, "wait", side_effect=[False, True]):
+            pump.run()
+            self.assertEqual(reader.call_count, 2)
 
 
 if __name__ == "__main__":

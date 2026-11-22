@@ -19,6 +19,44 @@ UI dependency and is safe to run beside the GSP controller. Stop is provided for
 future runtime shutdown; the current device app keeps the sampler alive until
 reboot.
 
+## Wok input
+
+`wok_gesture.c` shares the sampler's single task. With the board plane roughly
+horizontal, a consistent sweep of horizontal acceleration starts stirring.
+The task emits a `wok/circle/active=true` heartbeat every 100 ms and an
+`active=false` event when movement stops. A vertical upward impulse emits one
+`flip/vertical` event, then waits for settling and a cooldown to reject rebounds.
+Vertical tosses reset circling. The thresholds are initial settings requiring
+real grip calibration; the classifier itself is exercised by host tests.
+
+`wok-v2` uses a signed, decaying turn accumulator so brief local reversals do
+not discard a whole circle. The lateral floor is 0.045 g and no-turn timeout
+250 ms. Flips use an upward acceleration of 0.25 g above gravity, at least
+10 ms confirmation and 0.008 g*s impulse. Both the 700 ms cooldown and settling
+condition must pass before another flip. Circling is suppressed during that
+vertical episode, so its landing rebound cannot become stirring.
+
+A recorded, relative-time fixture contains this user's rest, 10-second circle
+and five-toss calibration sequence (no device IDs). Replaying the same samples
+recognizes 5/5 tosses, keeps stirring active for 387/404 circle samples and
+does not trigger in the labelled rest sections. This is replay coverage, not a
+general real-world accuracy claim. Run the native test with that fixture:
+
+```powershell
+gcc -std=c99 -Wall -Werror -I hardware/firmware/app_motion hardware/firmware/app_motion/wok_gesture.c tools/tests/test_wok_gesture.c -lm -o .hardware-runtime/test_wok_gesture.exe
+./.hardware-runtime/test_wok_gesture.exe tools/tests/fixtures/wok-user-calibration.csv
+```
+
+```text
+MOTION_EVENT {"action":"wok","motion":"circle","active":true,"t_ms":1234}
+MOTION_EVENT {"action":"flip","motion":"vertical","t_ms":2345}
+MOTION_EVENT {"action":"wok","motion":"circle","active":false,"t_ms":2500}
+```
+
+The browser accepts wok input only during cooking. It releases stirring after
+350 ms without a fresh heartbeat, on disconnect or pause. Flip-window timing
+and the penalty for early flips remain browser-owned game rules.
+
 `chop_cycle.c` is a platform-independent, single-owner recognizer used unchanged
 by the sampler and the host regression tests. The first strong movement chooses
 an angular axis, so either hand and different board orientations are supported.

@@ -43,6 +43,7 @@ class EventPump:
         self.lock = threading.Lock()
         self.process: subprocess.Popen[str] | None = None
         self.started_ns = time.time_ns()
+        self.stopped = threading.Event()
 
     def add_client(self) -> queue.Queue[str]:
         client: queue.Queue[str] = queue.Queue(maxsize=32)
@@ -70,8 +71,21 @@ class EventPump:
                     pass
 
     def run(self) -> None:
+        while not self.stopped.is_set():
+            self.started_ns = time.time_ns()
+            try:
+                self.read_once()
+            except OSError as error:
+                print(f"ESP log reader disconnected: {error}", flush=True)
+            if self.stopped.wait(1):
+                break
+
+    def read_once(self) -> None:
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        # Boot logs can contain replacement characters; Windows GBK must not kill the reader.
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["PYTHONUTF8"] = "1"
         self.process = subprocess.Popen(
             self.command,
             cwd=self.workspace,
@@ -109,6 +123,7 @@ class EventPump:
             self.broadcast(event)
 
     def stop(self) -> None:
+        self.stopped.set()
         if self.process and self.process.poll() is None:
             self.process.terminate()
 
