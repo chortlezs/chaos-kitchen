@@ -18,13 +18,13 @@ const window={location:{search:'?scene=toilet'},addEventListener:noop};
 const sandbox={document,window,requestAnimationFrame:noop,URLSearchParams,Math,console};
 const html=fs.readFileSync('neon-chaos-kitchen.html','utf8').replace(/\r\n/g,'\n');
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1].replace('requestAnimationFrame(frameLoop);\n})();',
-  'globalThis.test={state,selectScene,start,phase,map,drawChop,drawWok,drawServe,balance,activeStations,valid,routeTo,walk,inReach,dishes:()=>dishes,keys};\n})();');
+  'globalThis.test={state,selectScene,start,practice,phase,map,drawChop,drawWok,drawServe,balance,returnFromPhase,activeStations,valid,routeTo,walk,inReach,toiletRoutes,input,target,advance,dishes:()=>dishes,keys,setTime:t=>now=t};\n})();');
 vm.runInNewContext(script,sandbox);
 const g=sandbox.test;
 assert.equal(g.state.scene,'toilet');
 assert.equal(g.dishes().length,6);
-assert.equal(g.activeStations().length,10);
-g.start();assert.equal(g.state.queue.length,3);
+assert.equal(g.activeStations().length,5);
+g.start();assert.equal(g.state.queue.length,1);
 assert(g.state.queue.every(o=>o.id<6));
 g.map(0);
 for(const mode of ['chop','wok','serve']){
@@ -34,7 +34,12 @@ for(const mode of ['chop','wok','serve']){
 g.keys.add('e');g.balance(.1);assert(g.state.phase.route>0,'E advances the plate route');
 g.selectScene('neon');assert.equal(g.dishes().length,6,'scene cannot switch during active play');
 g.state.open='menu';g.selectScene('neon');assert.equal(g.dishes().length,6);
-assert.equal(g.activeStations().length,10);g.start();g.map(0);
+assert.equal(g.activeStations().length,5);g.start();g.map(0);
+for(let id=0;id<6;id++){
+  element('dish-select').value=String(id);g.start();assert.equal(g.state.queue.length,1);assert.equal(g.state.queue[0].id,id);
+  assert.equal(g.activeStations().filter(o=>o.type==='bin').length,1);assert.equal(g.activeStations()[0].dish,id);
+  g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};g.returnFromPhase();assert.equal(g.state.open,'end');assert.equal(g.state.served,1);
+}
 g.state.open='menu';g.selectScene('fridge');assert.equal(g.state.scene,'fridge');assert.equal(g.dishes().length,6);g.map(0);
 g.state.open='menu';g.selectScene('coffee');assert.equal(g.state.scene,'coffee');assert.equal(g.dishes().length,6);g.map(0);
 assert(g.valid(g.state.player.x,g.state.player.y),'coffee spawn is walkable');
@@ -53,6 +58,118 @@ for(const stop of coffeeStops){
   }
   assert(g.inReach(stop),'station can be interacted with after walking');
 }
-assert(!g.valid(480,210),'grinder area cannot be entered');
-console.log('PASS: coffee spawn and all ten stations reachable through actual walking.');
+assert(g.valid(480,210),'the exposed grinder wheel can be entered');
+element('dish-select').value='2';g.start();
+g.target({x:480,y:350,w:0,h:0});
+assert(g.state.target);
+for(let i=0;i<160&&g.state.target;i++)g.advance(.04);
+assert(!g.state.coffeeDrain,'ordinary copper rail crossings stay safe');
+assert(Math.hypot(g.state.player.x-480,g.state.player.y-350)<16);
+g.input('w',true);
+for(let i=0;i<30&&!g.state.coffeeDrain;i++)g.advance(.04);
+assert(g.state.coffeeDrain,'walking off the rail and onto the wheel triggers falling');
+g.advance(.5);g.map(.5);
+g.advance(1.5);
+assert.equal(g.state.open,'end');assert.match(element('menu-copy').innerHTML,/研磨轮卷走/);
+element('start').onclick();
+assert.equal(g.state.orderDishId,2);assert.equal(g.state.coffeeDrain,null);
+g.target({x:480,y:244,w:0,h:0});
+assert(g.state.target,'the exposed wheel can be clicked');
+for(let i=0;i<200&&!g.state.coffeeDrain;i++)g.advance(.04);
+assert(g.state.coffeeDrain,'mouse routing onto the wheel triggers falling');
+g.advance(2);assert.equal(g.state.open,'end');
+console.log('PASS: safe rail navigation, grinder fall by keyboard and click, and restarting the order.');
+for(let id=0;id<6;id++){
+  element('dish-select').value=String(id);g.start();
+  assert.equal(g.state.queue.length,1,'coffee level has exactly one meal');
+  assert.equal(g.state.queue[0].id,id,'selected food is the only order');
+  const sources=g.activeStations().filter(o=>o.type==='bin');assert.equal(sources.length,1,'one ingredient pickup per level');assert.equal(sources[0].dish,id,'pickup matches selected food');
+  assert(g.routeTo(sources[0]).length,'selected ingredient pickup is reachable');
+  for(const mode of ['chop','wok','serve']){g.phase(mode,id);assert.equal(g.state.phase.id,id);({chop:g.drawChop,wok:g.drawWok,serve:g.drawServe})[mode](1);}
+  g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};
+  g.returnFromPhase();
+  assert.equal(g.state.served,1);assert.equal(g.state.open,'end','one meal completes the level');
+}
+console.log('PASS: all six coffee levels finish after their selected single meal.');
+g.state.open='menu';g.selectScene('neon');g.start();
+assert.equal(element('controls').hidden,true,'maps hide the blue input pad');
+g.state.player={x:244,y:355};g.setTime(g.state.shockReadyAt+.1);
+g.advance(.04);assert.equal(g.state.shockUntil,0,'standing still does not trigger a shock');
+g.input('a',true);g.advance(.04);
+const hitUntil=g.state.shockUntil,hitX=g.state.player.x;
+assert(hitUntil>0);assert.match(g.state.toast.text,/线路漏电/);
+g.map(hitUntil-.1);
+g.advance(.04);assert.equal(g.state.player.x,hitX,'a shock briefly stops movement');
+g.setTime(hitUntil+.01);g.advance(.04);
+assert(g.state.player.x<hitX,'movement resumes after the shock');
+assert.equal(g.state.shockUntil,hitUntil,'cooldown prevents an immediate second shock');
+g.phase('chop',g.state.orderDishId);
+assert.equal(element('controls').hidden,false,'minigame touch controls still work');
+console.log('PASS: map input pad hidden and live wires briefly stun moving players with a cooldown.');
+g.state.open='menu';g.selectScene('toilet');
+const toiletSpawn={...g.state.player},angle=.7;
+g.state.player={x:480+340*Math.cos(angle),y:285+175*Math.sin(angle)};
+const inner={x:480+280*Math.cos(angle),y:285+135*Math.sin(angle)};
+assert(!g.valid(480+310*Math.cos(angle),285+155*Math.sin(angle)),'gap between rings is not walkable');
+g.walk(inner.x-g.state.player.x,inner.y-g.state.player.y);
+assert(Math.hypot(g.state.player.x-inner.x,g.state.player.y-inner.y)>20,'large movement cannot jump between rings');
+assert(g.valid(g.state.player.x,g.state.player.y),'feet stay on the narrow path');
+g.state.player=toiletSpawn;
+for(const points of g.toiletRoutes)for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i],steps=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1]));
+  for(let n=0;n<=steps;n++)assert(g.valid(a[0]+(b[0]-a[0])*n/steps,a[1]+(b[1]-a[1])*n/steps),'visible toilet loop must remain open');
+}
+for(const stop of g.activeStations()){
+  const route=g.routeTo(stop);assert(route.length||g.inReach(stop),'toilet station reachable: '+stop.type);
+  for(const point of route){
+    for(let n=0;n<100&&Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)>.05;n++){
+      const dx=point.x-g.state.player.x,dy=point.y-g.state.player.y,len=Math.hypot(dx,dy),step=Math.min(2,len);g.walk(dx/len*step,dy/len*step);
+    }
+    assert(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)<.1,'toilet route can be walked');
+  }
+  assert(g.inReach(stop),'toilet station within interaction range');
+}
+assert(!g.state.toiletDrain,'normal routes to stations stay out of the water');
+assert(g.valid(480,285),'toilet water can be entered');
+element('dish-select').value='auto';
+g.start();
+const retryDish=g.state.orderDishId;
+g.state.held={id:retryDish,stage:1};
+g.input('w',true);
+for(let n=0;n<60&&!g.state.toiletDrain;n++)g.advance(.04);
+assert(g.state.toiletDrain,'walking into water starts the drain animation');
+assert.equal(g.state.target,null);
+assert.equal(g.keys.size,0);
+g.input('d',true);
+assert.equal(g.keys.size,0,'the current takes over movement');
+g.advance(.5);g.map(.5);
+assert.notEqual(g.state.player.x,480,'the chef follows a curved path to the drain');
+g.advance(1.5);
+assert.equal(g.state.open,'end');
+assert.equal(g.state.failed,1);
+assert.equal(g.state.held,null);
+assert.match(element('menu-copy').innerHTML,/被冲进下水道/);
+element('start').onclick();
+assert.equal(g.state.orderDishId,retryDish,'restart keeps the current order');
+assert.equal(g.state.toiletDrain,null);
+assert.equal(g.state.time,180);
+assert.equal(g.state.player.y,460);
+g.target({x:480,y:285,w:0,h:0});
+assert(g.state.target,'clicking the water gives a reachable destination');
+for(let n=0;n<100&&!g.state.toiletDrain;n++)g.advance(.04);
+assert(g.state.toiletDrain,'click-to-move also triggers the drain');
+g.advance(2);
+assert.equal(g.state.open,'end');
+console.log('PASS: keyboard and click-to-move drain entry, loss, and replay of the same order.');
+for(let id=0;id<6;id++){
+  element('dish-select').value=String(id);g.start();assert.equal(g.state.queue.length,1);assert.equal(g.state.queue[0].id,id);
+  const source=g.activeStations().find(o=>o.type==='bin');assert.equal(source.dish,id);assert(g.routeTo(source).length);
+  g.phase('serve',id);g.state.phase.done={success:true,label:'完成'};g.returnFromPhase();assert.equal(g.state.open,'end');assert.equal(g.state.served,1);
+}
+g.state.open='menu';g.selectScene('coffee');
+element('dish-select').value='auto';element('office-event').value='今天又被老板催了';g.start();assert.equal(g.state.queue[0].id,1,'event matches boss');
+element('dish-select').value='4';g.start();assert.equal(g.state.queue[0].id,4,'manual choice overrides event');
+g.state.open='menu';g.selectScene('fridge');assert(element('frost-experience').hidden,'selecting fridge stays in shared menu');
+element('dish-select').value='3';g.start();assert.equal(element('frost-experience').src,'frost-kitchen.html?level=3&autostart=1');
+console.log('PASS: coffee pickup and four workstations reachable through actual walking.');
 console.log('PASS: one-page office, fridge, toilet and coffee scenes; six foods; close-ups and E-to-advance.');

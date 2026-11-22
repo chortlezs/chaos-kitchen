@@ -1,0 +1,880 @@
+.kitchen-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  color: var(--ink);
+  background: radial-gradient(#ecc7ad 0.75px, transparent 0.75px) 0 0 / 16px 16px, var(--cream);
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+}
+
+.opening-shell {
+  width: min(100% - 96px, 1280px);
+  margin-inline: auto;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+.opening-top {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid var(--line);
+}
+
+.kitchen-opening button {
+  color: var(--ink);
+  font-family: inherit;
+  touch-action: manipulation;
+}
+
+.kitchen-opening button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 5px;
+}
+
+.kitchen-opening .opening-manual {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+.opening-manual span { margin-left: 6px; }
+.kitchen-opening .opening-manual:hover { background: #ffe1c8; }
+
+.kitchen-opening .opening-primary {
+  min-height: 53px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  background: var(--orange);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px var(--ink);
+  padding: 10px 14px 10px 19px;
+  font-size: 17px;
+  font-weight: 900;
+  transition: transform 120ms, box-shadow 120ms, background 120ms;
+}
+
+.kitchen-opening .opening-primary:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px var(--ink);
+  background: #ff8958;
+}
+
+.kitchen-opening .opening-primary:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px var(--ink);
+}
+
+.kitchen-opening .opening-primary:disabled {
+  background: #f8dfca;
+  color: #775641;
+  border-color: #b6947c;
+  box-shadow: 3px 3px #b6947c;
+  cursor: default;
+}
+
+.opening-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes opening-reveal {
+  from { transform: perspective(560px) rotateY(-75deg) translateY(-4px); }
+  to { transform: perspective(560px) rotateY(0); }
+}
+
+
+.opening-top { gap: 12px; }
+.opening-manual:last-child { margin-left: auto; }
+
+.kitchen-opening[data-page="cover"] {
+  --cover-ratio: 1.94;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(ellipse at center, #a94320, #492019);
+}
+
+[data-page="cover"] .opening-shell {
+  position: relative;
+  width: min(100%, calc(100svh * var(--cover-ratio)));
+  aspect-ratio: var(--cover-ratio);
+  container-type: inline-size;
+}
+
+[data-page="cover"] .opening-top {
+  position: absolute;
+  z-index: 3;
+  right: 13.5%;
+  bottom: 7%;
+  min-height: 0;
+  border: 0;
+}
+
+.kitchen-opening[data-page="cover"] .opening-manual {
+  padding: .5em .75em;
+  border: 2px solid #642e24;
+  border-radius: 4px;
+  background: #fff0c7;
+  box-shadow: 2px 3px #75311f;
+  color: #48231b;
+  font-size: clamp(11px, 1cqw, 16px);
+  font-weight: 800;
+}
+
+.kitchen-opening[data-page="cover"] .opening-manual:hover { background: #fff8e0; }
+
+.opening-cover, .cover-art {
+  position: absolute;
+  inset: 0;
+}
+
+.cover-art {
+  overflow: hidden;
+  transform-origin: 65.5% 42%;
+  pointer-events: none;
+}
+
+.cover-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cover-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cover-motion-shape {
+  fill: white;
+  stroke: white;
+  stroke-width: 12px;
+  stroke-linejoin: round;
+  filter: url(#cover-motion-feather);
+}
+
+.cover-sway {
+  animation: cover-sway var(--sway-duration) ease-in-out var(--sway-delay) infinite alternate;
+}
+
+.cover-sway-center { --sway-x: 0px; --sway-y: 2.5px; --sway-duration: 1.9s; --sway-delay: -.3s; }
+.cover-sway-computer { --sway-x: 2.5px; --sway-y: 0px; --sway-duration: 2.12s; --sway-delay: -.9s; }
+.cover-sway-water { --sway-x: 1.77px; --sway-y: -1.77px; --sway-duration: 1.78s; --sway-delay: -1.3s; }
+.cover-sway-coffee { --sway-x: 1.5px; --sway-y: 2px; --sway-duration: 1.68s; --sway-delay: -.55s; }
+.cover-sway-fridge { --sway-x: 2.4px; --sway-y: -.7px; --sway-duration: 2.02s; --sway-delay: -1.6s; }
+
+@keyframes cover-sway {
+  from { transform: translate(calc(0px - var(--sway-x)), calc(0px - var(--sway-y))); }
+  to { transform: translate(var(--sway-x), var(--sway-y)); }
+}
+
+.is-launching .cover-sway { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-motion { display: none; }
+}
+
+.cover-actions {
+  position: absolute;
+  z-index: 2;
+  top: 88%;
+  left: 63%;
+  transform: translate(-50%, -50%);
+}
+
+.kitchen-opening #opening-play {
+  justify-content: center;
+  min-height: 34px;
+  min-width: 6.4em;
+  border: max(2px, .2cqw) solid #60271e;
+  border-radius: 5px;
+  padding: .26em .65em;
+  background: linear-gradient(#fff4b7, #ffb947);
+  color: #532419;
+  box-shadow: 0 .23em #a43a20, 0 .36em #60271e, inset 0 0 0 2px #ffed94;
+  font: 1000 clamp(19.5px, 2.175cqw, 37.5px)/1.1 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.kitchen-opening #opening-play span {
+  color: #fff5d0;
+  transform: scaleX(.92);
+  -webkit-text-stroke: .085em #59251a;
+  paint-order: stroke fill;
+  text-shadow: .025em .075em #59251a, .045em .13em #aa4120;
+}
+
+.kitchen-opening #opening-play:hover:not(:disabled) { background: #fff4b7; }
+.kitchen-opening #opening-play:active:not(:disabled) { box-shadow: 0 .12em #60271e; }
+.is-launching .cover-actions,
+.kitchen-opening[data-page="cover"]:has(.is-launching) .opening-top { visibility: hidden; }
+
+@media (max-width: 680px) and (max-aspect-ratio: 4/3) {
+  [data-page="cover"] .opening-shell { margin-bottom: 64px; }
+  [data-page="cover"] .opening-top { right: 8%; bottom: -56px; }
+  .cover-actions { left: 8%; top: auto; bottom: -56px; transform: none; }
+  .kitchen-opening #opening-play,
+  .kitchen-opening[data-page="cover"] .opening-manual { min-height: 44px; }
+}
+
+.opening-wordmark { display: none; }
+
+.kitchen-opening[data-page="draw"] {
+  --draw-ink: #3f1b20;
+  --draw-gold: #ffce66;
+  --draw-cream: #fff1cd;
+  --draw-plum: #4d222c;
+  isolation: isolate;
+  color: var(--draw-ink);
+  background:
+    radial-gradient(ellipse at 29% 38%, #ffe5a1 0%, #ffb45b80 36%, transparent 68%),
+    repeating-conic-gradient(from -9deg at 29% 38%, #febc72 0deg 9deg, #ffc987 9deg 18deg);
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  scrollbar-color: #ac481e #ffca7a;
+}
+
+[data-page="draw"] .opening-shell {
+  width: min(calc(100% - clamp(32px, 8vw, 140px)), 1320px);
+  padding-bottom: clamp(48px, 8vh, 92px);
+}
+
+.kitchen-opening[data-page="draw"]::before,
+.kitchen-opening[data-page="draw"]::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: 4;
+}
+.kitchen-opening[data-page="draw"]::before {
+  inset: 0;
+  border: 4px solid #8f351d;
+  box-shadow: inset 0 0 0 3px #ffd477, inset 0 0 0 6px #f3822c, inset 0 0 0 8px #bb5123;
+}
+.kitchen-opening[data-page="draw"]::after {
+  inset: auto 8px 8px;
+  height: 12px;
+  background: conic-gradient(#ffe7ad 25%, #e96528 0 50%, #ffe7ad 0 75%, #e96528 0) 0 0 / 24px 12px;
+  border-block: 2px solid #a74921;
+}
+
+[data-page="draw"] .opening-top {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  min-height: clamp(75px, 10vh, 115px);
+  border-bottom: 2px solid #9e4a2790;
+  box-shadow: 0 2px #ffe6a3;
+}
+[data-page="draw"] #opening-manual { grid-column: 1; grid-row: 1; justify-self: start; margin-left: 0; }
+[data-page="draw"] #opening-home { grid-column: 3; grid-row: 1; justify-self: end; }
+
+[data-page="draw"] .opening-wordmark {
+  grid-column: 2;
+  grid-row: 1;
+  display: block;
+  color: #fff3d6;
+  font: 900 clamp(19px, 3vw, 43px)/1 Impact, "Arial Black", sans-serif;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  -webkit-text-stroke: .13em #4d2323;
+  paint-order: stroke fill;
+  text-shadow: .05em .12em #983923;
+}
+.opening-wordmark span { color: #ffd871; }
+
+.kitchen-opening[data-page="draw"] .opening-manual {
+  min-height: 40px;
+  padding: 7px clamp(9px, 1.4vw, 19px);
+  border: 2px solid #713324;
+  color: var(--draw-ink);
+  background: #fff0ca;
+  box-shadow: inset 0 -3px #edaf62, 3px 3px #a34c28;
+  font-size: clamp(12px, 1.2vw, 15px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.kitchen-opening[data-page="draw"] .opening-manual:hover { background: #fff8e2; }
+
+.opening-draw {
+  flex: 1 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+  align-content: center;
+  align-items: center;
+  gap: clamp(24px, 5vw, 82px);
+  padding: clamp(28px, 7vh, 90px) 0 clamp(16px, 3vh, 40px);
+}
+
+.chef-chat {
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 17px;
+}
+
+.chef-portrait {
+  position: relative;
+  justify-self: center;
+  width: min(68%, 250px);
+  aspect-ratio: 1;
+  border: 4px solid #552529;
+  outline: 3px solid #fff0b4;
+  outline-offset: -7px;
+  background: #ffb16a url("assets/kitchen-cover.webp") 50% 38% / 330% auto;
+  box-shadow: 6px 7px #a03a20, 0 0 44px #fff4c1c0;
+  image-rendering: pixelated;
+  transform: rotate(-3deg);
+}
+.chef-portrait::before,
+.chef-portrait::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff7d2;
+  clip-path: polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%);
+}
+.chef-portrait::before { inset: 16% auto auto -24px; }
+.chef-portrait::after { inset: auto -24px 14% auto; width: 19px; height: 19px; }
+
+.chef-line {
+  position: relative;
+  justify-self: stretch;
+  border: 3px solid var(--draw-ink);
+  background: var(--draw-cream);
+  box-shadow: inset 0 0 0 2px #fff9e9, inset 0 -6px #f7c985, 5px 6px #ad532b;
+  padding: clamp(14px, 2.1vw, 27px);
+}
+.chef-line::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 10px);
+  top: -13px;
+  width: 20px;
+  height: 14px;
+  background: var(--draw-ink);
+  clip-path: polygon(35% 0, 65% 0, 65% 30%, 83% 30%, 83% 65%, 100% 65%, 100% 100%, 0 100%, 0 65%, 17% 65%, 17% 30%, 35% 30%);
+}
+.chef-line h2 {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 4px 9px;
+  color: #fff2cb;
+  background: #a13c25;
+  box-shadow: 2px 2px #63281f;
+  font-size: 13px;
+  font-weight: 800;
+}
+.chef-line p {
+  margin: 0;
+  color: var(--draw-ink);
+  font-size: clamp(16px, 1.8vw, 25px);
+  font-weight: 850;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.chef-line p:focus { outline: none; }
+
+.draw-picks {
+  min-width: 0;
+  padding: clamp(14px, 2.5vw, 36px);
+  border: 3px solid var(--draw-ink);
+  box-shadow: inset 0 0 0 2px #e18b42, 6px 7px #a94d29;
+  background: radial-gradient(#ffc16e26 1px, transparent 1px) 0 0 / 13px 13px, var(--draw-plum);
+}
+
+.opening-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0 0 clamp(14px, 2vw, 26px);
+  padding: 0;
+  list-style: none;
+}
+.opening-steps li {
+  padding: 5px 0 8px;
+  border-bottom: 3px solid #b56b63;
+  color: #f3c8aa;
+  font-size: clamp(12px, 1.4vw, 16px);
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+.opening-steps [aria-current="step"] {
+  background: linear-gradient(transparent, #fa913233);
+  color: #ffdc86;
+  border-color: var(--draw-gold);
+  box-shadow: 0 2px #be5727;
+}
+
+.chef-answers, .opening-decks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1.5vw, 19px);
+}
+
+.kitchen-opening .chef-answers button {
+  --option-accent: #ec8252;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  min-width: 0;
+  min-height: clamp(70px, 8.5vw, 112px);
+  padding: 12px clamp(12px, 1.9vw, 25px) 12px clamp(17px, 2vw, 27px);
+  border: 2px solid #331820;
+  color: var(--draw-ink);
+  background: linear-gradient(145deg, #fff6df, #ffe7b4);
+  box-shadow: inset 5px 0 var(--option-accent), inset 0 2px #fffdf0, inset 0 -4px #eeb96c, 3px 4px #27121a;
+  text-align: left;
+  transition: transform 120ms, background-color 120ms;
+}
+.kitchen-opening .chef-answers button:nth-child(2) { --option-accent: #f3be4b; }
+.kitchen-opening .chef-answers button:nth-child(3) { --option-accent: #db6272; }
+.kitchen-opening .chef-answers button:nth-child(4) { --option-accent: #75b7ce; }
+.kitchen-opening .chef-answers button:hover { transform: translateY(-2px); background: #fff6de; }
+.kitchen-opening .chef-answers button:active { transform: translateY(1px); }
+.chef-answers strong { font-size: clamp(15px, 1.65vw, 23px); font-weight: 900; line-height: 1.3; }
+.chef-answers small { margin-top: 6px; color: #743c2e; font-size: clamp(11px, 1.1vw, 15px); line-height: 1.35; }
+
+.opening-decks { gap: clamp(12px, 2.4vw, 30px); }
+.kitchen-opening .opening-card {
+  --card-glow: #ffdd90;
+  --card-dark: #ae3d25;
+  --card-bright: #ef752c;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 150px;
+  aspect-ratio: 5 / 5.35;
+  padding: clamp(11px, 1.5vw, 21px) 9px;
+  border: 3px solid #341820;
+  color: #fff0ca;
+  background: radial-gradient(ellipse at 50% 52%, var(--card-bright), var(--card-dark));
+  box-shadow: inset 0 0 0 2px var(--card-glow), 4px 5px #281119;
+  transition: transform 160ms, box-shadow 160ms;
+}
+.kitchen-opening #opening-dish:not([data-revealed]) {
+  --card-glow: #fde2a1;
+  --card-dark: #824052;
+  --card-bright: #c96665;
+}
+.opening-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  border: 1px dashed var(--card-glow);
+  background: repeating-conic-gradient(from 45deg, #fff3cb12 0 25%, transparent 0 50%) 0 0 / 12px 12px;
+}
+.kitchen-opening .opening-card:not([aria-disabled="true"]):hover {
+  transform: translateY(-4px);
+  box-shadow: inset 0 0 0 2px var(--card-glow), 4px 9px #281119;
+}
+.kitchen-opening .opening-card[data-revealed] {
+  color: var(--draw-ink);
+  background: #ffe8b5;
+  cursor: default;
+  animation: opening-reveal 260ms ease-out;
+}
+.opening-card[data-revealed]::before { border-color: #d77c4e; }
+.opening-card-label {
+  padding: 3px 9px;
+  border: 2px solid #552327;
+  color: var(--draw-ink);
+  background: #ffedbc;
+  box-shadow: 2px 2px #602b28;
+  font-size: clamp(12px, 1.3vw, 16px);
+  font-weight: 900;
+  white-space: nowrap;
+}
+.opening-card-art {
+  display: grid;
+  place-items: center;
+  width: clamp(54px, 8vw, 108px);
+  aspect-ratio: 1;
+  border: 2px solid #4d2230;
+  background: radial-gradient(circle, #f7b666, #be552d);
+  box-shadow: inset 0 0 0 2px #ffd892, 3px 3px #572530;
+}
+.opening-card[data-revealed] .opening-card-art { background: #fff0c7; }
+.opening-card-art canvas { width: 80%; height: auto; image-rendering: pixelated; }
+.opening-card-name { padding-inline: 3px; font-size: clamp(12px, 1.3vw, 17px); font-weight: 850; line-height: 1.35; }
+
+.kitchen-opening[data-page="draw"] .opening-cook {
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: clamp(14px, 1.8vw, 24px);
+  padding: 8px 15px;
+  border: 2px solid #452027;
+  background: linear-gradient(#fff1b7, #ffbf55);
+  box-shadow: inset 0 0 0 2px #ffe692, 3px 4px #27121a;
+  color: var(--draw-ink);
+}
+.kitchen-opening[data-page="draw"] .opening-cook:disabled {
+  background: #dfb497;
+  color: #623e36;
+  box-shadow: inset 0 0 0 2px #efc6a8, 3px 4px #27121a;
+}
+.kitchen-opening[data-page="draw"] .opening-cook:hover:not(:disabled) { background: #fff0b2; }
+.kitchen-opening[data-page="draw"] button:focus-visible { outline-color: #fff3b8; }
+.kitchen-opening[data-page="draw"] .opening-top button:focus-visible { outline-color: #632421; }
+
+@media (max-width: 680px) {
+  [data-page="draw"] .opening-top { min-height: 69px; }
+  [data-page="draw"] .opening-wordmark { font-size: clamp(15px, 4.2vw, 27px); }
+  .opening-draw { grid-template-columns: 1fr; align-content: start; gap: 19px; padding-top: 24px; }
+  .chef-chat { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; }
+  .chef-portrait { width: clamp(65px, 21vw, 104px); }
+  .chef-portrait::before, .chef-portrait::after { display: none; }
+  .chef-line::before { top: calc(50% - 8px); left: -17px; transform: rotate(-90deg); }
+  .chef-line h2 { margin-bottom: 6px; }
+  .opening-card-art { width: clamp(53px, 15vw, 88px); }
+}
+
+@media (max-height: 560px) and (min-width: 681px) {
+  [data-page="draw"] .opening-top { min-height: 62px; }
+  .opening-draw { padding-top: 22px; }
+  .chef-portrait { width: min(56%, 124px); }
+  .kitchen-opening .opening-card { aspect-ratio: 1.65; }
+  .opening-card-art { width: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kitchen-opening button { transition: none !important; animation: none !important; }
+}
+
+/* Engraved brass cabinet and illuminated card trays. */
+.kitchen-opening[data-page="draw"] {
+  background:
+    radial-gradient(ellipse at 24% 37%, #fff0af 1%, #ffb24a 49%, #ff7d60 100%);
+}
+[data-page="draw"] .opening-shell { position: relative; }
+[data-page="draw"] .opening-shell::before {
+  content: "";
+  position: fixed;
+  inset: 8px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 18% 44%, #fff5b14d 20%, #ff875040 100%),
+    repeating-linear-gradient(135deg, #fff0b12a 0 1px, transparent 1px 9px),
+    repeating-conic-gradient(from 0deg at 22% 44%, #fbbf871a 0deg 9deg, #ef682a28 9deg 18deg);
+}
+[data-page="draw"] .opening-top {
+  background: linear-gradient(90deg, transparent, #ffad54b0 26%, #ffc459c9 74%, transparent);
+  border-image: linear-gradient(90deg, transparent, #ffc568, transparent) 1;
+  box-shadow: none;
+}
+.opening-draw { gap: clamp(23px, 4.3vw, 76px); }
+.chef-chat {
+  position: relative;
+  align-content: center;
+  background:
+    radial-gradient(circle at 50% 30%, #ffda86 4%, #f87949 58%, transparent 59%),
+    repeating-conic-gradient(from 45deg, #fffac735 0 25%, transparent 0 50%) 0 0/16px 16px;
+  border: 3px solid #522835;
+  padding: clamp(16px, 3vw, 42px);
+  box-shadow: 0 0 0 2px #ffc66b, inset 0 0 0 4px #f3ad67, 7px 9px #70352f;
+}
+.draw-medallion {
+  position: absolute;
+  top: -23px;
+  left: 21px;
+  width: 49px;
+  aspect-ratio: 1;
+  background: #fbba68;
+  display: grid;
+  place-items: center;
+  border: 3px solid #512635;
+  box-shadow: 0 0 0 2px #ffe79d, inset 0 0 0 2px #fff1a1, 4px 4px #813d37;
+  transform: rotate(-9deg);
+  z-index: 2;
+}
+.draw-medallion canvas { image-rendering: pixelated; }
+.draw-picks {
+  --cabinet-edge: #f6b35e;
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 56%, #ed8d552f 0%, transparent 70%),
+    repeating-linear-gradient(135deg, #ffd89608 0 2px, transparent 2px 9px),
+    #3b2234;
+  box-shadow: 0 0 0 2px #ac5b43, 0 0 0 5px var(--cabinet-edge), inset 0 0 0 3px #b06954, 8px 12px #642e34, 8px 16px #42233740;
+}
+.draw-picks::before,
+.draw-picks::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+.draw-picks::before {
+  inset: 9px;
+  border: 1px solid #e7a15b82;
+  clip-path: polygon(0 0, 11% 0, 11% 2%, 89% 2%, 89% 0, 100% 0, 100% 100%, 89% 100%, 89% 98%, 11% 98%, 11% 100%, 0 100%);
+}
+.draw-picks::after {
+  inset: 4px;
+  background: radial-gradient(circle, #ffe39a 0 1px, #aa5a43 2px 3px, transparent 4px) left top/9px 9px no-repeat,
+              radial-gradient(circle, #ffe39a 0 1px, #aa5a43 2px 3px, transparent 4px) right top/9px 9px no-repeat,
+              radial-gradient(circle, #ffe39a 0 1px, #aa5a43 2px 3px, transparent 4px) left bottom/9px 9px no-repeat,
+              radial-gradient(circle, #ffe39a 0 1px, #aa5a43 2px 3px, transparent 4px) right bottom/9px 9px no-repeat;
+}
+.opening-steps { gap: 6px; }
+.opening-steps li {
+  border: 1px solid #b97249;
+  border-bottom-width: 3px;
+  color: #633826;
+  background: #fff4ca;
+}
+.opening-steps [aria-current="step"] {
+  border-color: #a44529;
+  color: #572a1d;
+  background: linear-gradient(0deg, #ffc268, #ffe59a);
+  box-shadow: 0 2px #d58148, inset 0 0 11px #fa91324d;
+}
+.kitchen-opening .chef-answers button {
+  overflow: hidden;
+  isolation: isolate;
+  padding-right: clamp(12px, 3vw, 45px);
+}
+.chef-answers button::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  width: clamp(30px, 6vw, 60px);
+  aspect-ratio: 1;
+  right: -8px;
+  bottom: -9px;
+  background: var(--option-accent);
+  opacity: .41;
+  clip-path: polygon(40% 0, 60% 0, 60% 35%, 100% 35%, 100% 65%, 60% 65%, 60% 100%, 40% 100%, 40% 65%, 0 65%, 0 35%, 40% 35%);
+}
+.opening-decks {
+  position: relative;
+  isolation: isolate;
+  gap: clamp(16px, 2.6vw, 34px);
+  padding: 15px 13px 19px;
+  border: 2px solid #bc793b;
+  background: #ffe7a2;
+  box-shadow: inset 0 3px 0 #e9a85b;
+}
+.draw-card-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 26% 53%, #fff5c5da, transparent 43%),
+    radial-gradient(ellipse at 72% 53%, #ffc0acb0, transparent 43%),
+    repeating-linear-gradient(90deg, transparent 0 13px, #e279432b 13px 14px);
+}
+.opening-decks[data-reveals="2"] .draw-card-light {
+  background: radial-gradient(ellipse at 50% 54%, #fff1bdc9, transparent 72%), #ffd395;
+}
+.kitchen-opening .opening-card {
+  border: 3px solid #72382d;
+  background: radial-gradient(circle at 50% 42%, var(--card-bright), var(--card-dark) 68%);
+  box-shadow: inset 0 0 0 2px var(--card-glow), 2px 4px #3c2533, 3px 7px #f5b65d, 5px 9px #a95731;
+}
+.kitchen-opening .opening-card::before {
+  border: 2px solid var(--card-glow);
+  box-shadow: inset 0 0 0 2px #43233882;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.kitchen-opening .opening-card::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  z-index: -1;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 15deg, transparent 0 20deg, #fff3c61a 20deg 22deg);
+}
+.kitchen-opening .opening-card[data-skin="neon"] { --revealed: #ecc9ff; --card-glow: #80fbff; --card-dark: #53357b; }
+.kitchen-opening .opening-card[data-skin="fridge"] { --revealed: #d6f6ff; --card-glow: #91d5ff; --card-dark: #43749b; }
+.kitchen-opening .opening-card[data-skin="toilet"] { --revealed: #dcf4e5; --card-glow: #a9e8bc; --card-dark: #548875; }
+.kitchen-opening .opening-card[data-skin="coffee"] { --revealed: #ffdfae; --card-glow: #f4bb73; --card-dark: #966040; }
+.kitchen-opening .opening-card[data-revealed] {
+  background: radial-gradient(circle, #fff7dc, var(--revealed, #ffe8b5));
+  animation: none;
+}
+.opening-card[data-revealed] .opening-card-art {
+  background: radial-gradient(circle, #fff9e6, var(--revealed, #ffe8b5));
+  box-shadow: inset 0 0 0 2px #fff6d9, 3px 3px var(--card-dark);
+}
+.kitchen-opening[data-page="draw"] .opening-cook:not(:disabled) {
+  box-shadow: inset 0 0 0 2px #fff19c, 3px 4px #27121a, 0 0 22px #f0b36c69;
+}
+@media (max-width: 680px) {
+  .chef-chat { padding: 13px; }
+  .draw-medallion { display: none; }
+  .opening-decks { padding: 11px 9px 15px; }
+}
+
+/* The kitchen atlas tracks the current shortlist and the revealed destination. */
+.opening-draw {
+  --atlas-glow: #ffcd7a;
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+  padding-block: clamp(22px, 4vh, 48px) 24px;
+}
+.opening-draw[data-world="fridge"] { --atlas-glow: #3ccfe8; }
+.opening-draw[data-world="toilet"] { --atlas-glow: #49cb9f; }
+.opening-draw[data-world="neon"] { --atlas-glow: #bb69e6; }
+.opening-draw[data-world="coffee"] { --atlas-glow: #ff9e36; }
+.opening-draw .draw-picks {
+  --cabinet-edge: var(--atlas-glow);
+  background: radial-gradient(ellipse at 50% 0, #ffcf8c 0, transparent 67%), #fff1c5;
+}
+.chef-chat {
+  isolation: isolate;
+  background:
+    repeating-conic-gradient(at 50% 37%, #ffe29928 0 9deg, transparent 9deg 18deg),
+    linear-gradient(145deg, #ffc449, #ff9165 70%, #ff8768);
+}
+.chef-chat::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 7px;
+  border: 2px solid #ffcc88;
+  box-shadow: inset 0 0 0 2px #602b3b;
+  pointer-events: none;
+}
+.chef-portrait {
+  box-shadow: 4px 6px #622c3b, 0 0 0 6px #ec9964, 0 0 0 8px #542736, 0 0 32px #ffb257;
+}
+.draw-atlas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(4px, 1vw, 13px);
+  margin: 0 0 15px;
+  padding: 6px;
+  border-block: 2px solid #eb9561;
+  background: repeating-linear-gradient(135deg, #fff1c5 0 7px, #ffd193 7px 14px);
+}
+.draw-world {
+  --world-tint: #ffb14d;
+  --world-x: 0%;
+  --world-y: 100%;
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  min-width: 0;
+  padding: 5px 2px 4px;
+  border: 1px solid #db986b;
+  color: #3f2426;
+  background: radial-gradient(ellipse at 50% 36%, var(--world-tint), #fff6d3 73%);
+  box-shadow: inset 0 0 0 2px #fff6d8, 0 2px 0 #e6a663;
+  transition: filter 180ms, box-shadow 180ms, border-color 180ms;
+}
+.draw-world[data-world="fridge"] { --world-tint: #78edff; --world-y: 0%; }
+.draw-world[data-world="toilet"] { --world-tint: #83efc7; --world-x: 100%; --world-y: 0%; }
+.draw-world[data-world="neon"] { --world-tint: #e0a2ff; --world-x: 100%; }
+.draw-world i {
+  width: clamp(34px, 6vw, 74px);
+  aspect-ratio: 1;
+  background: url("assets/cover-worlds.webp") var(--world-x) var(--world-y) / 200% auto no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 0 #2f163abf);
+}
+.draw-world span {
+  max-width: 100%;
+  font-size: clamp(9px, 1.1vw, 14px);
+  text-align: center;
+  font-weight: 850;
+  line-height: 1.25;
+}
+.draw-world[data-state="dimmed"] { filter: saturate(.64) brightness(.96); }
+.draw-world[data-state="selected"] {
+  border-color: var(--atlas-glow);
+  box-shadow: inset 0 0 0 2px var(--atlas-glow), 0 0 15px var(--atlas-glow);
+  filter: saturate(1.18);
+}
+.kitchen-opening .chef-answers button {
+  display: grid;
+  grid-template: auto auto / auto minmax(0, 1fr);
+  gap: 4px 8px;
+  align-content: center;
+  justify-content: stretch;
+  min-height: clamp(66px, 7vw, 100px);
+  padding-right: 11px;
+}
+.draw-option-icons {
+  display: grid;
+  gap: 0;
+  grid-row: 1 / span 2;
+  place-items: center;
+  border: 1px solid #9f6054;
+  background: linear-gradient(#ffe19b, var(--option-accent));
+  box-shadow: 2px 2px #ad644a;
+}
+.draw-option-icons canvas {
+  display: block;
+  width: clamp(17px, 2.55vw, 32px);
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+}
+.chef-answers small { margin-top: 0; }
+.opening-decks { padding: 12px 13px 16px; }
+.kitchen-opening .opening-card { aspect-ratio: 1.38; }
+.kitchen-opening .opening-card[data-revealed] {
+  box-shadow: inset 0 0 0 2px var(--card-glow), 3px 4px #382032, 4px 6px #b37960, 0 0 21px var(--card-glow);
+}
+.opening-card-art { width: clamp(44px, 6.2vw, 86px); }
+#opening-scene[data-revealed] .opening-card-art {
+  background:
+    radial-gradient(circle, var(--revealed), #fff5d7 77%);
+}
+.draw-readout {
+  margin: 13px 0 0;
+  color: #4a2723;
+  text-align: center;
+  line-height: 1.45;
+  font-weight: 800;
+  font-size: clamp(12px, 1.45vw, 18px);
+  background: #fff5d1;
+  padding: 6px 9px;
+  border: 1px solid #be794a;
+}
+.opening-draw[data-step="2"] .draw-atlas { border-color: var(--atlas-glow); }
+.opening-decks[data-reveals="2"] ~ .draw-readout {
+  color: #4a2723;
+  border-color: var(--atlas-glow);
+  box-shadow: inset 0 -3px var(--atlas-glow);
+}
+@media (max-width: 680px) {
+  .opening-draw { grid-template-columns: 1fr; padding-block: 17px 24px; }
+  .draw-atlas { margin-bottom: 10px; padding: 4px; }
+  .kitchen-opening .chef-answers button { padding-left: 10px; }
+  .kitchen-opening .opening-card { aspect-ratio: 1.12; min-height: 125px; }
+}

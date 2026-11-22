@@ -1,0 +1,16 @@
+#audio-toggle {
+  position: fixed;
+  z-index: 32;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  padding: 7px 10px;
+  border: 2px solid var(--ink, #552b20);
+  background: var(--cream, #fff2dd);
+  color: var(--ink, #552b20);
+  box-shadow: 2px 2px var(--ink, #552b20);
+  font: 700 13px/1.1 "Courier New", "PingFang SC", monospace;
+  cursor: pointer;
+}
+#audio-toggle[hidden] { display: none; }
+#audio-toggle:focus-visible { outline: 2px solid #ffaf62; outline-offset: 3px; }
+#audio-toggle[aria-pressed="true"] { opacity: .8; }

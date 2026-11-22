@@ -1,6 +1,16 @@
-.hardware-controls{position:absolute;left:1%;bottom:1%;z-index:22;display:flex;align-items:center;gap:.5em;max-width:47%;padding:.4em .6em;background:#071530ed;border:1px solid #78d9ed;color:#e9faff;font:600 clamp(10px,1.05cqw,14px)/1.4 system-ui;border-radius:5px}
-.hardware-controls button{flex:none;font:inherit;padding:.35em .5em;background:#123768;border:1px solid #78d9ed;color:#e9faff;cursor:pointer;border-radius:3px}
-.hardware-controls button:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.foot-controls{position:absolute;right:1%;bottom:1%;z-index:22;max-width:48%;display:flex;flex-direction:column;gap:.2em;padding:.4em .6em;background:#071530ed;border:1px solid #f6d77f;color:#fff4d0;font:600 clamp(14px,1.2cqw,17px)/1.4 system-ui;border-radius:5px}
+.hardware-controls {
+  position: absolute;
+  left: 1%;
+  bottom: 1%;
+  z-index: 22;
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  max-width: 47%;
+  padding: .4em .6em;
+  font: 600 clamp(11px, 1.05cqw, 14px)/1.4 system-ui;
+}
+.hardware-controls button { flex: none; font: inherit; padding: .35em .6em; }
+.foot-controls{position:absolute;right:1%;bottom:max(52px,calc(env(safe-area-inset-bottom) + 46px));z-index:22;max-width:48%;display:flex;flex-direction:column;gap:.2em;padding:.4em .6em;background:#071530ed;border:1px solid #f6d77f;color:#fff4d0;font:600 clamp(14px,1.2cqw,17px)/1.4 system-ui;border-radius:5px}
 .foot-option{display:flex;justify-content:center;align-items:center;gap:.5em;margin-top:1em;color:#fff2bd;font:600 clamp(14px,1.5cqw,18px)/1.4 system-ui}
 .foot-option input{width:auto;margin:0;accent-color:#f6d77f}

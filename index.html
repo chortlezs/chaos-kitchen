@@ -4,14 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>极限出餐</title>
-  <meta name="theme-color" content="#31536b">
+  <meta name="theme-color" content="#ff6b31">
 </head>
 <body>
-  <p>正在进入「极限出餐」冲水马桶场景……</p>
+  <p>正在打开「极限出餐」……</p>
   <script>
-    const query = location.search || "?scene=toilet";
-    location.replace(`neon-chaos-kitchen.html${query}${location.hash}`);
+    const game = new URL('neon-chaos-kitchen.html', location.href);
+    game.search = location.search;
+    game.searchParams.set('build', 'excellent-vocoder-1');
+    game.hash = location.hash;
+    location.replace(game.href);
   </script>
-  <noscript><a href="neon-chaos-kitchen.html?scene=toilet">点击进入游戏</a></noscript>
+  <noscript>请启用 JavaScript，<a href="neon-chaos-kitchen.html">打开游戏</a>。</noscript>
 </body>
 </html>

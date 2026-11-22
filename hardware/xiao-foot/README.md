@@ -26,15 +26,20 @@ python tools/start-hardware.py --transport ble --foot --foot-calibration <profil
 python tools/foot-bridge.py --calibration .hardware-runtime/foot-calibration.json
 ```
 
-Open `http://127.0.0.1:8767/neon-chaos-kitchen.html?scene=toilet&esp=1&foot=1`.
+Open `http://127.0.0.1:8767/?esp=1&foot=1` for the new main-branch cover, dialogue
+and card selection. The launcher opens this entry with both hardware inputs enabled.
+Direct scene links such as `neon-chaos-kitchen.html?scene=toilet&esp=1&foot=1` still work.
 Select **脚踝小跑移动** and start a normal order. The fixed route visits the correct
 ingredient bin, chopping board, wok and serving window. Arrival activates each
 station automatically. Each accepted ankle cycle credits 48 game-route pixels;
 this is a game distance, not a measurement of physical metres. Direction keys and
 map clicks do not move the avatar in this mode. Cooking still uses the hand board.
 Turn off the checkbox in the menu to restore the original map controls.
-Supported classic scenes: toilet, neon office and coffee. The separate Frost
-Kitchen iframe does not use this route mode.
+All four scenes are supported: toilet, neon office, coffee and fridge. The parent
+holds the hand and foot SSE connections. The fridge iframe receives validated
+foot packets through an origin/source-checked message bridge, then delegates its
+cooking minigames back to the common parent page. It never opens a second foot
+connection. Parent link loss immediately clears the child movement budget.
 
 The foot bridge uses localhost port 8768, independently of the hand bridge on
 8766. It checks the sensor identity against the calibration before accepting data.
@@ -52,7 +57,8 @@ cycles around 1.25 seconds and jogging cycles around 0.68 seconds. Replay separa
 those actions, but this is not a universal gait classifier; fast marching and
 other periodic motions still need separate evaluation.
 
-Checks: `node verify-foot.cjs` and
+Checks: `node verify-foot.cjs`, `node verify-dual-hardware.cjs` (all 24 scene/food
+combinations including the actual iframe handoff) and
 `python -m unittest discover -s tools/tests -p "test_*.py"`.
 
 ## Pinned local tools

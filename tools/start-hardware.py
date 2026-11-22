@@ -84,7 +84,7 @@ def main():
         if args.foot and not reuse_foot:
             children.append(subprocess.Popen([sys.executable,str(root/'tools'/'foot-bridge.py'),
                 '--calibration',str(foot_profile)],creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0))
-        url = f"http://127.0.0.1:{args.web_port}/neon-chaos-kitchen.html?scene=toilet&esp=1"
+        url = f"http://127.0.0.1:{args.web_port}/?esp=1"
         if args.foot:
             url += '&foot=1'
         print(f"V1 hardware game: {url}", flush=True)

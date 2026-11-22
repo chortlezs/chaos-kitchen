@@ -5,32 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>极限出餐｜赛博后厨</title>
 <link rel="stylesheet" href="hardware-chop.css">
+<link rel="stylesheet" href="kitchen-opening.css?v=draw-sunlit">
 <style>
+@layer legacyGame {
 *{box-sizing:border-box}body{margin:0;background:#05051a;color:#edfcff;font-family:"Courier New","PingFang SC","Microsoft Yahei",monospace;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);position:relative;aspect-ratio:16/9;background:#050523;overflow:hidden;container-type:inline-size}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030520b8;backdrop-filter:blur(3px)}[hidden]{display:none!important}.panel{width:63%;text-align:center;background:#080b2cf5;border:3px solid #31e8ff;box-shadow:0 0 0 5px #2025b4,0 0 0 8px #0c1035,0 0 36px #126fff80,inset 0 0 30px #1834aa88;padding:4cqw 3cqw;position:relative}.panel:before,.panel:after{content:"";position:absolute;width:8%;height:6px;background:#f456ff;box-shadow:0 0 13px #ff00eb;top:-4px}.panel:before{left:6%}.panel:after{right:6%}.tag{letter-spacing:.26em;color:#51efff;font-weight:bold;font-size:1.45cqw}.panel h1{font-size:6cqw;letter-spacing:.09em;margin:.08em 0 .23em;text-shadow:3px 4px #3122ac,0 0 20px #24caff}.panel p{font:600 1.65cqw/1.7 system-ui;margin:.45em 0 1.1em;color:#cbdbff}.buttons{display:flex;justify-content:center;gap:.9cqw;flex-wrap:wrap}button,select,input{font:700 1.45cqw system-ui;color:#e9faff;background:#0e1d57;border:2px solid #438fd8;border-radius:0;padding:.6em .85em}button{cursor:pointer}button:hover,button:focus-visible{background:#293993;border-color:#ff7bf8;outline:none}button.primary{color:#060b35;background:#35eaff;border-color:#baffff;box-shadow:4px 4px #273bc6;padding:.7em 1.4em}button.primary:hover{background:#fff}.small{margin-top:1.4cqw}.controls{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:flex;gap:.65cqw}.controls button{padding:.4em .65em;touch-action:none}.pause{position:absolute;right:1.2%;top:1.5%;padding:.25em .55em;font-family:inherit}.hint{font-size:1.12cqw;color:#a8c7f4;margin-top:1.3cqw}select{max-width:40%}input{width:76%;margin-bottom:1.3cqw;border-color:#3657b2;background:#0a143d}input::placeholder{color:#9db6e0}
 .scene-choice{display:flex;align-items:center;justify-content:center;gap:.7cqw;margin:0 0 1.1cqw;font:700 1.35cqw system-ui}.scene-choice button{font-size:1.25cqw;padding:.35em .7em}.scene-choice button.selected{background:#35eaff;color:#071044;border-color:#fff}
 body.toilet-scene .panel{background:#31536bf5;border-color:#f5e3ae;box-shadow:0 0 0 5px #7ab6bd,0 0 0 8px #22485f,0 0 35px #a5e0dd77}body.toilet-scene .panel h1{text-shadow:3px 4px #22485f}body.toilet-scene .panel p,body.toilet-scene .hint{color:#e5f4e8}body.toilet-scene button.primary{background:#f6d77f;border-color:#fff9e7;color:#31536b}body.toilet-scene .scene-choice button.selected{background:#f6d77f;color:#31536b;border-color:#fff9e7}
 body.fridge-scene .panel{background:#315b75f5;border-color:#e9fbff;box-shadow:0 0 0 5px #8ed8ec,0 0 0 8px #244c69,0 0 35px #b9efff77}body.fridge-scene .panel p,body.fridge-scene .hint{color:#e9fbff}body.fridge-scene button.primary,body.fridge-scene .scene-choice button.selected{background:#c8f2ff;color:#244c69;border-color:#fff}
 body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 0 0 5px #a7784d,0 0 0 8px #2b1a16,0 0 35px #d4a46f77}body.coffee-scene .panel p,body.coffee-scene .hint{color:#f4dfbf}body.coffee-scene button.primary,body.coffee-scene .scene-choice button.selected{background:#d9a45f;color:#342017;border-color:#f9e2bd}
 #frost-experience{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:20;background:#020b26}.frost-back{position:absolute;left:1.2%;top:1.5%;z-index:21;padding:.45em .8em;background:#112762e8;border-color:#9bedff;color:#efffff;box-shadow:0 0 12px #5de6ff88}
+.coffee-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;margin:1.2cqw 0}.coffee-levels button{background:#62381f;border-color:#dca368;color:#fff0ce;text-align:left;padding:.8em .6em;font-size:1.2cqw}.coffee-levels button:hover,.coffee-levels button[aria-pressed=true]{background:#a15d2b;border-color:#ffe5ac}.coffee-levels small{display:block;color:#e9bf85;font-size:.95cqw;margin-top:.35em}
+body.coffee-scene .panel h1{color:#fff0d0;text-shadow:2px 3px #6f351d}body.coffee-scene .tag{color:#f3c782}
+body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{background:#4c3022;border-color:#c58d52;color:#fff0cd;box-shadow:none}body.coffee-scene button:hover,body.coffee-scene button:focus-visible{background:#805133;border-color:#ffe0a0}body.coffee-scene .panel:before,body.coffee-scene .panel:after{background:#dfb16d;box-shadow:none}body.coffee-scene .hardware-controls{background:#35231cee;border-color:#bc8a57;color:#f6ddb5}body.coffee-scene .hardware-controls button{background:#65402b;border-color:#d9aa6b;color:#fff0cd}
+@media (hover:hover) and (pointer:fine){body.coffee-scene .controls,body.toilet-scene .controls{display:none}}
+@media (pointer:coarse){body.coffee-scene .controls{bottom:12%;gap:.45cqw}body.coffee-scene .controls button{background:#4a281eef;border-color:#e7b674;color:#fff0cc}}
+}
 </style>
+<link rel="stylesheet" href="kitchen-viewport.css">
+<link rel="stylesheet" href="kitchen-audio.css">
+<link rel="stylesheet" href="kitchen-theme.css?v=20261120-orange-entry-2">
 </head>
 <body>
 <main>
+<canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
+<div class="pocket-order"></div>
 <div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
 <div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="run-route" aria-live="polite"></span></div>
-<canvas id="game" width="960" height="540" aria-label="极限出餐像素厨房"></canvas>
+<canvas id="game" width="960" height="540" tabindex="-1" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回场景选择</button>
+<button class="frost-back" id="scene-back" type="button" hidden>← 返回选厨房</button>
 <button class="pause" id="pause" hidden aria-label="暂停">Ⅱ</button>
+<button class="game-exit" id="game-exit" type="button" aria-label="退出到封面">退出</button>
 <div class="controls" id="controls" hidden></div>
 <div class="overlay" id="overlay">
 <section class="panel">
 <div class="tag">⚡ OFFICE ARCADE / NEON KITCHEN</div>
 <h1 id="menu-title">极限出餐</h1>
-<p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单</p>
+<p id="menu-copy">把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒</p>
 <div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="fridge">冰箱内部</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" data-scene="coffee">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
-<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业 ↗</button><button id="resume" hidden>继续游戏</button></div>
+<div class="coffee-levels" id="coffee-levels" aria-label="选择咖啡豆仓关卡" hidden></div>
+<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业</button><button id="resume" hidden>继续游戏</button><button id="opening-return" type="button">返回抽卡</button></div>
 <div class="buttons small" id="practice">
 <select id="dish-select" aria-label="练习菜品"></select>
 <button data-mode="chop">切菜练习</button><button data-mode="wok">颠锅练习</button><button data-mode="serve">端盘练习</button>
@@ -40,8 +56,118 @@ body.coffee-scene .panel{background:#4a3026f5;border-color:#f1d2a6;box-shadow:0 
 </section>
 </div>
 </main>
+<button id="audio-toggle" type="button" aria-label="静音" aria-pressed="false" hidden>♪ 声音</button>
+<section class="kitchen-opening" id="kitchen-opening" aria-label="极限出餐 开局" hidden>
+  <div class="opening-shell">
+    <header class="opening-top">
+      <button class="opening-manual" id="opening-home" type="button" aria-label="退出到封面" hidden>退出</button>
+      <div class="opening-wordmark" aria-hidden="true">CHAOS <span>KITCHEN</span></div>
+      <button class="opening-manual" id="opening-manual" type="button">手动选关</button>
+    </header>
+    <div class="opening-cover" id="opening-cover">
+      <div class="cover-art" id="cover-art" aria-hidden="true">
+        <img src="assets/opening-cover.webp" alt="" fetchpriority="high">
+        <svg class="cover-motion" viewBox="0 0 1746 901" focusable="false">
+          <defs>
+            <image id="cover-motion-art" href="assets/opening-cover.webp" width="1746" height="901"/>
+            <filter id="cover-motion-feather"><feGaussianBlur stdDeviation="4"/></filter>
+            <clipPath id="cover-motion-frame">
+              <rect x="31" y="30" width="1688" height="840"/>
+            </clipPath>
+            <mask id="cover-mask-center">
+              <path class="cover-motion-shape" d="M770 313L875 233 917 132 1047 94 1084 38 1264 37 1374 107 1404 162 1433 191 1472 237 1535 382 1495 487 1390 545 1315 569 1284 714 1120 730 882 710 869 545 819 485 769 431Z"/>
+              <path class="cover-motion-shape" d="M227 395L345 358 708 318 784 371 812 466 861 475 881 634 837 671 291 711 257 666 260 542 230 526Z"/>
+            </mask>
+            <mask id="cover-mask-computer">
+              <path class="cover-motion-shape" d="M19 19H368L432 62 439 318 373 382 261 387 222 353 129 383 19 340Z"/>
+              <circle cx="69" cy="52" r="42" fill="black" filter="url(#cover-motion-feather)"/>
+            </mask>
+            <mask id="cover-mask-water">
+              <path class="cover-motion-shape" d="M1511 92L1605 67 1732 65 1745 276 1647 355 1578 347 1537 278 1485 239 1437 191 1449 154 1490 139Z"/>
+              <circle cx="1680" cy="52" r="42" fill="black" filter="url(#cover-motion-feather)"/>
+            </mask>
+            <mask id="cover-mask-coffee">
+              <path class="cover-motion-shape" d="M45 582L92 546 194 541 237 570 252 630 302 737 304 832 260 875H41Z"/>
+            </mask>
+            <mask id="cover-mask-fridge">
+              <path class="cover-motion-shape" d="M1508 635L1564 588 1655 570 1746 580V880H1490Z"/>
+            </mask>
+          </defs>
+          <g clip-path="url(#cover-motion-frame)">
+            <g mask="url(#cover-mask-center)">
+              <use class="cover-sway cover-sway-center" href="#cover-motion-art"/>
+            </g>
+            <g mask="url(#cover-mask-computer)">
+              <use class="cover-sway cover-sway-computer" href="#cover-motion-art"/>
+            </g>
+            <g mask="url(#cover-mask-water)">
+              <use class="cover-sway cover-sway-water" href="#cover-motion-art"/>
+            </g>
+            <g mask="url(#cover-mask-coffee)">
+              <use class="cover-sway cover-sway-coffee" href="#cover-motion-art"/>
+            </g>
+            <g mask="url(#cover-mask-fridge)">
+              <use class="cover-sway cover-sway-fridge" href="#cover-motion-art"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <h1 class="opening-sr">CHAOS KITCHEN</h1>
+      <div class="cover-actions">
+        <button class="opening-primary" id="opening-play" type="button"><span>开始游戏</span></button>
+      </div>
+    </div>
+    <div class="opening-draw" id="opening-draw" hidden>
+      <div class="chef-chat">
+        <div class="draw-medallion" aria-hidden="true"><canvas width="32" height="32"></canvas></div>
+        <div class="chef-portrait" role="img" aria-label="小厨师"></div>
+        <div class="chef-line">
+          <h2 id="opening-draw-title">小厨师</h2>
+          <p id="chef-question" tabindex="-1" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="draw-picks">
+        <div class="draw-atlas" role="group" aria-label="可前往的厨房">
+          <div class="draw-world" data-world="coffee"><i aria-hidden="true"></i><span>咖啡豆仓</span></div>
+          <div class="draw-world" data-world="fridge"><i aria-hidden="true"></i><span>冰封后厨</span></div>
+          <div class="draw-world" data-world="toilet"><i aria-hidden="true"></i><span>马桶水箱</span></div>
+          <div class="draw-world" data-world="neon"><i aria-hidden="true"></i><span>赛博办公室</span></div>
+        </div>
+        <ol class="opening-steps" aria-label="开局进度">
+          <li aria-current="step">选择口味</li>
+          <li>上班状态</li>
+          <li>翻卡开局</li>
+        </ol>
+        <div class="chef-answers" id="chef-answers" aria-label="选择回答"></div>
+        <div class="opening-decks" hidden>
+          <div class="draw-card-light" aria-hidden="true"></div>
+          <button class="opening-card" id="opening-scene" type="button">
+            <span class="opening-card-label">场景卡</span>
+            <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+            <span class="opening-card-name">抽场景</span>
+          </button>
+          <button class="opening-card" id="opening-dish" type="button">
+            <span class="opening-card-label">菜品卡</span>
+            <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+            <span class="opening-card-name">抽菜品</span>
+          </button>
+        </div>
+        <p class="opening-sr" id="opening-result" role="status" aria-live="polite"></p>
+        <p class="draw-readout" id="draw-readout" hidden></p>
+        <button class="opening-primary opening-cook" id="opening-cook" type="button" hidden disabled>进入厨房</button>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="kitchen-viewport.js"></script>
 <script src="hardware-chop.js"></script>
-<script src="foot-input.js?v=20261121-2"></script>
+<script src="foot-input.js?v=20261122-dual-ui"></script>
+<script src="kitchen-cookware.js"></script>
+<script src="kitchen-items.js"></script>
+<script src="kitchen-art.js"></script>
+<script src="kitchen-stage-fx.js"></script>
+<script src="kitchen-audio.js?v=excellent-vocoder-1"></script>
+<script src="kitchen-opening.js?v=draw-atlas"></script>
 <script>
 (() => {
 "use strict";
@@ -68,11 +194,12 @@ const toiletDishes = [
   {name:"堵塞失控空调",ingredient:"空调",parts:["面板","滤网","导风叶"],tone:"#68a9c2"}
 ];
 const fridgeDishes = [
-  {name:"冰脆咔哒订书机",parts:["冰封压柄","霜冻钉槽","冷藏底座"],tone:"#82c7de"},{name:"冻僵催单老板",parts:["冰壳假发","冻红脑袋","冷气大嘴"],tone:"#b3d9e7"},{name:"冰封积压文件夹",parts:["结霜封皮","冻住纸张","冰晶夹扣"],tone:"#90bbd8"},{name:"冻结卡纸打印机",parts:["冰盖","冻墨盒","霜纸托"],tone:"#9faed6"},{name:"霜冻弹窗键盘",parts:["冰键帽","冷轴体","冻外壳"],tone:"#77c7cb"},{name:"极寒失控空调",parts:["结霜面板","冰滤网","冷风叶"],tone:"#75b8d2"}
+  {name:"冰冻订书机",parts:["冰封压柄","霜冻钉槽","冷藏底座"],tone:"#82c7de"},{name:"冰冻老板",parts:["冰壳假发","冻红脑袋","冷气大嘴"],tone:"#b3d9e7"},{name:"冰冻文件夹",parts:["结霜封皮","冻住纸张","冰晶夹扣"],tone:"#90bbd8"},{name:"冰冻打印机",parts:["冰盖","冻墨盒","霜纸托"],tone:"#9faed6"},{name:"冰冻键盘",parts:["冰键帽","冷轴体","冻外壳"],tone:"#77c7cb"},{name:"冰冻空调",parts:["结霜面板","冰滤网","冷风叶"],tone:"#75b8d2"}
 ];
 const coffeeDishes = [
   {name:"咖啡咔哒订书机",parts:["烘焙压柄","咖啡钉槽","豆香底座"],tone:"#c66d62"},{name:"浓缩催单老板",parts:["油脂假发","浓缩脑袋","苦味大嘴"],tone:"#d08b5c"},{name:"豆渣积压文件夹",parts:["咖啡封皮","豆渣纸张","烘焙夹扣"],tone:"#d6a54b"},{name:"卡豆报错打印机",parts:["豆仓机盖","浓缩墨盒","滤纸托"],tone:"#8d789f"},{name:"爆豆弹窗键盘",parts:["烘焙键帽","咖啡轴体","豆壳外壳"],tone:"#638d79"},{name:"蒸汽失控空调",parts:["蒸汽面板","豆粉滤网","热风叶"],tone:"#6e96a0"}
 ];
+const sceneDishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes};
 let dishes=officeDishes;
 const bins=dishes.map((d,i)=>({x:155,y:148+i*55,w:96,h:48,type:"bin",dish:i,label:d.name}));
 const station=[
@@ -94,34 +221,69 @@ const coffeeStation=[
   {x:650,y:390,w:88,h:62,type:"trash",label:"豆渣回收"}
 ];
 const coffeeAll=[...coffeeBins,...coffeeStation];
-const activeStations=()=>state?.scene==="coffee"?coffeeAll:all;
+const activeStations=()=>state?.scene==="coffee"?[
+  {x:154,y:284,w:98,h:60,type:"bin",dish:state.coffeeLevel,label:coffeeDishes[state.coffeeLevel].name},
+  ...coffeeStation
+]:state?.scene==="toilet"?[
+  {...bins[2],x:190,y:284,dish:state.toiletLevel??0,label:toiletDishes[state.toiletLevel??0].name},
+  {x:340,y:240,w:110,h:96,type:"wok",label:"迷你电磁炉"},
+  {x:650,y:230,w:116,h:86,type:"chop",label:"马桶盖砧板"},
+  {x:780,y:140,w:132,h:61,type:"serve",label:"出餐窗口"},
+  {x:780,y:400,w:82,h:65,type:"trash",label:"刷桶回收"}
+]:state?.scene==="neon"?[{...bins[2],dish:state.neonLevel??0,label:officeDishes[state.neonLevel??0].name},...station]:all;
 const keys=new Set();
 const menu=get("overlay");
-const state={scene:"neon",view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
+const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
+const stageFx=window.KitchenStageFx?.create(ctx,W,H,()=>state.scene);
 let hardwareInput=null;
 let footInput=null;
-const footMode=()=>get("foot-mode").checked===true&&state.scene!=="fridge";
+const footMode=()=>get("foot-mode").checked===true;
 get("foot-mode").checked=new URLSearchParams(window.location.search).get("foot")==="1";
 const cycleDistance=48; // Game-route pixels per complete ankle cycle, not physical metres.
 function clearRunInput(){state.runBudget=0;state.moving=false;}
-function hardwareWokReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="wok"&&state.phase&&!state.phase.done;}
+function relayFoot(packet){
+  const frost=get("frost-experience"),origin=window.location.origin;
+  if(state.scene!=="fridge"||frost.hidden)return;
+  frost.contentWindow?.postMessage({type:"kitchen-foot-relay",packet},origin==="null"?"*":origin);
+}
+function relayFootLink(){
+  relayFoot({type:"link",transport:"xiao-ble",connected:footMode()&&footInput?.connected===true,state:footInput?.connected?"connected":"scanning"});
+}
+function hardwareWokReady(){return !document.hidden&&!state.open&&state.view==="wok"&&state.phase&&!state.phase.done;}
 function stirring(){return keys.has("e")||(hardwareWokReady()&&hardwareInput?.stirring());}
-function hardwareServeReady(){return !document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="serve"&&state.phase&&!state.phase.done;}
+function hardwareServeReady(){return !document.hidden&&!state.open&&state.view==="serve"&&state.phase&&!state.phase.done;}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
 const hit=(p,o)=>Math.abs(p.x-o.x)<o.w/2 && Math.abs(p.y-o.y)<o.h/2;
-function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
-function poly(points,color){ctx.fillStyle=color;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();}
-function path(points,color,width=2,glow=0){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=glow;ctx.lineJoin="miter";ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();ctx.restore();}
-function ellipse(x,y,rx,ry,color){ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
-function text(s,x,y,size=16,color=c.white,align="center"){ctx.font='bold '+size+'px "Courier New","PingFang SC","Microsoft Yahei",monospace';ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline="middle";ctx.fillText(s,Math.round(x),Math.round(y));}
+function sceneColor(color){return state.scene==="coffee"?({"#38dfff":"#e8bc79","#ff47e8":"#dca15e","#ffb7f8":"#f1d2a0","#ffb6f6":"#f1d2a0","#aa8bff":"#a96b42","#d19dff":"#e1b479","#776af4":"#744832","#e0b1ff":"#f2d7a4","#201267":"#39251c","#222b9b":"#69442c","#0b123f":"#40291d","#4539ad":"#b77c46","#212459":"#735034","#a64a88":"#a87442","#e16a51":"#ca8b50","#a9ffda":"#e6c58a","#522357":"#8b572e","#f650cb":"#cf8854","#121642":"#3e281d","#121253":"#3e281d"}[color]||color):color;}
+const originalSceneColor=sceneColor;
+sceneColor=function(color){
+  if(state.scene==="toilet")return ({"#38dfff":"#80b9c2","#ff47e8":"#d4ad79","#effeff":"#315568","#070923":"#315568","#ffd84e":"#ddb365","#ff537f":"#b65e46","#ffb6f6":"#315568","#aa8bff":"#acd9d5","#d19dff":"#f2f9e7","#776af4":"#81b7bf","#e0b1ff":"#d0eee3","#201267":"#87b1b6","#222b9b":"#e6f1e5","#0b123f":"#c2e4df","#4539ad":"#ffffff","#212459":"#8fc5cd","#a9ffda":"#b2d4be","#1b245c":"#d4e5e1","#baf6ff":"#ffffff"})[color]||color;
+  if(state.scene!=="fridge")return originalSceneColor(color);
+  if(color==="#1b245c")return "#c9dce0";
+  if(color==="#baf6ff")return "#ffffff";
+  if(color==="#ffb7f8")return "#36596b";
+  return ({"#38dfff":"#90b7c2","#ff47e8":"#bacfce","#effeff":"#36596b","#070923":"#547783","#ffd84e":"#cfa770","#ff537f":"#b7775d","#ffb6f6":"#36596b","#aa8bff":"#bad8df","#d19dff":"#eef7ee","#776af4":"#86aab8","#e0b1ff":"#dcebe6","#201267":"#7895a2","#222b9b":"#e8eeeb","#0b123f":"#dce9e7","#4539ad":"#ffffff","#212459":"#b0cbd1","#a9ffda":"#b0cdb7","#a64a88":"#d7e3df","#e16a51":"#fffdf4","#4c3022":"#547783","#f0dfbd":"#f4f6ef","#bc8c59":"#adc6cc","#fff0d0":"#ffffff","#bc8050":"#e8eee9","#e9b778":"#ffffff","#825032":"#99b4bd","#d5b187":"#b6cbd0"})[color]||color;
+};
+function rect(x,y,w,h,color){ctx.fillStyle=sceneColor(color);ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
+function poly(points,color){ctx.fillStyle=sceneColor(color);ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();}
+function path(points,color,width=2,glow=0){color=sceneColor(color);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=state.scene==="neon"?glow:0;ctx.lineJoin="miter";ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();ctx.restore();}
+function ellipse(x,y,rx,ry,color){ctx.fillStyle=sceneColor(color);ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();}
+function text(s,x,y,size=16,color=c.white,align="center"){ctx.font='bold '+size+'px "Courier New","PingFang SC","Microsoft Yahei",monospace';ctx.fillStyle=sceneColor(color);ctx.textAlign=align;ctx.textBaseline="middle";ctx.fillText(s,Math.round(x),Math.round(y));}
 function cut(x,y,w,h,k=10){return [[x+k,y],[x+w-k,y],[x+w,y+k],[x+w,y+h-k],[x+w-k,y+h],[x+k,y+h],[x,y+h-k],[x,y+k]];}
-function frame(x,y,w,h,accent=c.light,fill="#0a1150",k=10){const pts=cut(x,y,w,h,k);poly(pts,fill);path([...pts,pts[0]],"#1b36c5",7);path([...pts,pts[0]],accent,2,8);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#c5faff",1);}
+function frame(x,y,w,h,accent=c.light,fill="#0a1150",k=10){const pts=cut(x,y,w,h,k);if(state.scene==="coffee"){poly(pts,"#4c3022");path([...pts,pts[0]],"#271a14",6);path([...pts,pts[0]],"#c58d52",3);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#f4d29c",2);return;}poly(pts,fill);path([...pts,pts[0]],"#1b36c5",7);path([...pts,pts[0]],accent,2,8);path([[x+k+3,y+4],[x+w-k-3,y+4]],"#c5faff",1);}
+const originalFrame=frame;
+frame=function(x,y,w,h,accent=c.light,fill,k=10){
+  if(!["fridge","toilet"].includes(state.scene))return originalFrame(x,y,w,h,accent,fill,k);
+  const pts=cut(x,y,w,h,Math.min(k,6));poly(pts,state.scene==="toilet"?"#fffdf0":"#edf4ed");
+  ctx.save();ctx.strokeStyle=sceneColor(accent);ctx.lineWidth=2;ctx.beginPath();pts.forEach(([a,b],i)=>i?ctx.lineTo(a,b):ctx.moveTo(a,b));ctx.closePath();ctx.stroke();ctx.restore();
+  path([[x+9,y+4],[x+w-9,y+4]],"#ffffff",2);
+};
 function led(x,y,n,color=c.pink){for(let i=0;i<n;i++){rect(x+i*8,y,5,5,color);rect(x+i*8+1,y+1,3,2,c.white);}}
 function hazard(x,y,w){rect(x,y,w,9,"#161639");for(let i=0;i<w-7;i+=12)poly([[x+i+5,y],[x+i+12,y],[x+i+5,y+9],[x+i-2,y+9]],c.yellow);}
 function screw(x,y){rect(x-5,y-4,10,8,c.ink);rect(x-3,y-3,6,6,"#c3d6ff");rect(x-3,y,6,2,"#4654a6");}
-function bar(x,y,w,h,v,accent=c.light,segments=20){frame(x-4,y-4,w+8,h+8,c.light,"#09072e",7);for(let i=0;i<segments;i++){const ww=w/segments;rect(x+i*ww,y,ww-2,h,i/segments<v?accent:"#1b245c");if(i/segments<v)rect(x+i*ww,y+1,ww-2,2,"#baf6ff");}}
+function bar(x,y,w,h,v,accent=c.light,segments=20){frame(x-4,y-4,w+8,h+8,c.light,"#09072e",7);for(let i=0;i<segments;i++){const ww=w/segments,coffee=state.scene==="coffee";rect(x+i*ww,y,ww-2,h,i/segments<v?(coffee?"#e8ae61":accent):(coffee?"#35251d":"#1b245c"));if(i/segments<v)rect(x+i*ww,y+1,ww-2,2,coffee?"#ffe2aa":"#baf6ff");}}
 function trace(points,color,t,offset){path(points,"#090c38",16);path(points,color,8,11);path(points,"#d3faff",2);let lengths=[],sum=0;for(let i=1;i<points.length;i++){sum+=Math.hypot(points[i][0]-points[i-1][0],points[i][1]-points[i-1][1]);lengths.push(sum);}for(let q=0;q<3;q++){let at=(t*88+offset+q*sum/3)%sum;const i=lengths.findIndex(v=>v>=at);if(i<0)continue;const prev=lengths[i-1]||0, f=(at-prev)/(lengths[i]-prev),a=points[i],b=points[i+1];rect(a[0]+(b[0]-a[0])*f-3,a[1]+(b[1]-a[1])*f-3,7,7,c.white);}}
 const traces=[
   [[0,125],[48,125],[73,100],[73,37],[110,0]],[[0,463],[56,463],[76,443],[76,167],[101,142]],
@@ -146,7 +308,7 @@ function circuitry(t,near){
   }
 }
 function battery(x,y,accent){rect(x+5,y-5,14,6,"#f3e8ff");rect(x,y,24,51,c.ink);rect(x+3,y+2,18,46,"#252dce");rect(x+5,y+5,4,39,accent);rect(x+2,y+3,20,5,c.yellow);rect(x+2,y+43,20,5,c.yellow);bolt(x+14,y+24,9,c.white);}
-function bolt(x,y,k,color){poly([[x+1*k,y-1*k],[x-.66*k,y+.1*k],[x-.08*k,y+.1*k],[x-.5*k,y+1*k],[x+1*k,y-.26*k],[x+.37*k,y-.26*k]],color);}
+function bolt(x,y,k,color){if(state.scene==="coffee"){coffeeBean(x,y,k*.65,-.4);return;}poly([[x+1*k,y-1*k],[x-.66*k,y+.1*k],[x-.08*k,y+.1*k],[x-.5*k,y+1*k],[x+1*k,y-.26*k],[x+.37*k,y-.26*k]],color);}
 function fan(x,y,s,t){frame(x-s/2,y-s/2,s,s,"#879cff","#20358c",5);ellipse(x,y,s*.39,s*.39,"#07062e");ctx.save();ctx.translate(x,y);ctx.rotate(t*3.5);for(let i=0;i<5;i++){ctx.rotate(Math.PI*2/5);poly([[0,0],[s*.12,-s*.32],[s*.27,-s*.29],[s*.3,-s*.16],[s*.23,-s*.05]],"#075de4");path([[s*.12,-s*.29],[s*.22,-s*.24],[s*.24,-s*.15]],c.light,3);}ctx.restore();ellipse(x,y,s*.12,s*.12,"#2524af");bolt(x,y,s*.095,c.yellow);for(const xx of [-1,1])for(const yy of [-1,1])screw(x+xx*(s/2-8),y+yy*(s/2-8));}
 function screen(x,y,w,h,t){frame(x,y,w,h,"#6ac8ff","#111444",5);led(x+10,y+10,3);rect(x+9,y+21,w-18,2,"#1c50c5");for(let i=0;i<7;i++){const n=1+Math.floor(3*(.5+.5*Math.sin(t*3+i*1.8)))+i%2;for(let j=0;j<n;j++)rect(x+13+i*8,y+h-10-j*5,6,3,c.light);}bolt(x+w-25,y+h*.6,17,c.pink);}
 function trim(t){
@@ -156,80 +318,16 @@ function trim(t){
   battery(866,190,c.pink);battery(897,190,c.light);battery(784,469,c.light);
   for(const [x,y,w] of [[0,265,145],[0,423,113],[817,248,143],[813,360,147]]){frame(x,y,w,18,"#568bff","#3148d0",4);hazard(x+17,y+4,w-30);}
 }
-function toiletSprite(id,x,y,scale=1,part=null){
-  ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(scale,scale);
-  const b=(a,y,w,h,col)=>rect(a,y,w,h,col);
-  if(id===0){
-    b(-24,-10,48,9,"#7d4056");b(-21,-14,38,5,"#e99aab");b(15,-13,9,15,"#b85f75");b(-20,1,40,5,"#eff7f0");b(-23,8,47,8,"#824a5f");b(-17,8,35,3,"#e592a4");
-  }else if(id===1){
-    b(-18,-19,36,9,"#64485b");b(-21,-13,42,7,"#49384f");b(-16,-7,32,23,"#e5a47c");b(-21,-3,6,11,"#d57a69");b(15,-3,6,11,"#d57a69");b(-11,-3,6,5,"#31536b");b(5,-3,6,5,"#31536b");b(-11,8,22,7,"#994c58");b(-7,8,14,3,"#fff3cf");
-  }else if(id===2){
-    b(-24,-11,18,6,"#d89843");b(-24,-5,48,23,"#bd713b");b(-20,-5,40,15,"#fff1bf");b(-22,0,46,18,"#d7a94f");b(-18,4,38,3,"#fff5c7");b(8,11,10,4,"#fff1b5");
-  }else if(id===3){
-    b(-18,-18,36,10,"#e8f2ef");b(-14,-15,24,3,"#83aebc");b(-26,-7,52,21,"#9a83bd");b(-23,-4,46,4,"#d6c9e9");b(-17,4,34,6,"#31536b");b(-14,10,28,9,"#eef5f0");b(15,-3,6,4,"#78d8bd");
-  }else if(id===4){
-    b(-27,-12,54,26,"#4e8e8b");b(-24,-9,48,18,"#31536b");for(let row=0;row<2;row++)for(let col=0;col<8;col++)b(-21+col*6,-7+row*7,4,4,(row+col)%3?"#87d5c1":"#effff5");b(-19,6,38,4,"#a5e3d2");
-  }else{
-    b(-27,-14,54,28,"#6c98ae");b(-24,-11,48,18,"#eff8f3");b(-22,1,44,5,"#acd5d5");b(-21,7,42,7,"#31536b");b(-19,9,39,2,"#75cbd0");b(14,-5,7,3,"#79e0c7");
-  }
-  for(let i=0;i<3;i++){ellipse(-13+i*13,-17-(i%2)*4,3,3,"#b8ece1");rect(-15+i*13,-16-(i%2)*4,4,2,"#fffdf2");}
-  if(part!==null){
-    b(-23,19,46,5,"#315d78");b(-16,21,32,3,"#f8e8bc");
-    b(-10,21,20,3,dishes[id].tone);
-  }
-  ctx.restore();
-}
 function sprite(id,x,y,scale=1,part=null){
-  if(state.scene==="toilet"){toiletSprite(id,x,y,scale,part);return;}
-  const d=dishes[id], tone=d.tone;
-  ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(scale,scale);
-  const blocks=[
-    [[-24,-11,47,9,tone],[-21,-14,37,4,"#ffb1cf"],[14,-13,9,15,tone],[-17,1,36,4,"#ccd9ff"],[-20,8,44,7,"#702259"],[-17,8,37,2,"#ff83be"]],
-    [[-16,-19,32,9,"#663164"],[-20,-14,39,7,"#472752"],[-15,-9,30,21,"#ffb070"],[-20,-5,5,10,"#ee7d62"],[15,-5,5,10,"#ee7d62"],[-12,-5,6,5,"#301937"],[6,-5,6,5,"#301937"],[-10,5,21,9,"#7f1744"],[-7,5,14,3,"#fff0bc"]],
-    [[-23,-12,17,5,"#ffba42"],[-23,-7,46,23,"#dc7b2a"],[-19,-7,38,15,"#fff3aa"],[-21,-1,44,16,tone],[-18,2,38,3,"#fff5a5"],[8,8,10,4,"#fff5ac"]],
-    [[-17,-17,34,10,"#dbedff"],[-13,-14,23,2,"#89b8f3"],[-25,-7,50,20,tone],[-23,-4,44,3,"#dfb5ff"],[-16,3,32,5,"#27195d"],[-13,7,26,9,"#e9eeff"],[15,-3,5,3,c.green],[-8,11,16,2,"#919ad6"]],
-    [[-26,-11,53,25,"#397b88"],[-23,-9,47,18,"#133f64"],[-19,5,38,4,"#90ffd6"]],
-    [[-26,-13,52,26,"#688cc7"],[-24,-11,48,17,"#e9f8ff"],[-22,1,44,4,"#b3dcff"],[-21,6,42,6,"#233c6b"],[-19,8,39,2,"#4ddaff"],[14,-5,7,3,c.light]]
-  ][id];
-  if(id===4){for(let row=0;row<2;row++)for(let col=0;col<8;col++)blocks.push([-21+col*5.8,-7+row*6,4,4,(row+col)%3?tone:"#efffff"]);}
-  if(part!==null){
-    const parts=[
-      [[[-21,-5,41,10,tone],[-17,-7,32,3,"#ffb1cf"],[13,4,7,5,tone]],[[-17,-4,34,8,"#91b2eb"],[-12,-5,21,3,"#e6f4ff"],[10,-3,4,5,"#233f8d"]],[[-21,-3,42,10,"#702259"],[-16,-5,32,4,"#ff83be"]]],
-      [[[-17,-8,34,8,"#6c3368"],[-21,-3,40,10,"#492853"],[-13,-7,19,3,"#b1668b"]],[[-14,-12,28,24,tone],[-18,-4,5,10,"#ee7d62"],[14,-4,5,10,"#ee7d62"],[-8,-4,5,4,"#301937"],[5,-4,5,4,"#301937"]],[[-15,-6,30,15,"#7f1744"],[-10,-6,20,4,"#fff0bc"],[-9,4,18,3,"#ff8191"]]],
-      [[[-20,-9,18,5,"#ffba42"],[-20,-4,40,15,tone],[-16,-1,30,3,"#fff5a5"]],[[-12,-12,27,21,"#dddfff"],[-15,-8,27,19,"#fff7d5"],[-10,-3,15,2,"#8d91c1"],[-10,2,15,2,"#8d91c1"]],[[-12,-4,24,10,"#bd7740"],[-9,-7,18,6,"#fff2ac"],[-9,3,18,4,"#ffdc53"]]],
-      [[[-19,-8,38,15,"#b9d1ff"],[-17,-9,33,5,"#e9efff"],[-13,-3,24,4,"#849be8"]],[[-14,-9,28,19,"#6043a5"],[-11,-6,22,8,"#34285e"],[-8,-4,4,5,c.pink],[1,-4,4,5,c.light],[9,-4,3,5,c.yellow]],[[-19,-6,38,13,tone],[-13,-3,26,7,"#393175"],[-11,1,22,8,"#e9eeff"]]],
-      [[[-17,-7,12,12,tone],[-2,-9,12,12,"#c6ffef"],[9,-3,12,12,tone]],[[-12,-10,24,21,"#3788ac"],[-7,-6,14,13,tone],[-2,-7,4,15,"#163351"],[-7,-2,14,4,"#163351"]],[[-22,-7,44,17,"#4ba693"],[-18,-4,36,10,"#163856"],[-13,-1,27,2,"#70ffdb"]]],
-      [[[-22,-8,44,17,"#e9f8ff"],[-20,3,40,5,"#b3dcff"],[12,-4,6,3,c.light]],[[-17,-11,34,22,"#5b94af"],[-13,-8,26,16,"#1d4561"],[-9,-8,2,16,c.light],[-2,-8,2,16,c.light],[5,-8,2,16,c.light]],[[-21,-8,42,16,"#688cc7"],[-17,-5,34,3,"#17345d"],[-17,1,34,3,"#17345d"]]]
-    ][id][part];
-    for(const [a,b,w,h] of parts)rect(a-2,b-2,w+4,h+4,c.ink);
-    for(const [a,b,w,h,col] of parts)rect(a,b,w,h,col);
-  }else{
-    for(const [a,b,w,h] of blocks)rect(a-2,b-2,w+4,h+4,c.ink);
-    for(const [a,b,w,h,col] of blocks)rect(a,b,w,h,col);
-    rect(-18,14,33,2,"#343278");
-  }
-  if(state.scene==="fridge"){
-    rect(-25,-18,8,4,"#dff9ff");rect(16,-14,9,5,"#a9e6f4");rect(-11,14,17,3,"#efffff");
-    for(const [xx,yy] of [[-19,-20],[3,-18],[22,1]]){rect(xx,yy,3,9,"#eaffff");rect(xx-3,yy+3,9,3,"#eaffff");}
-  }else if(state.scene==="coffee"){
-    for(const [xx,yy,a] of [[-20,-19,-.4],[2,-21,.3],[21,-8,-.2]]){ctx.save();ctx.translate(xx,yy);ctx.rotate(a);ellipse(0,0,5,3,"#5a3526");path([[-3,1],[3,-1]],"#c18b57",1);ctx.restore();}
-  }
-  ctx.restore();
+  window.KitchenItems?.draw(ctx,state.scene,id,x,y,scale,part);
 }
 function chef(x,y,t){
-  if(state.scene==="toilet"){
-    const bob=state.moving?Math.round(Math.sin(t*16)*2):0;y+=bob;
-    rect(x-14,y+11,28,6,"#6a9aaa");rect(x-12,y+3,9,14,"#597f82");rect(x+4,y+3,9,14,"#597f82");
-    rect(x-16,y-17,32,24,"#ed9d78");rect(x-11,y-13,22,19,"#fff9e7");rect(x-11,y-29,22,17,"#f5ce9e");
-    rect(x-17,y-36,34,10,"#fffdf3");rect(x-10,y-43,20,9,"#fffdf3");rect(x-5,y-24,3,3,"#31536b");rect(x+5,y-24,3,3,"#31536b");
-    if(state.held!==null)sprite(state.held.id,x+18,y-9,.46);
-    return;
+  window.KitchenArt?.chef(ctx,x,y,1,state.scene,t,state.moving);
+  if(state.held!==null){
+    const bob=state.moving?Math.round(Math.sin(t*16)*2):0;
+    sprite(state.held.id,x+20,y-5+bob,.46);
+    if(state.held.stage>0)rect(x+28,y-17+bob,5,5,state.held.stage===1?c.light:c.yellow);
   }
-  ellipse(x,y+14,19,8,"#05051e");ellipse(x,y+13,17,6,c.pink);ellipse(x,y+12,12,4,"#522357");
-  const bob=state.moving?Math.round(Math.sin(t*16)*2):0; y+=bob;
-  rect(x-12,y-24,24,27,"#0c103b");rect(x-12,y-20,24,11,"#bccaff");rect(x-10,y-25,8,9,c.white);rect(x-3,y-29,12,11,c.white);rect(x+7,y-23,6,10,"#b5c8ff");rect(x-9,y-10,18,12,"#ffc498");
-  rect(x-10,y-9,5,6,"#f650cb");rect(x+6,y-9,5,6,"#f650cb");rect(x-5,y-6,2,4,c.ink);rect(x+4,y-6,2,4,c.ink);rect(x-8,y+1,16,10,c.white);rect(x-8,y+9,6,5,"#121642");rect(x+3,y+9,6,5,"#121642");rect(x-2,y+3,4,3,c.pink);
-  if(state.held!==null){sprite(state.held.id,x+20,y-5,.46);if(state.held.stage>0)rect(x+28,y-17,5,5,state.held.stage===1?c.light:c.yellow);}
 }
 function floor(x,y,w,h){
   frame(x,y,w,h,"#709dff","#172461",14);
@@ -252,21 +350,15 @@ function plate(x,y,s=1){
   ellipse(x,y-5*s,79*s,23*s,"#a5bafe");
 }
 function pan(x,y,s=1){
-  frame(x+139*s,y-12*s,119*s,22*s,c.pink,"#17154b",6);
-  rect(x+164*s,y-4*s,75*s,4*s,"#7356ff");led(x+175*s,y-9*s,5,c.pink);
-  ellipse(x,y+20*s,163*s,67*s,"#040724");ellipse(x,y+14*s,160*s,66*s,c.pink);
-  ellipse(x,y+8*s,161*s,65*s,"#161f92");ellipse(x,y-6*s,164*s,65*s,"#5adfff");
-  ellipse(x,y-8*s,157*s,59*s,"#b8f4ff");ellipse(x,y-8*s,152*s,55*s,"#26217f");
-  ellipse(x,y+2*s,140*s,44*s,"#3b2d9d");ellipse(x,y+8*s,122*s,33*s,"#4a3499");
-  for(let i=0;i<7;i++)rect(x+(-105+i*33)*s,y+(i%2?27:-26)*s,5*s,3*s,"#8263bc");
+  window.KitchenCookware?.draw(ctx,x,y,s,state.scene);
 }
 function themedStationArt(o,t,theme){
   const {x,y,w,h,type}=o,isIce=theme==="fridge",dark=isIce?"#315a73":"#4a3026",edge=isIce?"#8fd8ea":"#a8784d",fill=isIce?"#e7f8fb":"#ead3ad",accent=isIce?"#9edbea":"#c78b4d";
   if(theme==="coffee"){
     ellipse(x+4,y+9,w*.53,h*.48,"#2b1a14");ellipse(x,y+3,w*.54,h*.5,"#6f452f");ellipse(x,y-2,w*.49,h*.43,"#d4aa73");ellipse(x,y-4,w*.43,h*.36,type==="bin"?"#593426":"#8c5d3b");
     if(type==="bin"){for(let j=0;j<5;j++)coffeeBean(x-24+j*12,y-8+(j%2)*9,5+j%2,j*.7);sprite(o.dish,x,y-8,.62);}
-    if(type==="chop"){rect(x-31,y-21,62,27,"#7a4b31");rect(x-27,y-18,54,21,"#d8b075");knife(x+24,y-8,.22,-.7);}
-    if(type==="wok"){ellipse(x-5,y-8,35,18,"#2d1d17");ellipse(x-5,y-11,27,13,"#6c4935");rect(x+25,y-13,24,7,"#4a2c20");}
+    if(type==="chop"){window.KitchenCookware?.board(ctx,x,y-10,.13,"coffee");knife(x+24,y-8,.22,-.7);}
+    if(type==="wok")pan(x-9,y-12,.2);
     if(type==="serve"){rect(x-43,y-19,86,25,"#5d3a28");text("↑ 交单",x,y-8,15,"#fff0cf");}
     if(type==="trash")text("↺",x,y-7,24,"#f1d1a0");
     const coffeeLabel=type==="bin"?dishes[o.dish].name.replace(/^(咖啡|浓缩|豆渣|卡豆|爆豆|蒸汽)/,""):type==="chop"?"滤篮砧板":type==="wok"?"烘焙炒台":type==="serve"?"出餐滤杯":"豆渣回收";
@@ -283,17 +375,46 @@ function themedStationArt(o,t,theme){
   text(label,x,y+h/2-11,11,dark);
 }
 function stationArt(o,t){
+  paintStation(o,t);
+  const active=state.queue.length>0&&o.type===wanted()&&(o.type!=="bin"||o.dish===state.queue[0].id);
+  window.KitchenArt?.station(ctx,o.x,o.y,o.w,state.scene,o.type,active,t);
+}
+function paintStation(o,t){
   const {x,y,w,h,type}=o;
   if(state.scene==="fridge"||state.scene==="coffee"){themedStationArt(o,t,state.scene);return;}
   if(state.scene==="toilet"){
-    rect(x-w/2+5,y-h/2+8,w,h,"#54798c");rect(x-w/2,y-h/2,w,h,"#315c76");rect(x-w/2+5,y-h/2+5,w-10,h-10,"#fffbed");
-    rect(x-w/2+9,y-h/2+9,w-18,h-30,type==="bin"?"#f3d885":type==="chop"?"#e6c69b":type==="wok"?"#f2a37c":"#afd9cf");
-    if(type==="bin")sprite(o.dish,x,y-7,.75);
-    if(type==="chop"){rect(x-31,y-21,62,27,"#c99468");rect(x-27,y-18,54,21,"#f7dda8");knife(x+24,y-8,.22,-.7);}
-    if(type==="wok"){ellipse(x-5,y-8,35,18,"#31536b");ellipse(x-5,y-11,27,13,"#6da4ab");rect(x+25,y-13,24,7,"#985f46");}
-    if(type==="serve"){rect(x-44,y-20,88,26,"#4d9bae");text("↑ 交单",x,y-8,15,"#fff9e5");}
-    if(type==="trash")text("↺",x,y-7,24,"#31536b");
-    text(type==="bin"?dishes[o.dish].ingredient+"箱":type==="chop"?"马桶盖砧板":type==="wok"?"迷你电磁炉":type==="serve"?"出餐窗口":"刷桶回收",x,y+h/2-11,12,"#31516b");
+    ellipse(x+3,y+15,w*.43,12,"#83aaa8");
+    if(type==="bin"){
+      poly([[x-42,y-14],[x+42,y-14],[x+33,y+18],[x-33,y+18]],"#b48147");
+      poly([[x-37,y-12],[x+37,y-12],[x+29,y+12],[x-29,y+12]],"#ebce88");
+      ellipse(x,y-13,43,13,"#fff1c9");ellipse(x,y-13,35,8,"#af9264");
+      for(let j=-2;j<=2;j++)rect(x+j*12-2,y+1,3,9,"#c29e62");
+      sprite(o.dish,x,y-17,.75);
+    }
+    if(type==="chop"){
+      window.KitchenCookware?.board(ctx,x,y-5,.16,"toilet");knife(x+18,y-7,.24,-.7);
+    }
+    if(type==="wok"){
+      ellipse(x,y+8,47,27,"#456f81");ellipse(x,y+2,47,27,"#fff6df");ellipse(x,y-1,37,20,"#de8a68");
+      pan(x-5,y-10,.21);ellipse(x-22,y+18,3,3,"#f0bd69");
+    }
+    if(type==="serve"){
+      rect(x-28,y+5,10,20,"#739ca0");rect(x+18,y+5,10,20,"#739ca0");
+      ellipse(x,y+4,55,21,"#6a99a2");ellipse(x,y-2,55,21,"#fffae8");ellipse(x,y-5,44,13,"#b2d6cc");
+      ellipse(x,y-8,29,9,"#fffdf2");ellipse(x,y-9,21,5,"#dbe9dc");
+      text("↑",x+40,y-17,15,"#3d8190");
+    }
+    if(type==="trash"){
+      rect(x+10,y-37,6,33,"#95734e");ellipse(x+13,y-35,10,8,"#f5e7c8");
+      rect(x-25,y-11,50,29,"#79aaa9");ellipse(x,y+18,25,10,"#5d8a91");ellipse(x,y-11,27,12,"#fff5df");ellipse(x,y-12,18,7,"#476f7c");
+      text("↺",x,y+6,17,"#eaf5e9");
+    }
+    const label=type==="bin"?dishes[o.dish].ingredient+"料篮":type==="chop"?"马桶盖砧板":type==="wok"?"迷你电磁炉":type==="serve"?"出餐托盘":"刷桶回收";
+    const labelY=y+(type==="bin"?29:type==="trash"?36:40);
+    text(label,x,labelY,11,"#31516b");
+    if(type===wanted()&&(type!=="bin"||o.dish===state.queue[0]?.id)){
+      const py=y-h/2-8-Math.sin(t*5)*3;poly([[x-5,py-7],[x+5,py-7],[x,py]],"#dca646");
+    }
     return;
   }
   frame(x-w/2,y-h/2+10,w,h,c.pink,"#23338e",8);
@@ -301,7 +422,7 @@ function stationArt(o,t){
   rect(x-w/2+7,y+h/2-8,w-14,4,"#3f63fd");
   led(x-w/2+12,y+h/2-13,3);
   if(type==="bin"){rect(x-33,y-17,66,31,"#14164e");sprite(o.dish,x,y-1,.69);}
-  if(type==="chop"){frame(x-43,y-31,86,48,"#ffdcb3","#a96147",5);rect(x-36,y-26,72,34,"#e7965d");knife(x+11,y-9,.33,-.94);}
+  if(type==="chop"){window.KitchenCookware?.board(ctx,x,y-10,.15,state.scene);knife(x+11,y-9,.33,-.94);}
   if(type==="wok"){ellipse(x-6,y-6,42,26,c.pink);pan(x-10,y-12,.24);}
   if(type==="serve"){for(let i=-1;i<=1;i++)plate(x+i*36,y-8,.135);}
   if(type==="trash"){rect(x-27,y-17,54,30,"#111842");text("↺",x,y-1,24,c.green);}
@@ -310,52 +431,205 @@ function stationArt(o,t){
     poly([[x-7,y-h/2-15-pulse],[x+7,y-h/2-15-pulse],[x,y-h/2-6-pulse]],c.yellow);
   }
 }
+const neonLiveTraces=[
+  [[254,111],[254,143],[277,167],[277,215],[236,256],[236,400],[264,429],[403,429]],
+  [[691,109],[691,238],[729,276],[729,358],[686,401],[686,463]],
+  [[856,317],[831,343],[622,343],[600,365],[600,439],[579,460]]
+];
+const neonCircuitBranches=[
+  [[107,147],[151,147],[178,174],[240,174],[254,160]],
+  [[110,197],[143,197],[165,219],[245,219],[269,195]],
+  [[282,151],[306,127],[403,127],[424,148],[424,206]],
+  [[299,197],[321,175],[386,175],[404,191],[404,218]],
+  [[106,349],[159,349],[175,365],[229,365]],
+  [[135,415],[166,384],[208,384],[222,397]],
+  [[293,427],[313,409],[397,409],[433,373]],
+  [[540,128],[562,146],[654,146],[677,169],[691,169]],
+  [[529,205],[563,205],[587,181],[682,181]],
+  [[548,283],[570,302],[655,302],[681,276],[728,276]],
+  [[749,290],[773,265],[846,265],[860,252]],
+  [[523,411],[548,411],[563,396],[598,396]],
+  [[700,439],[738,439],[755,423],[823,423],[853,393]]
+];
+const neonDataBuses=[
+  [[108,118],[147,118],[161,132],[201,132],[226,157]],
+  [[304,121],[323,140],[360,140],[383,165],[425,165]],
+  [[101,298],[132,298],[157,323],[211,323],[233,301]],
+  [[100,425],[138,425],[171,392],[214,392],[235,413]],
+  [[273,442],[309,442],[330,421],[395,421],[429,387]],
+  [[532,119],[571,119],[592,140],[647,140],[674,113]],
+  [[528,252],[561,252],[592,281],[649,281],[670,303]],
+  [[756,217],[780,242],[822,242],[855,271]],
+  [[525,437],[552,437],[580,408],[626,408],[651,383]],
+  [[704,449],[744,449],[773,420],[826,420],[852,394]]
+].flatMap((points,i)=>Array.from({length:4},(_,wire)=>{
+  const offset=wire*5-7;
+  const lane=points.map(([x,y])=>[x+offset*.4,y+offset]);
+  let length=0;
+  const segments=lane.slice(1).map((end,j)=>{
+    const start=lane[j],size=Math.hypot(end[0]-start[0],end[1]-start[1]);
+    length+=size;
+    return {start,end,size,distance:length};
+  });
+  return {lane,segments,length,color:i%3===0?"#8964ad":i%3===1?"#6485b4":"#a78675",wire};
+}));
+function neonBoardBackplane(t){
+  for(const side of [-1,1]){
+    const x=480+side*442;
+    for(const [y,h] of [[117,93],[289,114]]){
+      const housing=cut(x-26,y,52,h,6);
+      poly(housing,"#0d1737");path([...housing,housing[0]],"#486e97",2);
+      rect(x-19,y+5,38,3,"#557da9");
+      for(let i=0;i<5;i++){
+        const yy=y+15+i*13, active=Math.floor(t*4+i+side)%5===0;
+        rect(x-17,yy,34,9,"#263b58");
+        rect(x-13,yy+1,19,5,"#091330");
+        for(let pin=0;pin<5;pin++)rect(x-12+pin*4,yy+2,2,3,"#c99a6f");
+        rect(x+10,yy+2,3,4,active?"#a6ffee":"#47698a");
+      }
+    }
+  }
+  for(const [y,h] of [[192,56],[312,55],[434,34]]){
+    rect(448,y,64,h,"#122549");
+    for(let i=0;i<8;i++){
+      const x=452+i*8;
+      rect(x,y+2,3,h-4,i%2?"#95659a":"#5584aa");
+      rect(x,y+4+(t*(22+i)+i*7)%(h-11),3,5,i%2?"#f9b7ef":"#b6fcff");
+    }
+  }
+}
+function neonBoardComponents(t){
+  for(const [x,y,w,h,name] of [[348,148,87,42,"RAM"],[348,373,96,38,"I/O"],[581,276,92,45,"CPU"],[796,279,86,45,"VRM"]]){
+    const housing=cut(x-w/2,y-h/2,w,h,6);
+    poly(cut(x-w/2+3,y-h/2+6,w,h,6),"#0e1534");
+    poly(housing,"#243855");path([...housing,housing[0]],"#7b8fb7",2);
+    for(let k=0;k<9;k++){
+      const u=x-w/2+10+k*(w-20)/8;
+      for(const v of [y-h/2-4,y+h/2+1]){
+        rect(u-2,v,5,5,"#b49b8c");rect(u-1,v,2,3,"#f5caa3");
+      }
+    }
+    rect(x-w/2+7,y-h/2+6,w-14,h-12,"#141e42");
+    for(let i=0;i<3;i++)rect(x-12+i*11,y+5,8,4,i===Math.floor(t*2.4+x)%3?"#7de1da":"#426a8c");
+    text(name,x,y-5,9,"#a8bede");
+  }
+  for(const [x,y] of [[200,193],[410,217],[169,356],[308,342],[561,203],[660,253],[759,212],[563,395],[806,441]]){
+    for(let row=0;row<2;row++)for(let col=0;col<5;col++){
+      const u=x+col*7-14,v=y+row*8;
+      rect(u-2,v-1,5,5,"#111c40");rect(u-1,v,3,3,(row+col)%3?"#a49192":"#c3a16c");
+    }
+  }
+  for(const [x,y] of [[118,120],[416,120],[117,452],[418,451],[539,121],[839,122],[539,455],[842,453]]){
+    ellipse(x,y,7,7,"#152349");ellipse(x,y,4,4,"#9aaecc");
+    path([[x-2,y+1],[x+2,y-1]],"#3a587c",1.5);
+  }
+}
+function neonCircuitDetails(t){
+  for(const [i,{lane,segments,length,color,wire}] of neonDataBuses.entries()){
+    path(lane,color,wire===1?1.5:1);
+    const [x,y]=lane.at(-1);ellipse(x,y,2.4,2.4,color);ellipse(x,y,1,1,"#1c2849");
+    if(wire%2===0){
+      const distance=(t*(39+i%5*7)+i*17)%length;
+      const {start,end,size,distance:edge}=segments.find(segment=>segment.distance>=distance);
+      const f=1-(edge-distance)/size;
+      rect(start[0]+(end[0]-start[0])*f-1,start[1]+(end[1]-start[1])*f-1,3,2,"#a8e4ed");
+    }
+  }
+  for(const [i,points] of neonCircuitBranches.entries()){
+    const color=i%3===0?"#914fba":"#4f83bc";
+    path(points,"#14264f",6);path(points,color,2);
+    for(const [x,y] of [points[0],points.at(-1)]){
+      rect(x-4,y-4,8,8,"#17264f");rect(x-3,y-3,6,6,color);rect(x-1,y-1,2,2,"#0f1b42");
+    }
+    const p=points[Math.floor((t*.9+i)%points.length)];
+    rect(p[0]-1,p[1]-1,3,3,i%3===0?"#e2a1fa":"#a1eafb");
+  }
+  for(const [x,y] of [[174,158],[349,148],[160,388],[380,393],[585,132],[638,293],[817,251],[552,432],[775,443]]){
+    rect(x-15,y-10,31,22,"#101839");
+    for(let i=0;i<5;i++)for(const side of [-1,1])rect(x-12+i*5,y+side*11-1,2,5,"#6d8bb9");
+    rect(x-12,y-8,25,16,"#253663");rect(x-10,y-7,20,1,"#617aaf");
+    rect(x-8,y-4,3,3,"#83e6ef");
+  }
+  neonBoardComponents(t);
+}
+function drawNeonShock(t){
+  if(t>=state.shockUntil)return;
+  const {x,y}=state.player, z=Math.floor(t*33);
+  ellipse(x,y+12,24,8,"#9eefff");
+  for(let i=0;i<5;i++){
+    const a=i*Math.PI*2/5+z*.44, cy=y-10;
+    const points=[[x,cy],[x+Math.cos(a)*12+3,cy+Math.sin(a)*12],[x+Math.cos(a)*21-3,cy+Math.sin(a)*21-3],[x+Math.cos(a)*29,cy+Math.sin(a)*29]];
+    path(points,i%2?"#f8b4ff":"#5be5ff",4,6);path(points,"#ecffff",1.3);
+  }
+}
 function map(t){
   if(state.scene==="toilet"){toiletMap(t);return;}
   if(state.scene==="fridge"){fridgeMap(t);return;}
   if(state.scene==="coffee"){coffeeMap(t);return;}
   circuitry(t,false);
+  neonBoardBackplane(t);
   floor(94,105,348,365);floor(517,105,350,365);
   for(const y of [164,282,406]){
     frame(438,y-19,82,38,c.light,"#3443a8",3);
     hazard(436,y-21,17);hazard(506,y+14,17);
     text("»  »",479,y,27,c.light);
   }
-  trace([[254,111],[254,143],[277,167],[277,215],[236,256],[236,400],[264,429],[403,429]],c.light,t,80);
-  trace([[691,109],[691,238],[729,276],[729,358],[686,401],[686,463]],c.light,t,90);
-  trace([[856,317],[831,343],[622,343],[600,365],[600,439],[579,460]],c.pink,t,50);
-  for(const o of all)stationArt(o,t);
+  neonCircuitDetails(t);
+  neonLiveTraces.forEach((points,i)=>trace(points,i===2?c.pink:c.light,t,80+i*19));
+  for(const o of activeStations())stationArt(o,t);
   chef(state.player.x,state.player.y,t);
-  frame(24,16,539,75,c.light,"#0b1140",9);
-  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:4,left:142}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=32+i*174;frame(x,22,168,61,i? "#617fd6":c.light,"#111b61",7);sprite(o.id,x+31,49,.58);text(dishes[o.id].name,x+98,43,15);text(timeText(o.left),x+98,65,13,o.left<15?c.red:c.light);}
-  frame(585,18,294,56,c.pink,"#151044");
-  text("极限出餐  /  电路后厨",732,39,22);
-  text("OFFICE ARCADE",732,60,11,c.light);
-  frame(22,475,169,53,c.light,"#0c144a",10);bolt(44,500,12,c.yellow);
-  text(String(state.score).padStart(3,"0"),110,500,29,c.white);
-  frame(751,475,187,53,state.time<25?c.pink:c.light,"#0c144a",10);
-  text(timeText(state.time),845,491,25,state.time<25?c.red:c.white);
-  bar(772,507,144,8,state.time/180,state.time<25?c.pink:c.yellow,18);
-  frame(203,481,540,41,c.pink,"#0d1241",8);
-  const current=state.queue[0];
-  text(state.open==="menu"?"取料  →  切菜  →  颠锅  →  端盘":current?instructions(): "订单结算",473,501,16);
+  drawNeonShock(t);
+  drawOrderHud();
   if(state.target){ellipse(state.target.x,state.target.y,7,3,c.light);}
 }
-function themedHud(theme){
-  const ice=theme==="fridge",dark=ice?"#294e68":"#3f281e",paper=ice?"#ecfbff":"#f2dfbf",soft=ice?"#c6edf4":"#d8b983",accent=ice?"#65bfd6":"#b97943";
-  rect(20,13,540,69,dark);const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,paper);rect(x+3,22,162,51,soft);sprite(o.id,x+31,46,.6);text(dishes[o.id].name,x+100,41,11,dark);text(timeText(o.left),x+100,62,13,o.left<15?"#c55b55":accent);}
-  rect(600,14,344,61,dark);text("极限出餐",772,39,20,paper);text(ice?"冰箱内部":"咖啡机豆仓内部",772,61,11,soft);
-  rect(20,475,169,53,dark);text(String(state.score).padStart(3,"0"),103,501,29,paper);rect(751,475,187,53,dark);text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":paper);
-  rect(203,481,540,41,dark);text(state.open==="menu"?"取料 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,paper);
+const hudPalettes={
+  neon:{dark:"#080c29",edge:"#45dfff",paper:"#141d49",trim:"#a15afa",ink:"#e8fbff",muted:"#a3deee",urgent:"#ff9cda",track:"#29366c",label:"CIRCUIT BOARD"},
+  fridge:{dark:"#203b70",edge:"#8cccf3",paper:"#eaf7ff",trim:"#509dd3",ink:"#253f75",muted:"#376b91",urgent:"#a1346a",track:"#bfd9ed",label:"FREEZER SHELF"},
+  toilet:{dark:"#46768a",edge:"#78b0bd",paper:"#f6f8ee",trim:"#9dcfc8",ink:"#24495c",muted:"#426c7a",urgent:"#a14737",track:"#cee4e1",label:"PORCELAIN BOWL"},
+  coffee:{dark:"#2e1a15",edge:"#a66845",paper:"#4b3025",trim:"#dba773",ink:"#fff0d6",muted:"#edc8a4",urgent:"#ffb18b",track:"#705040",label:"MOCHA ROAST"}
+};
+function ticket(x,y,w,h,skin){
+  const notch=state.scene==="neon"?8:state.scene==="coffee"?5:3;
+  const shape=cut(x,y,w,h,notch);
+  poly(cut(x+3,y+4,w,h,notch),skin.dark);
+  poly(shape,skin.paper);
+  path([...shape,shape[0]],skin.edge,2,state.scene==="neon"?5:0);
+  rect(x+notch+2,y+3,w-(notch+2)*2,2,skin.trim);
+  for(const xx of [x+notch+1,x+w-notch-5])rect(xx,y+h-7,4,3,skin.trim);
+}
+function drawOrderHud(){
+  const skin=hudPalettes[state.scene];
+  const {ink,muted:warm,urgent}=skin;
+  const level=state.orderDishId??({coffee:state.coffeeLevel,toilet:state.toiletLevel,neon:state.neonLevel}[state.scene])??0;
+  const queue=state.queue.length?state.queue:[{id:level,left:180}];
+  ticket(20,13,540,69,skin);
+  queue.forEach((order,i)=>{
+    const x=108+i*174;
+    sprite(order.id,x+31,46,.6);
+    text(dishes[order.id].name,x+100,40,12,ink);
+    text(timeText(order.left),x+100,62,13,order.left<15?urgent:warm);
+  });
+  text("第 "+(level+1)+" 关 · 单份订单",391,39,16,ink);
+  text("取料 → 切菜 → 翻炒 → 端盘",391,62,12,warm);
+  const names={neon:"赛博办公室",coffee:"咖啡机豆仓",toilet:"马桶水箱",fridge:"冰封后厨"};
+  ticket(600,14,294,61,skin);
+  text(names[state.scene],747,37,20,ink);
+  text(skin.label,747,59,12,warm);
+  ticket(20,475,169,53,skin);
+  text(String(state.score).padStart(3,"0"),103,502,29,ink);
+  ticket(751,475,187,53,skin);
+  text(timeText(state.time),845,495,25,state.time<25?urgent:ink);
+  rect(772,515,144,4,skin.track);
+  rect(772,515,144*clamp(state.time/180,0,1),4,state.time<25?urgent:skin.trim);
+  ticket(203,481,540,41,skin);
+  text(state.open==="menu"?"取料 → 切菜 → 翻炒 → 端盘":state.queue.length?instructions():"订单结算",473,502,15,ink);
 }
 function fridgeMap(t){
   rect(0,0,W,H,"#d9f1f5");for(let y=0;y<H;y+=28)for(let x=0;x<W;x+=28)rect(x,y,27,27,(x/28+y/28)%2?"#d4eef4":"#effbfc");
   rect(76,83,808,390,"#315a73");rect(86,93,788,370,"#eaf9fb");rect(98,105,764,346,"#b9e4ed");
   for(const y of [176,300,420]){rect(101,y,758,12,"#6eafc2");rect(105,y,750,5,"#efffff");}
   for(let i=0;i<12;i++){const x=122+(i*67)%720,y=122+(i%3)*118;poly([[x,y],[x+11,y+5],[x+7,y+17],[x-6,y+14],[x-10,y+4]],i%2?"#eaffff":"#91d4e5");}
-  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("fridge");rect(344,86,272,29,"#315a73");text("02 / 冰箱内部",480,101,15,"#eaffff");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#eaffff");
+  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);drawOrderHud();rect(344,86,272,29,"#315a73");text("02 / 冰箱内部",480,101,15,"#eaffff");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#eaffff");
 }
 function coffeeBean(x,y,s,a){
   ctx.save();ctx.translate(x,y);ctx.rotate(a);
@@ -364,20 +638,158 @@ function coffeeBean(x,y,s,a){
   path([[-s*.72,s*.3],[-s*.18,-s*.08],[.08,-s*.48],[s*.28,-s*.08],[s*.72,-s*.3]],"#e0a36a",Math.max(1.5,s*.14));
   ctx.restore();
 }
+function coffeeMachineDetails(t){
+  // Recessed copper plumbing and the bean feed sit behind the walkways.
+  const pipes=[
+    [[67,235],[120,235],[143,210],[143,161],[181,124],[323,124]],
+    [[901,228],[847,228],[818,197],[818,150],[785,120],[634,120]],
+    [[73,368],[107,368],[133,392],[133,421],[179,462],[290,462]],
+    [[887,356],[846,356],[822,380],[822,421],[779,460],[679,460]]
+  ];
+  ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+  for(const points of pipes){
+    path(points,"#492921",15);path(points,"#a15c39",11);path(points,"#e0a873",3);
+    for(const [x,y] of [points[1],points.at(-1)]){
+      rect(x-9,y-7,18,14,"#5d392a");rect(x-8,y-6,16,10,"#c38657");rect(x-7,y-5,14,2,"#f5cc93");
+    }
+  }
+  ctx.restore();
+  for(const [x,y,offset] of [[75,178,0],[883,178,1.6]]){
+    ellipse(x+3,y+5,26,26,"#34231b");
+    ellipse(x,y,26,26,"#9b6546");ellipse(x,y,22,22,"#e1b684");ellipse(x,y,18,18,"#513629");
+    for(let i=0;i<7;i++){
+      const a=2.45+i*.57;
+      path([[x+Math.cos(a)*13,y+Math.sin(a)*13],[x+Math.cos(a)*16,y+Math.sin(a)*16]],i>4?"#ed9b74":"#f9d3a1",1);
+    }
+    const a=-1.6+Math.sin(t*1.4+offset)*.48;
+    path([[x,y],[x+Math.cos(a)*13,y+Math.sin(a)*13]],"#ffbf8d",2);
+    ellipse(x,y,2,2,"#f6e1b7");
+  }
+  poly([[360,84],[600,84],[560,133],[400,133]],"#563526");
+  poly([[372,87],[588,87],[552,127],[408,127]],"#c18552");
+  path([[376,89],[584,89]],"#f3c892",3);
+  rect(438,125,84,11,"#6a422f");rect(441,126,78,3,"#efbe86");
+  for(let i=0;i<10;i++){
+    const p=(t*(.54+i%3*.06)+i*.173)%1;
+    coffeeBean(422+i*12+Math.sin(p*4+i)*4,103+p*p*58,3+i%3,i+p*3);
+  }
+  for(const [x,y] of [[100,301],[859,301],[327,452],[638,452]]){
+    poly(cut(x-22,y-10,44,20,3),"#643a28");
+    rect(x-19,y-8,38,2,"#d59d66");
+    for(let i=0;i<6;i++){rect(x-16+i*6,y-3,4,8,"#3a271e");rect(x-16+i*6,y+5,4,1,"#b6774f");}
+  }
+}
+function coffeeGrinder(t){
+  const {x,y}=coffeeWheel,turn=-t*4.8;
+  ctx.save();ctx.translate(x,y);ctx.scale(2,2);ctx.translate(-x,-y);
+  // Keep the housing in perspective while the cutter rotates in its own plane.
+  ellipse(x,y+29,145,84,"#3b231dd9");
+  ellipse(x,y+14,141,84,"#673723");
+  ellipse(x,y+6,139,85,"#aa633f");
+  ellipse(x,y,139,84,"#edb77c");
+  ellipse(x,y,130,78,"#6e422f");
+  ellipse(x,y-2,122,72,"#3e2620");
+  const rim=(a,r)=>[x+Math.cos(a)*r,y+Math.sin(a)*r*.60];
+  for(let i=0;i<24;i++){
+    const a=i*Math.PI/12;
+    path([rim(a,122),rim(a,133)],i%3?"#f9dba6":"#ffd973",i%3?1.5:3);
+    if(i%3===0){
+      const [u,v]=rim(a+.12,132);
+      ellipse(u,v,3.4,2.6,"#754b37");rect(u-1,v-1,2,1,"#fff0c8");
+    }
+  }
+  ctx.save();ctx.translate(x,y);ctx.scale(1,.60);
+  ctx.beginPath();ctx.arc(0,0,120,0,Math.PI*2);ctx.clip();
+  ctx.strokeStyle="#805034";ctx.lineWidth=3;
+  for(const r of [35,59,86,113]){ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();}
+  for(let i=0;i<16;i++){
+    const a=turn+i*Math.PI/8, r=49+i%4*20;
+    ctx.strokeStyle=i%3===0?"#ffda9c99":"#e49b6570";ctx.lineWidth=i%3===0?3:1.6;
+    ctx.beginPath();ctx.arc(0,0,r,a,a+.23+i%3*.12);ctx.stroke();
+  }
+  ctx.save();ctx.rotate(turn);
+  for(let i=0;i<8;i++){
+    ctx.save();ctx.rotate(i*Math.PI/4);
+    poly([[18,0],[49,-14],[93,-22],[117,-7],[113,16],[84,29],[61,22],[41,25],[22,17]],"#311c19");
+    poly([[18,-2],[50,-12],[94,-19],[113,-7],[105,10],[78,18],[58,12],[40,21],[20,13]],i%2?"#c48151":"#eab077");
+    poly([[45,5],[98,-12],[107,-5],[99,5],[75,12],[61,10],[40,19]],"#f9d29d");
+    path([[24,1],[51,-9],[93,-16]],"#fff0c8",2);
+    path([[65,16],[85,19],[109,12]],"#875337",3);
+    ctx.restore();
+  }
+  poly(cut(-21,-21,42,42,8),"#4a2a22");
+  poly(cut(-16,-16,32,32,6),"#e3a962");
+  rect(-9,-9,18,5,"#fff0b5");rect(-6,1,12,7,"#966040");
+  ctx.restore();ctx.restore();
+  // Beans and grounds move through the chamber instead of orbiting as ornaments.
+  for(let i=0;i<15;i++){
+    const age=(t*(.48+i%4*.08)+i*.271)%1;
+    const a=-Math.PI*.55-age*(2.7+age*3.8)+i%3*.22, r=115-age*85;
+    const u=x+Math.cos(a)*r,v=y+Math.sin(a)*r*.58;
+    ctx.save();ctx.globalAlpha=Math.sin(age*Math.PI)*.88;
+    if(age<.62&&i%3===0)coffeeBean(u,v,4-age*3,a);
+    else{rect(u,v,3-age,2,i%2?"#ffdc99":"#f2a966");rect(u+4,v+3,2,1,"#ffe5b4");}
+    ctx.restore();
+  }
+  for(const side of [-1,1]){
+    const bx=x+side*126;
+    poly(cut(bx-14,y+41,28,18,4),"#653a30");
+    rect(bx-9,y+46,18,3,"#ffbe71");
+    rect(bx-9,y+52,11,2,"#d48f62");
+  }
+  ctx.restore();
+}
+function coffeeRoasterDeck(t){
+  const finsY=413;
+  poly(cut(292,finsY-7,376,55,12),"#5a3324");
+  poly(cut(298,finsY-5,364,47,9),"#ba744a");
+  poly(cut(305,finsY,350,36,7),"#693c29");
+  for(let i=0;i<21;i++){
+    const x=316+i*16, heat=.55+.45*Math.sin(t*3.8-i*.24);
+    rect(x,finsY+5,9,23,"#361f1b");
+    rect(x+1,finsY+6,3,18,"#b9704a");
+    ctx.save();ctx.globalAlpha=.25+heat*.66;
+    rect(x+5,finsY+8,2,15,"#ffb76d");ctx.restore();
+  }
+  for(const side of [-1,1]){
+    const x=480+side*276;
+    ellipse(x,392,61,34,"#523126");ellipse(x,387,56,30,"#9f603f");
+    ellipse(x,385,50,25,"#73452e");ellipse(x,385,37,18,"#513427");
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3;
+      ellipse(x+Math.cos(a)*46,385+Math.sin(a)*23,3,2,"#efd0a2");
+    }
+    for(let i=0;i<8;i++)coffeeBean(x-30+i*8,376+(i*17%19),3+i%3,i*.8);
+    ctx.save();ctx.lineCap="round";
+    for(let i=0;i<5;i++){
+      const age=(t*(.32+i*.04)+i*.219+side*.17+1)%1;
+      const u=x+(i-2)*15+side*age*22,v=380-age*(69+i*5);
+      ctx.globalAlpha=Math.sin(age*Math.PI)*.34;
+      ctx.strokeStyle=i%2?"#fff0c9":"#f2c191";ctx.lineWidth=7+age*7;
+      ctx.beginPath();ctx.moveTo(u,v+13);ctx.bezierCurveTo(u-side*15,v+8,u+side*14,v+2,u+side*7,v-7);ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
 function coffeeMap(t){
   rect(0,0,W,H,"#512511");
   /* 咖啡机金属内胆：侧板、铆钉、压力表与进豆漏斗。 */
   rect(20,88,86,374,"#43251b");rect(28,96,70,358,"#8d5638");rect(37,108,52,334,"#332019");
   rect(854,88,86,374,"#43251b");rect(862,96,70,358,"#8d5638");rect(871,108,52,334,"#332019");
   for(const x of [47,913])for(const y of [122,216,350,430]){ellipse(x,y,8,8,"#e2aa68");ellipse(x-2,y-2,3,3,"#fff0c8");}
-  ellipse(72,184,29,29,"#2d1c17");ellipse(72,184,23,23,"#efd29e");path([[72,184],[84,172]],"#a84d2b",3);text("BAR",72,202,8,"#efd29e");
-  ellipse(888,184,29,29,"#2d1c17");ellipse(888,184,23,23,"#efd29e");path([[888,184],[879,168]],"#a84d2b",3);text("TEMP",888,202,8,"#efd29e");
-  poly([[356,80],[604,80],[568,133],[392,133]],"#3b241a");poly([[374,84],[586,84],[555,122],[405,122]],"#c1844d");
-  for(let i=0;i<9;i++)coffeeBean(400+i*20,104+(i%2)*9,7+i%2,i*.38);
   /* 烘焙炉芯从豆仓底部透出暖光。 */
   ellipse(480,320,470,268,"#4d2515");ellipse(480,310,455,254,"#6c351d");
   /* 透明豆仓外壁与铜制固定环。 */
-  ellipse(480,288,456,263,"#613018");ellipse(480,280,444,252,"#f0b06b");ellipse(480,280,431,239,"#a35b2e");
+  // 下半仓体留出道路侧壁与投影的空间，底部转角也完整落在圆盘内。
+  const hopperShell=(x,y,rx,upper,lower,color)=>{
+    ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,upper,0,Math.PI,Math.PI*2);
+    ctx.ellipse(x,y,rx,lower,0,0,Math.PI);ctx.closePath();ctx.fill();
+  };
+  hopperShell(480,288,456,263,300,"#613018");hopperShell(480,280,444,252,290,"#f0b06b");hopperShell(480,280,431,239,277,"#a35b2e");
+  for(let i=0;i<20;i++){
+    const a=.13+i*(Math.PI*2/20),x=480+Math.cos(a)*436,y=280+Math.sin(a)*(Math.sin(a)<0?246:282);
+    ellipse(x,y+2,5,4,"#8a4f37");ellipse(x-1,y,3,2,"#ffdfa4");
+  }
   ctx.save();ctx.strokeStyle="#fff0c9";ctx.globalAlpha=.74;ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(480,270,418,228,0,Math.PI*1.06,Math.PI*1.8);ctx.stroke();ctx.strokeStyle="#efb76f";ctx.globalAlpha=.58;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,286,426,237,0,-.12,Math.PI*.72);ctx.stroke();ctx.restore();
   /* 底层豆床基本铺满仓体：小豆均匀散落，大豆簇制造自然疏密。 */
   ctx.save();ctx.beginPath();ctx.ellipse(480,280,424,232,0,0,Math.PI*2);ctx.clip();
@@ -395,15 +807,20 @@ function coffeeMap(t){
   }
   for(let i=0;i<8;i++)coffeeBean(338+((i*83)%285),126+((i*29)%42),7+i%3,((i*47)%170)*Math.PI/180);
   ctx.restore();
+  coffeeGrinder(t);
+  coffeeMachineDetails(t);
+  coffeeRoasterDeck(t);
   /* 参考 Frost Kitchen：逐层铺设整张道路图，让交叉口自然合并成实体平台。 */
   const railStroke=(points,color,width,offset=0)=>{
     ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineJoin="round";ctx.lineCap="round";
     ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y+offset):ctx.moveTo(x,y+offset));ctx.stroke();ctx.restore();
   };
-  for(const [color,width,offset] of [["#402012",66,6],["#ad6230",60,3],["#f6bd75",54,0],["#8a4a26",48,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
+  for(const [color,width,offset] of [["#402012",54,5],["#ad6230",48,2],["#f6bd75",42,0],["#8a4a26",36,0]])for(const points of coffeeRoutes)railStroke(points,color,width,offset);
   for(const points of coffeeRoutes)railStroke(points,"#ffe0a0",3);
   for(const [x,y] of [[228,132],[228,330],[228,444],[732,180],[732,300],[732,444],[340,350],[600,350]]){ellipse(x,y,5,5,"#342017");ellipse(x-1,y-1,2,2,"#ffe2a3");}
-  text("分解 ↓",350,140,12,"#ffe4a6");text("翻炒 ←",732,250,12,"#ffe4a6");text("出餐 ↓",420,350,12,"#ffe4a6");
+  for(const [x,y] of [[350,140],[732,250],[420,350]]){
+    rect(x-7,y-2,4,4,"#b97b4c");rect(x+3,y-2,4,4,"#b97b4c");
+  }
   for(let i=0;i<16;i++){const a=i*.9+t*.05,r=155+(i%4)*53;ellipse(480+Math.cos(a)*r,286+Math.sin(a)*r*.55,3+i%3,2+i%2,"#f3d3a0");}
   /* 缓慢上升的蒸汽与炉火微粒，强化“刚烘焙好”的热度。 */
   ctx.save();ctx.lineCap="round";
@@ -414,65 +831,277 @@ function coffeeMap(t){
   }
   ctx.restore();
   for(let i=0;i<18;i++){const a=i*1.73+t*.22,r=88+(i%6)*54;ellipse(480+Math.cos(a)*r,300+Math.sin(a)*r*.5,2+i%3,2+i%2,i%2?"#ffcf70":"#fff0bb");}
-  /* 中央研磨漏斗与刀盘。 */
-  ctx.save();ctx.translate(168,98);ctx.scale(.65,.65);
-  ellipse(480,286,112,72,"#3b1d13");ellipse(480,280,104,66,"#e0aa69");ellipse(480,280,88,54,"#5d321f");
-  ctx.save();ctx.translate(480,280);ctx.rotate(-t*.35);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);poly([[8,-7],[72,-17],[84,0],[72,17],[8,7]],i%2?"#bb8c5b":"#ffe0a1");}ctx.restore();ellipse(480,280,22,22,"#4b3125");ellipse(480,276,11,11,"#f4b65e");ctx.restore();
-  for(const o of activeStations())stationArt(o,t);chef(state.player.x,state.player.y,t);themedHud("coffee");rect(344,86,272,29,"#3f281e");text("04 / 咖啡机豆仓",480,101,15,"#f2dfbf");if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
+  const stations=activeStations();
+  for(const o of stations)stationArt(o,t);
+  const current=state.queue[0], goal=current&&stations.find(o=>o.type===wanted()&&(o.type!=="bin"||o.dish===current.id));
+  if(goal&&!state.coffeeDrain)window.KitchenArt?.target(ctx,goal.x,goal.y-goal.h/2-16,t);
+  if(state.coffeeDrain)drawDrainingChef(t);
+  else chef(state.player.x,state.player.y,t);
+  // 前沿在道路之后绘制，明确外壳包住内部平台的层级。
+  ctx.save();ctx.strokeStyle="#ffd197";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,280,438,284,0,.15,Math.PI-.15);ctx.stroke();ctx.restore();
+  drawOrderHud();if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f2c77e");
+}
+function toiletVortex(t){
+  const {x,y,rx,ry}=toiletWater,projection=ry/rx;
+  ctx.save();ctx.translate(x,y);ctx.scale(1,projection);
+  const water=ctx.createRadialGradient(0,0,9,0,0,rx);
+  if(water){
+    for(const [at,color] of [[0,"#315d73"],[.16,"#488ea5"],[.39,"#62b3c0"],[.65,"#a7e0da"],[.85,"#80c9d1"],[1,"#4a91a8"]])water.addColorStop(at,color);
+  }
+  ctx.fillStyle=water||"#82ced6";
+  ctx.beginPath();ctx.arc(0,0,rx,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  // Each short wake follows a different path and fades as it reaches the drain.
+  ctx.save();ctx.beginPath();ctx.ellipse(x,y,247,125,0,0,Math.PI*2);ctx.clip();ctx.lineCap="round";
+  for(let i=0;i<58;i++){
+    const life=(t*(.17+(i%9)*.016)+i*.61803398875)%1;
+    const reach=128+i*71%106, heading=i*2.39996323;
+    const length=.035+(i%8)*.009;
+    const wake=[];
+    for(let j=0;j<=9;j++){
+      const age=Math.max(0,life-length*(1-j/9));
+      const radius=23+(reach-23)*(1-age*.91);
+      const a=heading+age*(2.3+age*3.55)+.027*Math.sin(t*1.8 + i + age*13);
+      wake.push([x+Math.cos(a)*radius,y+Math.sin(a)*radius*projection]);
+    }
+    const crest=i%4===0, shadow=i%4===1;
+    ctx.globalAlpha=Math.sin(life*Math.PI)*(crest?.78:shadow?.29:.41);
+    path(wake,crest?"#f3fff3":shadow?"#378da4":"#c9f2eb",crest?2+i%3*.55:shadow?4:1+i%3*.6);
+    if(crest){
+      const [px,py]=wake[9];
+      rect(px,py,2+i%3,1+i%2,"#f7fff7");
+    }
+  }
+  ctx.restore();
+
+  ellipse(x,y+2,23,11,"#418098");
+  ellipse(x,y+1,16,8,"#234f67");
+  ctx.save();ctx.lineCap="round";
+  for(let i=0;i<7;i++){
+    const life=(t*(.56+i%3*.14)+i*.38)%1;
+    const a=i*2.39+t*1.4, r=34-life*16;
+    ctx.globalAlpha=Math.sin(life*Math.PI)*.75;
+    ctx.strokeStyle=i%2?"#ccf2e6":"#85cdd1";ctx.lineWidth=1+i%3*.5;
+    ctx.beginPath();ctx.ellipse(x,y,r,r*projection,0,a,a+.27+life*.27);ctx.stroke();
+  }
+  ctx.restore();
+}
+const toiletDripPoints=[
+  // x, start height, impact height, cycle length, phase, spread on impact
+  [61,245,438,1.84,.28,1],[131,165,373,2.29,.7,.75],[193,130,263,1.55,.15,.85],
+  [302,145,224,1.36,.55,1],[373,141,240,2.07,.82,.85],[479,146,288,1.73,.44,1],
+  [595,141,230,1.47,.07,.8],[661,150,248,1.89,.71,1],
+  [779,115,302,2.24,.31,.75],[891,241,420,1.66,.59,1],
+  [263,352,486,2.04,.4,.75],[695,356,491,1.62,.17,1],[817,326,457,2.44,.86,.8],
+  [357,382,493,1.98,.63,.75],[582,406,501,1.72,.93,.82]
+];
+function toiletDrips(t){
+  ctx.save();ctx.lineCap="round";
+  for(const [x,top,landing,cycle,phase,size] of toiletDripPoints){
+    const age=(t/cycle+phase)%1;
+    if(age<.56){
+      const fall=age/.56;
+      const y=top+(landing-top)*fall*fall;
+      const tail=(3+fall*12)*size;
+      ctx.globalAlpha=.25+Math.min(fall*2,.62);
+      path([[x,y-tail],[x,y]],"#4a94aa",2.5*size);
+      path([[x,y-tail*.78],[x,y-2]],"#d6f9ee",1.1*size);
+      rect(x-1,y-3,3*size,4*size,"#85d5dc");
+      rect(x-1,y-3,1,3*size,"#f7fff7");
+      continue;
+    }
+    const dispersal=(age-.56)/.44;
+    const radius=(3+dispersal*16)*size;
+    ctx.globalAlpha=(1-dispersal)*.56;
+    ctx.strokeStyle="#438fa4";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(x,landing,radius,radius*.33,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle="#effff4";ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(x,landing-1,radius,radius*.33,0,Math.PI*.83,Math.PI*1.88);ctx.stroke();
+    if(dispersal<.38){
+      const splash=dispersal/.38;
+      for(let i=-1;i<=1;i++){
+        const a=x+i*(3+splash*10)*size;
+        const b=landing-Math.sin(splash*Math.PI)*(5+Math.abs(i)*3)*size;
+        rect(a,b,2,2,"#eafff6");
+      }
+    }
+  }
+  ctx.restore();
+}
+function toiletWetPorcelain(){
+  const reflections=[
+    [[114,281],[128,245],[149,216]],[[168,196],[191,178],[211,167]],
+    [[707,150],[738,168],[763,190]],[[804,215],[825,245],[838,267]],
+    [[160,410],[185,437],[214,455]],[[746,454],[774,433],[800,404]]
+  ];
+  ctx.save();ctx.lineCap="round";ctx.globalAlpha=.68;
+  for(const points of reflections){
+    path(points,"#b4d6d4",5);
+    path(points,"#f9fff4",2.5);
+  }
+  for(const [x,y,w] of [[114,424,15],[166,475,18],[225,504,12],[767,488,16],[842,467,15],[915,442,13]]){
+    ellipse(x,y,w,3.8,"#9fcdd1");
+    path([[x-w*.52,y-1],[x+w*.17,y-2]],"#effff5",1.1);
+  }
+  ctx.restore();
+}
+function toiletRivet(x,y){
+  rect(x-2,y-2,5,5,"#466f80");
+  rect(x-1,y-1,3,3,"#e1f3ec");
+  rect(x,y,2,1,"#6f9cab");
+}
+function toiletPlumbing(){
+  for(const x of [58,902]){
+    const side=x<480?1:-1;
+    rect(x-27,87,57,384,"#2c536562");
+    rect(x-24,89,48,382,"#26465c");
+    rect(x-15,96,30,367,"#6195a4");
+    rect(x-11,102,23,355,"#86b8bf");
+    rect(x-9,102,6,355,"#ddf1e8");
+    rect(x+8,102,4,355,"#497e91");
+    for(const y of [128,237,319,437]){
+      rect(x-20,y,40,12,"#385d70");
+      rect(x-18,y+2,36,7,"#9cc6ca");
+      rect(x-15,y+2,28,2,"#e8f6ea");
+      toiletRivet(x-14,y+6);toiletRivet(x+14,y+6);
+    }
+    for(const y of [190,370]){
+      ellipse(x+2,y+4,25,25,"#233d5290");
+      ellipse(x,y,25,25,"#31536b");
+      ellipse(x,y-1,19,19,"#b4774c");
+      ellipse(x,y-3,16,16,"#edc180");
+      ellipse(x,y-3,11,11,"#714c47");
+      for(let spoke=0;spoke<4;spoke++){
+        const a=spoke*Math.PI/2+.45;
+        path([[x,y-3],[x+Math.cos(a)*14,y-3+Math.sin(a)*14]],"#f8d49a",3);
+      }
+      ellipse(x,y-3,4,4,"#c16a49");
+      rect(x-3,y-5,4,2,"#fff0c2");
+      rect(x+side*23-5,y-3,10,6,"#3d6b7d");
+    }
+  }
+  rect(98,105,89,54,"#31536b");
+  rect(102,109,85,47,"#82aeb5");
+  rect(106,113,73,38,"#b7d8d3");
+  rect(109,115,66,2,"#e4f3e9");
+  for(let i=0;i<5;i++){
+    const x=114+i*12;
+    rect(x,121,7,20,"#497e90");rect(x+1,121,3,18,"#6ba0ab");
+  }
+  for(const x of [109,175])toiletRivet(x,145);
+}
+function toiletTank(t){
+  poly(cut(275,91,410,66,8),"#3f758a64");
+  poly(cut(282,85,396,65,8),"#6a9ba8");
+  poly(cut(284,85,392,58,7),"#f9f9e9");
+  rect(297,89,367,3,"#ffffff");
+  rect(300,139,360,4,"#b4d5d3");
+  // A glazed inspection window ties the flush tank to the visible water below it.
+  poly(cut(370,98,222,36,5),"#417187");
+  poly(cut(373,101,216,29,3),"#bfe2df");
+  poly([[376,113],[415,115],[458,111],[501,114],[547,112],[586,114],[586,127],[376,127]],"#70b9cb");
+  rect(377,123,208,4,"#509cb3");
+  for(let i=0;i<6;i++){
+    const x=381+(i*35+t*9)%194,y=114+i%3*4;
+    rect(x,y,8+i%3*5,1,"#d7f9ee");
+  }
+  rect(435,103,7,21,"#754e41");rect(437,103,3,20,"#e1ad63");
+  path([[440,110],[471,107],[519,119]],"#724a42",5);
+  path([[440,109],[471,106],[519,118]],"#e2b56e",2);
+  ellipse(519,119,12,8,"#9e4c40");ellipse(517,117,10,6,"#d97154");
+  rect(512,114,7,2,"#ffbd91");
+  path([[380,103],[421,103],[426,105]],"#f5fff9",1.5);
+  for(const x of [294,665]){toiletRivet(x,95);toiletRivet(x,132);}
+  rect(306,105,49,21,"#557989");rect(308,107,45,17,"#d6eeea");
+  for(let i=0;i<4;i++)rect(312+i*9,117-i%2*4,5,5+i%2*4,i===2?"#db9861":"#71acb2");
+  rect(610,104,36,21,"#9b684d");rect(613,106,30,16,"#edbe78");
+  rect(616,108,24,3,"#fff0ba");rect(620,114,16,5,"#bd765a");
+}
+function toiletRimDetails(){
+  ctx.save();ctx.lineCap="round";
+  for(const [from,to] of [[.10,.52],[.72,1.03],[2.11,2.42],[2.60,2.99],[3.28,3.62],[5.80,6.09]]){
+    ctx.strokeStyle="#a6cbcd";ctx.lineWidth=5;
+    ctx.beginPath();ctx.ellipse(480,286,377,216,0,from,to);ctx.stroke();
+    ctx.strokeStyle="#fffdf0";ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(480,282,378,216,0,from,to);ctx.stroke();
+  }
+  ctx.restore();
+  for(const side of [-1,1]){
+    const x=480+side*169;
+    ctx.save();ctx.translate(x,381);ctx.rotate(-side*.31);
+    poly(cut(-22,-8,44,16,3),"#6e5a54");
+    poly(cut(-20,-7,40,12,2),"#f2ca83");
+    for(let i=0;i<3;i++){
+      const n=-15+i*11;
+      poly([[n,-6],[n+4,-6],[n+9,4],[n+5,4]],"#a96b54");
+    }
+    ctx.restore();
+  }
 }
 function toiletMap(t){
-  rect(0,0,W,H,"#31536b");
-  for(let y=0;y<H;y+=24)for(let x=0;x<W;x+=24){rect(x,y,22,22,(x/24+y/24)%2?"#e8eee5":"#f8f6e9");}
-  /* 墙内冲水管线、阀门与检修口，增加马桶内部的空间层次。 */
-  rect(34,89,48,382,"#26465c");rect(43,96,30,367,"#70aab2");rect(48,102,12,355,"#c8e4dc");
-  rect(878,89,48,382,"#26465c");rect(887,96,30,367,"#70aab2");rect(899,102,12,355,"#c8e4dc");
-  for(const [x,y] of [[58,190],[58,370],[902,190],[902,370]]){ellipse(x,y,25,25,"#31536b");ellipse(x,y,18,18,"#f3df9b");ellipse(x,y,8,8,"#bb7352");}
-  rect(98,105,89,54,"#31536b");rect(106,113,73,38,"#b7d8d3");for(let i=0;i<5;i++)rect(113+i*13,120,6,24,"#5a8fa0");
-  rect(773,105,89,54,"#31536b");rect(781,113,73,38,"#b7d8d3");for(let i=0;i<5;i++)rect(788+i*13,120,6,24,"#5a8fa0");
+  rect(0,0,W,H,"#5b8597");
+  for(let y=0;y<H;y+=24)for(let x=0;x<W;x+=24){
+    const i=x/24,j=y/24;
+    rect(x,y,22,22,(i+j)%2?"#d5e6df":"#e8eee3");
+    if(i<8||i>31){rect(x+2,y+2,18,1,"#f3faed");rect(x+20,y+4,1,15,"#b7d0cd");}
+    if((i+j*3)%8===2&&(i<8||i>31)){
+      poly([[x+11,y+5],[x+16,y+10],[x+11,y+15],[x+6,y+10]],"#b0c9c5");
+      rect(x+10,y+8,3,3,"#eef5e9");
+    }
+  }
+  toiletPlumbing();
   /* 连续的椭圆马桶圈取代左右两块方形站板；瓷砖只铺在圈体内部。 */
   ellipse(480,295,392,230,"#719daf");ellipse(480,282,392,230,"#fffdf2");ellipse(480,282,365,209,"#e5eee5");
   ctx.save();ctx.beginPath();ctx.ellipse(480,282,356,200,0,0,Math.PI*2);ctx.clip();
   for(let yy=92;yy<474;yy+=24)for(let xx=116;xx<844;xx+=24)rect(xx,yy,22,22,((xx+yy)/24)%2?"#edf2e8":"#f8f8eb");
   ctx.restore();
-  ellipse(480,285,274,145,"#cde2df");ellipse(480,285,250,128,"#4a91a8");ellipse(480,285,222,105,"#82ced6");ellipse(480,285,188,78,"#a8e3de");
-  /* 双侧防滑通道与三处跨水连接，让操作路线一眼可读。 */
-  path([[154,146],[154,438],[356,438],[356,284],[284,284],[284,202]],"#5b8792",31);
-  path([[154,146],[154,438],[356,438],[356,284],[284,284],[284,202]],"#f8f1d9",5);
-  path([[806,146],[806,438],[676,438],[676,202]],"#5b8792",31);
-  path([[806,146],[806,438],[676,438],[676,202]],"#f8f1d9",5);
-  for(const [x,y,a] of [[154,238,"↓"],[154,370,"↓"],[312,438,"→"],[806,238,"↓"],[806,370,"↓"],[716,438,"←"],[284,244,"↑"],[676,244,"↑"]])text(a,x,y,15,"#31536b");
-  for(let j=0;j<6;j++){const x=323+j*58,y=248+(j%2)*43;rect(x,y,27,5,"#e1f8e8");rect(x+10,y+9,19,4,"#65b6c5");}
-  ellipse(480,285,45,25,"#376d84");ellipse(480,283,27,14,"#25516a");
-  ctx.save();ctx.translate(480,284);ctx.rotate(t*.18);for(let i=0;i<8;i++){ctx.rotate(Math.PI/4);ellipse(70,0,16,5,i%2?"#dff7eb":"#67b8c3");}ctx.restore();
-  for(let i=0;i<13;i++){const a=i*.83+t*.14,r=74+(i%4)*31;ellipse(480+Math.cos(a)*r,284+Math.sin(a)*r*.48,3+i%3,2+i%2,"#eafff5");}
+  ellipse(480,285,274,145,"#cde2df");
+  toiletVortex(t);
+  toiletWetPorcelain();
+  toiletRimDetails();
   /* 座圈高光与前端缺口，让椭圆具有瓷器厚度。 */
   ctx.strokeStyle="#ffffff";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(480,272,345,192,0,Math.PI*1.08,Math.PI*1.92);ctx.stroke();
-  /* 把水箱提到座圈上层，避免被椭圆遮住；铰链把两部分连成完整马桶。 */
-  rect(280,82,400,94,"#719daf");rect(268,70,424,94,"#fffdf2");rect(282,84,396,66,"#dcebe3");
-  rect(302,93,352,43,"#f9f8ed");rect(636,105,38,15,"#31536b");rect(642,99,29,14,"#f2c55a");
-  rect(334,151,67,24,"#719daf");rect(342,151,51,16,"#fffdf2");rect(559,151,67,24,"#719daf");rect(567,151,51,16,"#fffdf2");
-  /* 前端收窄底座覆盖座圈下沿，补出马桶落地的体积。 */
+  // 同心瓷环在瓷壁之上、装置之下；保留完整规则轮廓，不绕物件变形。
+  ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
+  for(const [width,color] of [[24,"#396d80"],[21,"#70b0bd"],[18,"#9bd3d8"]]){
+    ctx.lineWidth=width;ctx.strokeStyle=color;
+    for(const points of toiletRoutes){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();}
+  }
+  ctx.strokeStyle="#5b98a9";ctx.lineWidth=1;
+  for(const points of toiletRoutes)for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i],length=Math.hypot(b[0]-a[0],b[1]-a[1]),nx=-(b[1]-a[1])/length,ny=(b[0]-a[0])/length;
+    for(let d=20;d<length;d+=28){const x=a[0]+(b[0]-a[0])*d/length,y=a[1]+(b[1]-a[1])*d/length;ctx.beginPath();ctx.moveTo(x+nx*7,y+ny*7);ctx.lineTo(x-nx*7,y-ny*7);ctx.stroke();}
+  }
+  ctx.restore();
+  // 水箱和工作台压住环路，角色经过后方时也被装置自然遮挡。
+  toiletTank(t);
+  // 前端底座是前景实体，压住后方环路，保留完整马桶造型。
   poly([[346,405],[614,405],[596,476],[562,493],[398,493],[364,476]],"#719daf");
   poly([[360,407],[600,407],[583,465],[552,479],[408,479],[377,465]],"#fffdf2");
   poly([[385,422],[575,422],[562,456],[540,466],[420,466],[398,456]],"#dcebe3");
+  path([[385,426],[401,452],[424,462],[460,462]],"#accacc",2);
+  path([[502,462],[538,462],[559,452],[575,426]],"#accacc",2);
+  for(const x of [420,540])toiletRivet(x,457);
+  rect(467,438,26,17,"#5c8393");rect(469,440,22,13,"#b2d9d5");
+  path([[474,444],[480,449],[486,444]],"#3f6e81",2);
   rect(441,478,78,9,"#719daf");rect(451,473,58,8,"#fffdf2");
-  for(const y of bridges){rect(430,y-18,100,36,"#fffaf0");rect(435,y-13,90,26,"#aed4d0");text("»  »",480,y,23,"#458da0");}
-  rect(344,7,272,29,"#31536b");text("03 / 冲水马桶内部",480,22,15,"#fff9e7");
-  for(const o of activeStations())stationArt(o,t);
-  chef(state.player.x,state.player.y,t);
-  rect(20,13,540,69,"#31536b");
-  const queue=state.queue.length?state.queue:[{id:0,left:82},{id:1,left:112},{id:2,left:142}];
-  for(let i=0;i<queue.length;i++){const o=queue[i],x=28+i*174;rect(x,19,168,57,"#fff9e8");rect(x+3,22,162,51,"#d9ece4");sprite(o.id,x+31,46,.65);text(dishes[o.id].name,x+100,41,12,"#31536b");text(timeText(o.left),x+100,62,13,o.left<15?"#c86655":"#39758a");}
-  rect(600,14,344,61,"#31536b");text("极限出餐",772,39,20,"#fff9e7");text("冲水马桶内部",772,61,11,"#9fe0d8");
-  rect(20,475,169,53,"#31536b");text(String(state.score).padStart(3,"0"),103,501,29,"#fff9e7");
-  rect(751,475,187,53,"#31536b");text(timeText(state.time),845,496,25,state.time<25?"#ffb38c":"#fff9e7");
-  rect(203,481,540,41,"#31536b");text(state.open==="menu"?"取菜 → 切菜 → 翻炒 → 端盘":state.queue[0]?instructions():"订单结算",473,502,15,"#fff9e7");
+  toiletDrips(t);
+  const foreground=activeStations().filter(o=>state.player.y<o.y+12);
+  for(const o of activeStations())if(!foreground.includes(o))stationArt(o,t);
+  if(state.toiletDrain)drawDrainingChef(t);
+  else chef(state.player.x,state.player.y,t);
+  for(const o of foreground)stationArt(o,t);
+  // 顶部使用连续的冷白瓷面衬底，遮住背景与水箱在信息栏间露出的碎块。
+  rect(0,0,W,84,"#dcebe5");rect(0,81,W,3,"#719daf");
+  rect(0,78,W,2,"#f6fbef");
+  drawOrderHud();
   if(state.target)ellipse(state.target.x,state.target.y,7,3,"#f3d77c");
 }
 function instructions(){
   if(footMode())return "原地小跑沿黄色路线前进 · 到站后停止跑动，完成工序";
   const held=state.held, name=dishes[state.queue[0].id].name;
-  if(!held)return "取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
+  if(!held)return state.scene==="coffee"?"取料 · "+name+" ｜ 点击料篮 / 靠近按空格":"取料 · "+name+"  ｜  点击对应料箱或靠近按空格";
   if(state.scene==="coffee")return name+"  →  "+["左上方 · 滤篮砧板","右侧 · 烘焙炒台","下方偏左 · 出餐滤杯"][held.stage];
   if(held.stage===0)return name+"  →  右侧分解砧板";
   if(held.stage===1)return name+"  →  左侧电磁炒锅";
@@ -488,121 +1117,89 @@ function knife(x,y,s=1,angle=0){
   rect(-12,23,25,62,c.ink);rect(-9,24,19,53,"#21277e");rect(-6,29,6,35,"#346fdb");rect(0,33,7,10,c.light);rect(0,48,7,10,c.light);rect(-10,73,22,11,c.pink);
   ctx.restore();
 }
-function drawChallengeHeader(title,sub,t){
-  if(state.scene==="fridge"){rect(0,0,W,H,"#d9f2f6");for(let i=0;i<22;i++)rect((i*83)%W,(i*47)%H,5,13,"#efffff");}
+function drawChallengeHeader(title,sub,t,stage){
+  if(state.scene==="toilet")toiletNearBase("","",true);
+  if(state.scene==="fridge")freezerBackdrop(t);
   if(state.scene==="coffee"){rect(0,0,W,H,"#2d1b16");for(let i=0;i<20;i++)coffeeBean((i*91)%W,(i*59)%H,9+(i%3)*3,i*.5);}
-  const themed=state.scene==="fridge"?"#315a73":state.scene==="coffee"?"#4a3026":"#101047",accent=state.scene==="fridge"?"#8ed8ea":state.scene==="coffee"?"#c18a55":c.light;
-  frame(184,19,592,99,accent,themed,23);
-  frame(337,11,286,22,accent,themed,7);
-  text({fridge:"FROZEN SHELF / 冰箱后厨",coffee:"BEAN HOPPER / 豆仓后厨"}[state.scene]||"OFFICE ARCADE / 微型后厨",480,22,12,accent);
-  bolt(226,61,19,c.pink);bolt(734,61,19,c.pink);
-  text(title,480,60,29);
-  frame(263,83,433,34,c.pink,"#170f48",7);
-  text(sub,479,99,15,state.phase.left<5?c.red:"#ffb7f8");
-  frame(29,28,106,51,c.light,"#101443",7);
-  text("阶段剩余",81,41,12,c.light);text(timeText(state.phase.left),81,61,22,state.phase.left<5?c.red:c.white);
-  if(!state.practice)text("营业 "+timeText(state.time),883,146,14,state.time<25?c.red:c.light);
+  window.KitchenArt?.workshop(ctx,W,H,state.scene,stage,t);
+  const ink=state.scene==="coffee"?"#fff0d3":c.white;
+  frame(184,19,592,99);frame(337,11,286,22);
+  text({neon:"OFFICE / 办公室",fridge:"FROZEN SHELF / 冰封后厨",toilet:"PORCELAIN / 清水后厨",coffee:"BEAN HOPPER / 豆仓后厨"}[state.scene],480,22,12,ink);
+  text(title,480,60,29,ink);
+  frame(263,83,433,34);text(sub,479,99,15,state.phase.left<5?c.red:ink);
+  frame(29,28,106,51);text("阶段剩余",81,41,12,ink);
+  text(timeText(state.phase.left),81,61,22,state.phase.left<5?c.red:ink);
+  if(!state.practice){frame(824,131,117,30);text("营业 "+timeText(state.time),883,146,14,ink);}
 }
 function board(){
-  const outer=[[234,145],[731,145],[772,179],[803,360],[768,396],[200,396],[161,370],[186,186]];
-  const outerCol=state.scene==="fridge"?"#315a73":state.scene==="coffee"?"#4a3026":"#282066",topCol=state.scene==="fridge"?"#9edbea":state.scene==="coffee"?"#b9824e":"#7b66df",innerCol=state.scene==="fridge"?"#d9f3f7":state.scene==="coffee"?"#8b603d":"#6450ce";
-  poly(outer,outerCol);poly(outer.map(([x,y])=>[x,y-10]),topCol);
-  path([...outer.map(([x,y])=>[x,y-10]),[234,135]],"#cfa8ff",3);
-  const inner=[[240,153],[722,153],[748,186],[773,346],[756,368],[217,368],[194,348],[211,183]];
-  poly(inner,innerCol);path([...inner,inner[0]],topCol,5);
-  for(let i=0;i<7;i++){rect(218-i*3,177+i*28,520+i*7,3,"#9a70ef");rect(219-i*3,180+i*28,519+i*7,1,"#2b20a2");}
-  path([[223,189],[251,158],[311,158]],c.light,3,12);
-  path([[649,158],[713,158],[740,186],[746,202]],c.light,3,12);
-  path([[208,326],[205,345],[225,362],[281,362]],c.light,3,12);
-  path([[747,328],[757,346],[742,361],[679,361]],c.light,3,12);
-  for(const [x,y] of [[213,158],[747,157],[182,354],[779,355]])screw(x,y);
-  hazard(295,387,69);hazard(600,387,69);led(437,388,9);
+  window.KitchenCookware?.board(ctx,480,275,1.1,state.scene);
 }
-function toiletNearBase(title,subtitle){
-  rect(0,0,W,H,"#31536b");for(let y=20;y<H;y+=32)for(let x=20;x<W;x+=32)rect(x,y,30,30,(x/32+y/32)%2?"#386b80":"#3d7186");
-  rect(28,23,904,495,"#31536b");rect(38,33,884,475,"#467f91");rect(48,43,864,455,"#2f5e76");
-  text("PORCELAIN BOWL / 白瓷厨房操作近景",480,57,15,"#bce9dc");text(title,480,99,28,"#fff9e7");text(subtitle,480,135,17,"#bce9dc");
+function toiletNearBase(title,subtitle,backgroundOnly=false){
+  // 三个近景共用清水背景：浅水渐层、柔和水下折光，替代深蓝实心墙面。
+  rect(0,0,W,H,"#edf8f2");rect(24,20,912,502,"#b9dfe0");rect(31,27,898,488,"#f7fff8");
+  const water=["#e8faf5","#e0f7f1","#d8f3ee","#d0efeb","#c8ebe7","#bfe6e4","#b6e1e1","#afdcde"];
+  for(let i=0;i<water.length;i++)rect(38,34+i*59,884,60,water[i]);
+  ctx.save();ctx.beginPath();ctx.rect(38,34,884,474);ctx.clip();
+  for(let row=0;row<7;row++){
+    const points=[];
+    for(let x=0;x<=960;x+=24)points.push([x,166+row*53+Math.sin(x*.014+now*.35+row*1.3)*11]);
+    ctx.globalAlpha=.24;path(points,"#ffffff",3);
+    ctx.globalAlpha=.12;path(points.map(([x,y])=>[x+17,y+15]),"#79c6ca",2);
+  }
+  for(let i=0;i<15;i++){
+    const x=72+(i*173)%810,y=181+(i*97)%300,r=7+i%4*3;
+    ctx.globalAlpha=.22;ctx.strokeStyle="#ffffff";ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(x,y,r,r*.35,0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=.55;rect(x-r*.4,y-2,3,2,"#ffffff");
+  }
+  ctx.restore();
+  if(backgroundOnly)return;
+  // 浅水上改用深青文字，保持原有排版与清晰度。
+  text("PORCELAIN BOWL / 白瓷厨房操作近景",480,57,15,"#557f8c");text(title,480,99,28,"#315568");text(subtitle,480,135,17,"#456e7e");
   rect(40,39,105,53,"#fff9e7");text("阶段剩余",92,54,12,"#31536b");text(timeText(state.phase.left),92,75,21,"#31536b");
 }
-function toiletChip(id,x,y,s=1,cooked=false){
-  ctx.save();ctx.translate(snap(x),snap(y));ctx.scale(s,s);
-  const tone=dishes[id].tone,hot=["#aa596c","#c67d55","#bd8a42","#78639a","#438f7e","#487f99"][id];
-  rect(-13,-9,26,18,cooked?hot:tone);rect(-10,-6,20,12,"#f6f4df");rect(-7,-4,14,8,cooked?hot:tone);
-  if(id===0){rect(-7,-1,14,3,"#fff7e8");rect(4,-4,4,8,"#763d52");}
-  else if(id===1){rect(-5,-3,3,3,"#31536b");rect(3,-3,3,3,"#31536b");rect(-5,3,10,2,"#974a55");}
-  else if(id===2){rect(-7,-4,4,8,"#f7dda1");rect(-1,-4,8,2,"#9e713d");}
-  else if(id===3){rect(-6,-3,12,5,"#31536b");rect(-4,3,8,3,"#e7efe9");}
-  else if(id===4){for(let k=0;k<3;k++)rect(-6+k*5,-3,3,3,"#31536b");}
-  else{rect(-7,-3,14,3,"#9fd4d6");rect(-5,3,10,2,"#31536b");}
-  ellipse(10,-8,3,3,"#b8ece1");rect(9,-9,2,2,"#fffdf2");
-  ctx.restore();
-}
-function toiletDrawChop(t){
-  const p=state.phase,hit=Math.max(0,1-(t-p.hit)*5.5);
-  toiletNearBase("01 / 马桶盖砧板 · 十刀备菜","按住 E 上下切 · 食材逐步变成像素碎块");
-  rect(154,178,652,244,"#31536b");rect(147,170,652,244,"#fff9e7");rect(158,180,630,224,"#e8d9b3");
-  for(let j=0;j<7;j++)rect(170,194+j*29,607,3,"#d3bf97");
-  sprite(p.id,364,290,2.7);
-  for(let j=0;j<p.cuts;j++)toiletChip(p.id,490+(j%5)*44,263+Math.floor(j/5)*48,.85);
-  ctx.save();ctx.translate(691-hit*67,267+hit*28);ctx.rotate(-.3+hit*.4);rect(-12,-68,24,111,"#31536b");rect(-8,-65,16,74,"#f8f9ef");rect(-6,9,12,39,"#a4694c");rect(-2,16,4,22,"#f3c36f");ctx.restore();
-  text(dishes[p.id].name+" · "+p.cuts+" / 10",480,448,20,"#fff9e7");
-  rect(230,479,500,15,"#214b65");rect(233,482,494*p.cuts/10,9,"#f2ca76");
-}
-function toiletDrawWok(t){
-  const p=state.phase,need=p.flipWindow>0,jump=clamp((.55-(t-p.toss))/.55,0,1);
-  toiletNearBase("02 / 迷你电磁炉 · 翻炒",need?"现在向上颠 / 按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面");
-  rect(199,200,562,258,"#fff9e7");rect(219,215,522,225,"#80b9c2");rect(246,234,468,190,"#31536b");
-  const shake=stirring()?Math.sin(t*18)*5:0,y=321-Math.sin(jump*Math.PI)*45;
-  ellipse(475+shake,y+24,193,70,"#31536b");ellipse(475+shake,y+13,187,65,"#91bdc2");ellipse(475+shake,y+3,172,55,"#537d89");rect(647+shake,y-4,110,26,"#a66e53");
-  for(let j=0;j<9;j++){const a=t*(stirring()?5:1)+j*2.2,x=375+(j%3)*98+Math.round(Math.sin(a)*7),yy=y-26+Math.floor(j/3)*26-Math.sin(jump*Math.PI)*(35+j%3*9);toiletChip(p.id,x,yy,1.15,p.progress>.45||p.flips>0);}
-  text("翻面 "+p.flips+" / 2",813,222,18,"#fff9e7");text("焦糊风险 "+Math.round(p.burn)+"%",480,461,17,p.burn>60?"#ffae91":"#fff9e7");
-  rect(230,480,500,15,"#214b65");rect(233,483,494*p.progress,9,"#f2ca76");
-}
-function toiletDrawServe(t){
-  const p=state.phase,travel=p.route*1050,step=keys.has("e")?Math.round(Math.sin(t*13)*4):0,danger=Math.abs(p.tilt)>.54;
-  toiletNearBase("03 / 水流栈道 · 平稳端盘",p.route>=1?"到出餐口了！松开 E，保持水平 1.2 秒":"按住 E 前进 · A / D 反向修正盘子");
-  rect(63,167,834,252,"#4c9bb1");ctx.save();ctx.beginPath();ctx.rect(63,167,834,252);ctx.clip();
-  for(let j=0;j<7;j++)for(let i=0;i<13;i++)rect(64+((i*83-travel*.7+1000)%1000),184+j*29,41,7,j%2?"#79c8ce":"#b5e8db");
-  for(let i=0;i<9;i++){const x=64+((i*142-travel+1150)%1150);rect(x,174,8,44,"#f8ebba");rect(x,375,8,39,"#f8ebba");}
-  const exitX=885-p.route*365;rect(exitX,197,15,183,"#f8e7a8");text("出餐口 →",exitX-64,223,15,"#fff9e7");ctx.restore();
-  ctx.save();ctx.translate(480+p.tilt*15,297+step);ctx.rotate(p.tilt*.28);
-  ellipse(0,12,202,77,"#31536b");ellipse(0,3,196,72,"#fff9e7");ellipse(0,-4,160,50,"#d7eadf");
-  for(let j=0;j<5;j++)toiletChip(p.id,-100+j*50+p.tilt*24,-5+(j%2)*8,1.25,true);
-  ctx.restore();
-  rect(241,437,478,26,"#31536b");rect(397,440,166,20,"#8fc8b4");rect(477+p.tilt*180,433,7,34,danger?"#ffad83":"#fff9e7");
-  text(danger?"盘子倾斜，快修正！":p.route>=1?"稳住，准备交单":"盘子平稳",480,474,19,danger?"#ffad83":"#fff9e7");
-  rect(260,488,440,10,"#214b65");rect(263,491,434*p.route,4,"#f2ca76");text("路程 "+Math.floor(p.route*100)+"%  ·  完整度 "+Math.ceil(p.integrity)+"%",784,148,14,"#fff9e7");
+function verticalChop(t){
+  const age=t-state.phase.hit,impact=clamp(1-age/.24,0,1),x=455,y=290+impact*40;
+  ctx.save();ctx.translate(x,y+30);ctx.rotate(Math.PI);
+  rect(-13,-73,26,61,"#372e38");rect(-9,-69,18,52,state.scene==="coffee"?"#aa6338":"#d18c50");rect(-5,-63,5,33,"#f5cd87");
+  rect(-21,-15,42,10,"#6b8190");
+  poly([[-23,-5],[25,-5],[25,72],[12,95],[-23,95]],"#365267");
+  poly([[-18,0],[20,0],[20,70],[8,88],[-18,88]],"#dcf4f2");rect(-15,4,8,78,"#ffffff");rect(12,5,5,62,"#8ebdc5");ctx.restore();
+  if(age>=0&&age<.3){
+    const f=1-age/.3;ctx.save();ctx.globalAlpha=f;
+    ellipse(x,286,25+age*210,9+age*55,effectColor(1));ellipse(x,282,18+age*160,5+age*28,"#ffffff");
+    for(let i=0;i<9;i++){const a=Math.PI+i*Math.PI/8,r=26+age*230;path([[x+Math.cos(a)*r,282+Math.sin(a)*r*.6],[x+Math.cos(a)*(r+22*f),282+Math.sin(a)*(r+22*f)*.6]],effectColor(i),4);}
+    rect(x-5,215,10,74,"#ffffff");ctx.restore();
+  }
 }
 function drawChop(t){
-  if(state.scene==="toilet"){toiletDrawChop(t);return;}
   const p=state.phase,d=dishes[p.id],last=Math.max(0,1-(t-p.hit)*5.5);
-  drawChallengeHeader("01 / 分解砧板","按住 E 上下切 · 逐步拆出零件",t);
-  board();
-  if(p.cuts<3){for(let i=0;i<31;i++){const a=i*2.39,r=8+(i*27)%56,x=390+Math.cos(a)*r,y=255+Math.sin(a)*r*.65;rect(x+Math.sin(t*3+i)*5,y,18+(i%4)*4,12+(i%3)*3,["#aa8bff","#d19dff","#776af4","#e0b1ff"][i%4]);}}
-  else {
-    const count=p.cuts>=9?3:p.cuts>=6?2:1;
-    for(let i=0;i<count;i++){const x=303+i*84,y=252-12*Math.sin(i*3+last*3);sprite(p.id,x,y,1.85,i);text(d.parts[i],x,y+50,14,c.white);}
+  drawChallengeHeader("01 / 分解砧板","按住 E 上下切 · 逐步拆出零件",t,"chop");
+  ctx.save();ctx.translate(last>0?Math.sin(t*95)*last*3:0,last*2);board();ctx.restore();
+  const revealed=Math.min(3,Math.floor(p.cuts/3));
+  if(revealed===0)sprite(p.id,377,260,2.3);
+  else for(let i=0;i<3;i++){
+    const detached=i<revealed;
+    const x=detached?[296,529,672][i]:revealed===1?563+(i-1)*57:672;
+    const y=detached?262-(i===revealed-1?last*10:0):247+(i-1)*22;
+    ellipse(x,y+31,detached?39:32,8,"#38252537");
+    sprite(p.id,x,y,detached?1.74:1.43,i);
+    if(detached)text(d.parts[i],x,329,15,c.white);
   }
-  knife(619-last*120,242+last*34,1.14,-.39+last*.66);
-  if(last>.28){path([[516,194],[473,222],[447,251],[437,283]],"#ffddff",5,13);path([[527,212],[492,233],[467,269]],c.pink,3,9);}
+  verticalChop(t);
   frame(339,404,282,40,c.light,"#101355");text(d.name+"  /  "+p.cuts+" / 10",480,424,19);
   bar(237,459,486,18,p.cuts/10,c.light,10);
 }
 function drawWok(t){
-  if(state.scene==="toilet"){toiletDrawWok(t);return;}
   const p=state.phase, d=dishes[p.id], jump=clamp((.55-(t-p.toss))/.55,0,1);
-  drawChallengeHeader("02 / 电磁颠锅",p.flipWindow>0?"现在向上颠 / 按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面",t);
-  ellipse(452,362,169,40,"#201267");ellipse(452,354,160,38,c.pink);ellipse(452,346,157,35,"#222b9b");
-  for(let i=0;i<12;i++){const x=341+i*20;rect(x,365+(i>2&&i<10?6:0),9,12,i%2?c.pink:c.light);}
-  const shake=stirring()?Math.sin(t*19)*5:0;
-  const y=302-Math.sin(jump*Math.PI)*55;
+  const wokTitles={neon:"02 / 感应炉颠锅",coffee:"02 / 铜炉烘焙",toilet:"02 / 瓷釉炉颠锅",fridge:"02 / 霜火颠锅"};
+  drawChallengeHeader(wokTitles[state.scene],p.flipWindow>0?"现在向上颠 / 按 F 翻面！  "+p.flipWindow.toFixed(1)+" 秒":"平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面",t,"wok");
+  const active=stirring(),lift=Math.sin(jump*Math.PI);
+  window.KitchenArt?.burner(ctx,452,354,1,state.scene,t,active||p.flipWindow>0,p.progress,p.burn/100);
+  const shake=active?Math.sin(t*19)*5:0;
+  const y=302-lift*55;
   pan(448+shake,y,1);
-  if(p.progress>.87){sprite(p.id,450+shake,y-23,2.3);}
-  else for(let i=0;i<3;i++){
-    const a=t*(stirring()?6:1)+i*2.094, spread=1-p.progress*.6;
-    const yy=y-12-(22+35*Math.max(0,Math.sin(a)))*spread-Math.sin(jump*Math.PI)*(54+i*10);
-    sprite(p.id,450+Math.cos(a)*99*spread,yy,1.45+(1-spread)*.5,i);
-  }
+  const sway=active?Math.sin(t*8)*21:0;
+  sprite(p.id,450+shake+sway,y-23-lift*52-(active?Math.abs(Math.sin(t*8))*12:0),2.3);
   frame(627,139,150,42,p.flipWindow>0?c.yellow:c.light,"#131154",7);
   text(p.flipWindow>0?"F  立刻翻面":"翻面   "+p.flips+" / 2",702,160,17,p.flipWindow>0?c.yellow:c.white);
   frame(146,408,667,52,c.light,"#111253",13);
@@ -612,6 +1209,7 @@ function drawWok(t){
   text(d.name+"   /   焦糊风险 "+Math.round(p.burn)+"%",480,489,17,p.burn>59?c.red:"#ffb6f6");
 }
 function arc(x,y,x2,y2,t,accent,seed){
+  if(state.scene==="coffee"){for(let i=0;i<3;i++){const a=(t*.7+i*.33)%1;ellipse(x+(x2-x)*a,y+(y2-y)*a-8*Math.sin(a*Math.PI),3,3,"#efc482");}return;}
   const pts=[];
   for(let i=0;i<9;i++){const f=i/8,dy=i>0&&i<8?Math.round(Math.sin(i*48.3+Math.floor(t*10)*2.9+seed)*18):0;pts.push([snap(x+(x2-x)*f),snap(y+(y2-y)*f+dy)]);}
   path(pts,accent,5,13);path(pts,"#edfaff",1.5);
@@ -628,70 +1226,266 @@ function glove(x,y,side){
   path([[-9,-15],[4,-8],[13,3]],"#a772de",3);
   ctx.restore();
 }
-function drawServe(t){
-  if(state.scene==="toilet"){toiletDrawServe(t);return;}
-  const p=state.phase, d=dishes[p.id], danger=Math.abs(p.tilt)>.54;
-  drawChallengeHeader("03 / 端盘上菜 · 电流干扰",p.route>=1?"松开 E · 将指针留在中心 1.2 秒":"按住 E 前进 · A / D 向反方向修正",t);
-  const vanish=[480,160], shift=p.tilt*35;
-  poly([[433,162],[526,162],[735,405],[222,405]],"#0b123f");
-  for(let i=0;i<11;i++){const f=((i/11+(p.route*9)%1/11)%1)**1.5;const ww=45+206*f;path([[vanish[0]-ww+shift*f,166+237*f],[vanish[0]+ww+shift*f,166+237*f]],i%4===0?"#4539ad":"#212459",2);}
-  path([[433,162],[222+shift,405]],c.light,3,9);path([[526,162],[735+shift,405]],c.pink,3,9);
-  ctx.save();ctx.translate(480+p.tilt*19,263+Math.sin(t*21)*2.4);ctx.rotate(p.tilt*.3);
-  plate(0,2,1.46);ellipse(0,-4,103,24,"#a64a88");ellipse(0,-8,99,20,"#e16a51");
-  for(let i=0;i<15;i++)rect(-85+(i*41)%170,-13+(i*13)%27,4,3,i%3?c.yellow:c.pink);
-  sprite(p.id,p.tilt*22,-21,2.38);glove(-137,47,1);glove(137,47,-1);
-  arc(-215,65,-106,5,t,c.pink,1);arc(215,65,106,5,t,c.light,2);
-  if(p.surge>0)arc(-168,33,169,50,t,c.pink,5);
+function cleaningGlove(x,y,side){
+  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
+  poly([[-62,78],[-45,25],[-29,7],[0,1],[24,23],[9,78]],"#31536b");
+  poly([[-55,75],[-39,29],[-22,14],[0,10],[16,26],[3,75]],"#dfad54");
+  rect(-53,59,58,16,"#f5d282");rect(-50,61,52,4,"#fff0bd");
+  poly([[-29,18],[-30,-3],[-18,-26],[-9,-30],[-2,-24],[-7,-7],[9,-21],[19,-20],[22,-12],[12,2],[25,-3],[33,3],[30,13],[11,34],[-7,35]],"#31536b");
+  poly([[-24,17],[-24,-1],[-14,-23],[-9,-24],[-8,-19],[-13,-2],[9,-15],[16,-15],[16,-11],[4,7],[23,3],[27,7],[24,12],[8,28],[-5,29]],"#f4cd70");
+  path([[-20,12],[-12,3],[-5,5]],"#fff0bd",3);
   ctx.restore();
-  frame(159,383,642,57,danger?c.pink:c.light,"#12134c",12);
+}
+function baristaGlove(x,y,side){
+  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
+  poly([[-64,79],[-45,26],[-25,11],[10,22],[9,79]],"#4c3022");
+  poly([[-57,75],[-39,31],[-23,18],[3,27],[2,75]],"#f0dfbd");
+  rect(-54,58,59,17,"#bc8c59");rect(-51,61,53,4,"#fff0d0");
+  poly([[-30,22],[-31,-6],[-22,-26],[-11,-31],[1,-26],[3,-7],[18,-18],[30,-13],[32,-2],[18,20],[8,34],[-13,35]],"#4c3022");
+  poly([[-24,20],[-25,-4],[-17,-22],[-10,-25],[-4,-22],[-3,2],[19,-12],[25,-9],[25,-3],[12,17],[3,28],[-11,29]],"#bc8050");
+  path([[-19,18],[-20,0],[-13,-17]],"#e9b778",3);
+  path([[-14,27],[-3,22],[8,11]],"#825032",2);
+  // 隔热手套的缝线和袖口咖啡豆标记，不使用电路或发光装饰。
+  for(let i=0;i<4;i++)rect(-25+i*7,40,3,2,"#d5b187");
+  if(state.scene==="fridge"){path([[-30,66],[-16,66]],"#789aa8",2);path([[-23,59],[-23,73]],"#789aa8",2);}
+  else coffeeBean(-23,66,6,-.4);
+  ctx.restore();
+}
+function freezerMitten(x,y,side){
+  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
+  // 厚实冷库棉手套与绗缝袖口，不复用清洁橡胶或咖啡隔热手套。
+  poly([[-63,79],[-45,27],[-27,13],[8,19],[17,79]],"#435e7a");
+  poly([[-55,75],[-38,32],[-24,20],[2,25],[8,75]],"#8ca5c3");
+  for(let i=0;i<3;i++)path([[-44+i*5,48+i*10],[-6+i*4,54+i*10]],"#b8cce0",2);
+  rect(-49,33,55,18,"#f5f5ec");rect(-47,47,52,5,"#c8d6df");
+  poly([[-29,31],[-35,11],[-31,-15],[-23,-29],[-7,-34],[8,-28],[13,-9],[25,-16],[36,-10],[39,2],[27,21],[10,37],[-12,39]],"#435e7a");
+  poly([[-24,27],[-29,10],[-25,-13],[-18,-23],[-6,-27],[2,-23],[7,1],[24,-9],[30,-5],[32,1],[22,15],[7,30],[-10,32]],"#a9c1d9");
+  path([[-20,15],[-22,-8],[-13,-20]],"#e5eff5",3);
+  path([[-11,8],[3,8]],"#f9fcfa",2);path([[-4,1],[-4,15]],"#f9fcfa",2);
+  ctx.restore();
+}
+function freezerBackdrop(t){
+  const light=ctx.createLinearGradient(0,0,0,H);
+  if(light){
+    light.addColorStop(0,"#edf9ff");light.addColorStop(.44,"#b4dcf1");light.addColorStop(1,"#81afda");
+  }
+  rect(0,0,W,H,light||"#b4dcf1");
+  for(const side of [-1,1]){
+    poly([[480+side*122,0],[480+side*165,0],[480+side*450,H],[480+side*287,H]],"#f7fdff68");
+  }
+  for(const x of [12,171,785,944]){
+    rect(x,0,4,H,"#82aed0");rect(x+4,0,2,H,"#e8f8ff");
+  }
+  for(const side of [-1,1]){
+    ctx.save();if(side===1){ctx.translate(960,0);ctx.scale(-1,1);}
+    for(const y of [226,306]){
+      for(let i=0;i<3;i++){
+        const x=40+i*33;
+        rect(x,y-27,24,24,["#b28fcb","#8bbad7","#9dc37d"][i]);rect(x+3,y-24,18,9,"#e3f6ff");rect(x+6,y-14,12,2,"#5274ad");
+        rect(x+2,y-30,20,4,"#f7fcf8");
+      }
+      rect(21,y,133,8,"#6f9cc3");rect(21,y,133,3,"#f1fcff");
+      for(let i=0;i<5;i++)rect(29+i*27,y+8,3,5+i%3*3,"#f3fbf9");
+    }
+    ctx.restore();
+  }
+  for(let i=0;i<10;i++){
+    const x=185+i*65,h=20+i%3*12;
+    poly([[x,0],[x+20,0],[x+10,h]],"#d6f4ff");
+    poly([[x+3,0],[x+11,0],[x+10,h*.76]],"#f8ffff");
+    const glint=Math.max(0,Math.sin(t*(2.1+i%3*.3)+i*2.37))**6;
+    ctx.save();ctx.globalAlpha=glint;
+    rect(x+6,h*.38,8,2,"#ffffff");rect(x+9,h*.38-3,2,8,"#ffffff");ctx.restore();
+  }
+  ctx.save();
+  for(const side of [-1,1]){
+    const x=480+side*366,opening=.5+.5*Math.sin(t*1.5+side*.4);
+    poly(cut(x-53,151,106,42,5),"#6289a9");
+    poly(cut(x-48,155,96,33,4),"#315c7d");
+    for(let i=0;i<4;i++){
+      const y=157+i*8-Math.sin(t*5+i*.4)*opening*1.7;
+      rect(x-44,y,88,1+(1-opening)*7,"#a5d0e6");
+      rect(x-43,y,86,1,"#f3fdff");
+    }
+    for(let i=0;i<10;i++){
+      const age=(t*(.45+i%3*.06)+i*.271)%1;
+      const u=x-side*age*(55+opening*87)+Math.sin(i+age*4)*13,v=188+age*(35+i%4*16);
+      ctx.globalAlpha=Math.sin(age*Math.PI)*(.12+opening*.23);
+      path([[u,v],[u+side*(16+age*14),v-5],[u+side*(27+age*25),v-12]],"#f0fcff",2+i%3);
+    }
+    ctx.globalAlpha=1;
+  }
+  for(let i=0;i<70;i++){
+    const speed=22+i%7*9,y=(i*79+t*speed)%(H+28)-14;
+    const x=(i*173+t*(22+i%6*12)+Math.sin(t*1.7+i)*17+W+24)%(W+24)-12;
+    const size=1+i%4*.55;
+    ctx.globalAlpha=.32+i%4*.12;
+    rect(x,y,size,size,i%5?"#effdff":"#67a8cd");
+    if(i%6===0){
+      rect(x-size,y,size*3,1,"#f7ffff");rect(x,y-size,1,size*3,"#f7ffff");
+    }
+  }
+  ctx.globalAlpha=.2;
+  for(let i=0;i<4;i++)ellipse(240+i*160+Math.sin(t*.35+i)*17,365+i%2*8,76,7,"#ffffff");
+  ctx.restore();
+}
+function drawServe(t){
+  const toilet=state.scene==="toilet",fridge=state.scene==="fridge";
+  const p=state.phase, d=dishes[p.id], danger=Math.abs(p.tilt)>.54;
+  drawChallengeHeader({toilet:"03 / 端盘上菜 · 水流扰动",fridge:"03 / 端盘上菜 · 冰面打滑",coffee:"03 / 端盘上菜 · 热流扰动",neon:"03 / 端盘上菜 · 电流干扰"}[state.scene],p.route>=1?"将指针回到中心即可交单":"按住 E 前进 · A / D 向反方向修正",t,"serve");
+  const vanish=[480,160], shift=p.tilt*35;
+  poly([[433,162],[526,162],[735,405],[222,405]],fridge?"#91c4f0":toilet?"#214b65":"#0b123f");
+  for(let i=0;i<11;i++){const f=((i/11+(p.route*9)%1/11)%1)**1.5;const ww=45+206*f;path([[vanish[0]-ww+shift*f,166+237*f],[vanish[0]+ww+shift*f,166+237*f]],toilet?(i%4===0?"#bce9dc":"#538d9e"):(i%4===0?"#4539ad":"#212459"),2);}
+  if(toilet)for(let i=0;i<10;i++){
+    const f=(i/10+p.route*.65)%1,y=174+220*f,x=480+(i%2?-1:1)*(68+210*f);
+    ellipse(x,y,3+5*f,2+3*f,"#9bd3d8");ellipse(x-1,y-1,1+2*f,1+f,"#e4f5e9");
+  }
+  if(fridge)for(let i=0;i<8;i++){
+    const f=(i/8+p.route*.65)%1,x=480+(i%2?-1:1)*(68+210*f),y=174+220*f;
+    path([[x-4,y],[x+4,y]],"#ffffff",2);path([[x,y-4],[x,y+4]],"#ffffff",2);
+  }
+  path([[433,162],[222+shift,405]],toilet?"#bce9dc":c.light,3,toilet?0:9);path([[526,162],[735+shift,405]],toilet?"#80b9c2":c.pink,3,toilet?0:9);
+  ctx.save();ctx.translate(480+p.tilt*19,263+Math.sin(t*21)*2.4);ctx.rotate(p.tilt*.3);
+  if(fridge){
+    ellipse(0,14,170,54,"#264b89");ellipse(0,7,174,53,"#629bda");
+    ellipse(0,0,174,51,"#b4e4ff");ellipse(0,-2,158,41,"#4f86c3");ellipse(0,-3,148,34,"#fffefa");
+    for(let i=0;i<7;i++){
+      const a=Math.PI*(1.12+i*.12),x=Math.cos(a)*165,y=Math.sin(a)*45;
+      rect(x,y,7,3,"#ffffff");rect(x+2,y-3,3,9,"#ffffff");
+    }
+  }else if(toilet){
+    ellipse(0,14,170,54,"#31536b");ellipse(0,7,174,53,"#80b9c2");ellipse(0,0,174,51,"#fff9e7");ellipse(0,-2,151,38,"#cfe5da");ellipse(0,-3,140,31,"#eaf3e6");
+    for(const side of [-1,1]){path([[side*145,-5],[side*153,1],[side*143,8]],"#80b9c2",3);}
+  }else if(state.scene==="coffee"){
+    ellipse(0,14,170,54,"#6d5141");ellipse(0,7,174,53,"#d4cbbb");
+    ellipse(0,0,174,51,"#ffffff");ellipse(0,-2,151,38,"#e8e5dc");ellipse(0,-3,140,31,"#fffef8");
+    path([[-146,-12],[-113,-29],[-63,-37]],"#ffffff",3);
+  }else{
+    plate(0,2,1.46);ellipse(0,-4,103,24,"#a64a88");ellipse(0,-8,99,20,"#e16a51");
+    for(let i=0;i<15;i++)rect(-85+(i*41)%170,-13+(i*13)%27,4,3,i%3?c.yellow:c.pink);
+  }
+  window.KitchenArt?.tray(ctx,174,51,state.scene,t);
+  sprite(p.id,p.tilt*22,-21,2.38);
+  if(toilet){cleaningGlove(-137,47,1);cleaningGlove(137,47,-1);}
+  else if(fridge){freezerMitten(-137,47,1);freezerMitten(137,47,-1);}
+  else if(state.scene==="coffee"){baristaGlove(-137,47,1);baristaGlove(137,47,-1);}
+  else {glove(-137,47,1);glove(137,47,-1);}
+  if(state.scene==="coffee"){
+    ctx.save();ctx.strokeStyle="#f3d8ae";ctx.lineWidth=3;ctx.lineCap="round";
+    for(let i=0;i<3;i++){
+      const x=-54+i*54,age=(t*.55+i*.31)%1;
+      ctx.globalAlpha=(1-age)*.55;ctx.beginPath();ctx.moveTo(x,-42-age*28);ctx.bezierCurveTo(x-10,-53-age*28,x+10,-62-age*28,x,-74-age*28);ctx.stroke();
+    }
+    ctx.restore();
+  }else if(!toilet&&state.scene!=="fridge"){arc(-215,65,-106,5,t,c.pink,1);arc(215,65,106,5,t,c.light,2);
+  if(p.surge>0)arc(-168,33,169,50,t,c.pink,5);}
+  ctx.restore();
+  frame(159,383,642,57,danger?c.red:c.light,"#12134c",12);
   text("A ◀",219,411,20);text("▶ D",739,411,20);
   bar(280,400,400,20,1,c.pink,20);
-  for(let i=0;i<10;i++)rect(280+i*20,400,18,20,c.light);
+  for(let i=0;i<10;i++)rect(280+i*20,400,18,20,toilet?"#86bdc5":c.light);
   rect(446,400,68,20,"#a9ffda");rect(479,397,2,26,c.white);
   const x=480+p.tilt*191;rect(x-5,394,10,32,c.ink);rect(x-3,397,6,26,c.white);
-  text(p.route>=1?"稳盘 "+Math.min(1.2,p.stable).toFixed(1)+" / 1.2 秒":danger?"过电失衡！反向修正":"持续电流 · "+d.name,480,455,18,danger?c.pink:c.white);
+  text(p.route>=1?"盘子回正即可交单":danger?{toilet:"水流失衡！反向修正",fridge:"冰面打滑！反向修正",coffee:"热流失衡！反向修正",neon:"过电失衡！反向修正"}[state.scene]:{toilet:"冲水扰动 · ",fridge:"冷风扰动 · ",coffee:"烘焙热流 · ",neon:"持续电流 · "}[state.scene]+d.name,480,455,18,fridge?(danger?"#ffd39b":"#d9f4ff"):danger?c.red:c.white);
   frame(258,472,444,33,c.light,"#101345",8);
   text("路程 "+Math.floor(p.route*100)+"%    /    完整度 "+Math.ceil(p.integrity)+"%",480,490,17);
 }
-function burst(x,y,t,color,n=16){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=55+Math.random()*235;state.fx.push({x,y,t,ttl:.2+Math.random()*.35,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color});}}
+function effectColor(i){return {neon:[c.light,c.pink,c.yellow],fridge:["#ffffff","#a4cbd6","#d7e9e4"],toilet:["#ffffff","#84c9cc","#bce8dc"],coffee:["#f2d3a0","#c18b51","#8d5a37"]}[state.scene][i%3];}
+function burst(x,y,t,color,n=16){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=55+Math.random()*235;state.fx.push({x,y,t,ttl:.2+Math.random()*.35,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color:state.scene==="neon"?color:effectColor(i),theme:state.scene});}}
 function visuals(t){
-  state.fx=state.fx.filter(f=>t-f.t<f.ttl);
-  for(const f of state.fx){const age=t-f.t;rect(f.x+f.vx*age,f.y+f.vy*age+155*age*age,age<.18?5:3,age<.18?5:3,f.color);}
-  if(state.toast&&state.toast.until>t){
-    const f=state.toast;
-    frame(317,122,326,49,f.color,"#080d40",9);text(f.text,480,146,19,f.color);
+  const cooking=state.view==="wok"&&state.phase&&!state.phase.done&&!state.open;
+  if(cooking){
+    const p=state.phase,hot=stirring(),toss=Math.max(0,1-(t-p.toss)/.65);
+    // 像素火星沿锅缘上升；翻面时加大喷溅，停止翻炒后随即减弱。
+    if(hot||toss>0)for(let i=0;i<(toss>0?24:12);i++){
+      const age=(t*1.9+i*.137)%1,x=365+(i*47)%240+Math.sin(i*3)*age*24,y=335-age*(55+toss*65);
+      ctx.save();ctx.globalAlpha=1-age;
+      if(state.scene==="toilet")ellipse(x,y,3+age*2,2+age,effectColor(i));
+      else if(state.scene==="fridge"){path([[x-3,y],[x+3,y]],effectColor(i),2);path([[x,y-3],[x,y+3]],effectColor(i),2);}
+      else rect(x,y,age<.45?4:2,age<.45?6:3,state.scene==="coffee"?effectColor(i):["#ffd76b","#ff933e","#fff0b0"][i%3]);
+      ctx.restore();
+    }
+    if(p.burn>35)for(let i=0;i<7;i++){
+      const age=(t*.6+i*.17)%1;ctx.save();ctx.globalAlpha=(1-age)*Math.min(.45,p.burn/200);
+      const x=400+i*25+Math.sin(t+i)*14,y=275-age*110,s=8+age*20;
+      rect(x,y,s,s,p.burn>70?"#63534d":"#c6b6a3");rect(x+5,y-6,s*.7,s*.8,p.burn>70?"#63534d":"#c6b6a3");ctx.restore();
+    }
   }
+  state.fx=state.fx.filter(f=>t-f.t<f.ttl);
+  for(const f of state.fx){
+    const age=t-f.t,x=f.x+f.vx*age,y=f.y+f.vy*age+155*age*age;
+    ctx.save();ctx.globalAlpha=1-age/f.ttl;
+    if(f.theme==="toilet")ellipse(x,y,3,2,f.color);
+    else if(f.theme==="fridge"){path([[x-3,y],[x+3,y]],f.color,1);path([[x,y-3],[x,y+3]],f.color,1);}
+    else if(f.theme==="coffee"&&age<.18)coffeeBean(x,y,3,age*2);
+    else rect(x,y,age<.18?5:3,age<.18?5:3,f.color);
+    ctx.restore();
+  }
+  drawNotice(t);
 }
-const phaseLimits={chop:14,wok:22,serve:17};
+const noticePriority={info:0,success:1,warning:2,error:3};
+function drawNotice(t){
+  if(state.toast&&state.toast.until<=t)state.toast=null;
+  if(!state.toast&&state.noticeQueue?.length){const n=state.noticeQueue.shift();state.toast={...n,until:t+n.duration};}
+  const n=state.toast;if(!n)return;
+  // 专属提示槽与标题、操作说明、右侧翻面计数互不相交。
+  const x=202,y=state.view==="map"?88:126,w=400,h=32;
+  const palettes={neon:["#101443","#38dfff","#ff775b","#effeff"],fridge:["#f0f7ef","#82aab8","#bc805e","#36596b"],toilet:["#fffdf0","#80b9c2","#d67b61","#315568"],coffee:["#fff0d3","#bb8a55","#b96735","#5b3824"]};
+  const [fill,edge,danger,ink]=palettes[state.scene],warning=n.kind==="warning"||n.kind==="error",accent=warning?danger:n.kind==="success"?"#6e9a78":edge;
+  const pts=cut(x,y,w,h,5);poly(pts,fill);path([...pts,pts[0]],accent,2,state.scene==="neon"?6:0);
+  const ix=x+18,iy=y+16;
+  if(state.scene==="coffee")coffeeBean(ix,iy,9,-.3);
+  else if(state.scene==="toilet"){poly([[ix,iy-10],[ix-8,iy+1],[ix-7,iy+7],[ix,iy+10],[ix+7,iy+7],[ix+8,iy+1]],accent);}
+  else if(state.scene==="fridge"){path([[ix-8,iy],[ix+8,iy]],accent,2);path([[ix,iy-8],[ix,iy+8]],accent,2);path([[ix-5,iy-5],[ix+5,iy+5]],accent,2);}
+  else bolt(ix,iy,10,accent);
+  text(warning?"!":n.kind==="success"?"✓":"·",ix,iy,12,state.scene==="neon"?"#101443":"#ffffff");
+  text(n.text,x+38,iy,Math.min(16,Math.floor(344/Math.max(1,n.text.length))),warning?danger:ink,"left");
+  // 只有不可恢复失败才强调屏幕边缘，轻提醒不闪屏。
+  if(n.kind==="error"){ctx.save();ctx.globalAlpha=Math.min(.35,(n.until-t)*.5);ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.strokeRect(6,6,W-12,H-12);ctx.restore();}
+}
+const phaseLimits={chop:14,wok:35,serve:17};
 const bridges=[164,282,406];
+const toiletWater={x:480,y:285,rx:249,ry:127};
+const toiletDrainDuration=1.85;
+const coffeeWheel={x:480,y:244,rx:235,ry:134};
+const toiletRingRadii=[340,280],toiletRingProjection=175/340;
+const toiletRings=toiletRingRadii.map(rx=>Array.from({length:129},(_,i)=>{
+  const a=i*Math.PI*2/128,ry=rx*toiletRingProjection;return [toiletWater.x+rx*Math.cos(a),toiletWater.y+ry*Math.sin(a)];
+}));
+const toiletRoutes=[...toiletRings,[[140,285],[200,285]],[[760,285],[820,285]],[[480,285+280*175/340],[480,460]]];
 const coffeeRoutes=[
   [[228,132],[228,444]],[[732,180],[732,444]],
   [[228,132],[540,132],[630,156],[732,180]],
   [[228,330],[340,350],[600,350],[732,300]],
   [[228,444],[570,444],[650,456],[732,444]],
   [[350,132],[350,160]],[[732,250],[714,250]],[[420,350],[420,364]],
-  ...[166,284,402].flatMap(y=>[[[210,y],[228,y]],[[732,y],[750,y]]])
+  [[210,284],[228,284]]
 ];
 let now=0,lastFrame=0;
 function wanted(){
   const held=state.held;
   return held?["chop","wok","serve"][held.stage]:"bin";
 }
-function toast(message,color=c.light,seconds=1.65){state.toast={text:message,color,until:now+seconds};}
+function toast(message,color=c.light,seconds=1.65,kind="info"){
+  const n={text:message,color,duration:seconds,kind};
+  if(state.toast?.text===message&&state.toast.until>now)return;
+  if(kind==="error"){state.noticeQueue=[];state.toast={...n,until:now+seconds};return;}
+  if(!state.toast||state.toast.until<=now||noticePriority[kind]>noticePriority[state.toast.kind??"info"]){state.toast={...n,until:now+seconds};return;}
+  state.noticeQueue??=[];
+  if(!state.noticeQueue.some(item=>item.text===message)&&state.noticeQueue.length<3)state.noticeQueue.push(n);
+}
 function updateControls(){
+  get("scene-back").hidden=state.open==="menu"||!get("frost-experience").hidden;
   const bar=get("controls");
-  if(footMode()&&state.view==="map"){
-    bar.replaceChildren();bar.hidden=true;get("pause").hidden=!!state.open;return;
-  }
-  const sets={map:[["w","↑"],["a","←"],["s","↓"],["d","→"],[" ","空格 · 操作"]],chop:[["e","E · 切菜"]],wok:[["e","E · 翻炒"],["f","F · 翻面"]],serve:[["a","A · 左"],["e","E · 前进"],["d","D · 右"]]};
-  bar.replaceChildren(...sets[state.view].map(([key,label])=>{
+  const sets={chop:[["e","E · 切菜"]],wok:[["e","E · 翻炒"],["f","F · 翻面"]],serve:[["a","A · 左"],["e","E · 前进"],["d","D · 右"]]};
+  bar.replaceChildren(...(sets[state.view]??[]).map(([key,label])=>{
     const button=document.createElement("button");
     button.textContent=label;
     button.onpointerdown=e=>{e.preventDefault();button.setPointerCapture(e.pointerId);input(key,true);};
     button.onpointerup=button.onlostpointercapture=()=>input(key,false);
     return button;
   }));
-  bar.hidden=!!state.open;
+  bar.hidden=!!state.open||state.view==="map";
   get("pause").hidden=!!state.open;
 }
 function toggleMenu(mode){
@@ -701,61 +1495,129 @@ function toggleMenu(mode){
   state.open=mode; keys.clear(); state.moving=false;
   menu.hidden=!mode;
   if(mode){
-    const title={menu:"极限出餐",pause:"营业暂停",end:"营业结算",practice:"练习结算"}[mode];
+    const title={menu:"极限出餐",pause:"营业暂停",end:state.served?"大成功！！！":"营业结算",practice:"练习结算"}[mode];
     get("menu-title").textContent=title;
     get("menu-copy").innerHTML={
-      menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒 · 3 张订单",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
+      menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:"本局 "+state.score+" 分 · 出餐 "+state.served+" / 3 道 · 错过 "+state.failed+" 张订单",
+      end:state.coffeeDrain?"被研磨轮卷走了！<br>点击「重新营业」重开本局。":state.toiletDrain?"被冲进下水道了！<br>点击「重新营业」重开本局。":(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.orderDishId??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
-    get("office-event").hidden=mode==="pause"||state.scene!=="neon";
+    get("opening-return").hidden=mode==="pause"||!window.KitchenOpening;
+    get("office-event").hidden=mode==="pause";
     get("scene-choice").hidden=mode==="pause";
-    get("start").textContent=mode==="menu"?"开始营业 ↗":"重新营业 ↗";
+    get("start").textContent=mode==="menu"?"开始营业":"重新营业";
     get("practice").hidden=mode==="pause";
+    get("coffee-levels").hidden=true;
+    if(state.scene==="coffee"){
+      if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒";
+      get("start").textContent=mode==="menu"?"开始营业":"重新营业";
+    }
   }
   updateControls();
 }
+function renderCoffeeLevels(){
+  const choices=get("coffee-levels");choices.replaceChildren();
+  coffeeDishes.forEach((dish,id)=>{
+    const button=document.createElement("button");button.type="button";button.ariaPressed=String(id===state.coffeeLevel);
+    button.textContent=String(id+1).padStart(2,"0")+" · "+dish.name;
+    button.onclick=()=>{state.coffeeLevel=id;get("dish-select").value=String(id);start();};
+    choices.append(button);
+  });
+}
 function reset(){
+  stageFx?.reset();
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
-  const spawn=state.scene==="coffee"?{x:228,y:444}:{x:285,y:401};
-  Object.assign(state,{view:"map",time:180,score:0,queue:[],served:0,failed:0,held:null,phase:null,practice:false,player:spawn,target:null,toast:null,fx:[],runBudget:0,runJourney:null,footCycles:0});
+  const spawn=state.scene==="coffee"?{x:228,y:444}:state.scene==="toilet"?{x:480,y:460}:{x:285,y:401};
+  Object.assign(state,{view:"map",time:180,score:0,queue:[],orderDishId:null,served:0,failed:0,held:null,phase:null,practice:false,frostRound:false,player:spawn,toiletDrain:null,shockUntil:0,shockReadyAt:now+2.8,target:null,toast:null,noticeQueue:[],fx:[],runBudget:0,runJourney:null,footCycles:0});
+  state.coffeeDrain=null;
 }
 function start(){
+  window.KitchenAudio?.cue("enter",state.scene);
+  const retry=state.open==="end"&&(state.toiletDrain||state.coffeeDrain)?state.orderDishId:null;
   reset();
   const event=get("office-event").value.trim();
   const officeTerms=[/订书机|装订|卡钉/,/老板|领导|上司|开会|催|被骂/,/文件夹|文件|文档|表格|归档/,/打印机|打印|复印|卡纸/,/键盘|打字|码字|敲键|开心/,/空调|冷气|太冷|太热|冻/,];
   const match=officeTerms.findIndex(term=>term.test(event));
-  const first=state.scene!=="neon"?-1:match<0&&/生气|烦|压力大/.test(event)?0:match;
-  const order=dishes.map((_,i)=>i);
-  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
-  if(first>=0&&first<order.length){order.splice(order.indexOf(first),1);order.unshift(first);}
-  state.queue=order.slice(0,3).map((id,i)=>({id,left:82+i*43}));
+  const manual=get("dish-select").value;
+  const first=match<0&&/生气|烦|压力大/.test(event)?0:match;
+  const id=/^[0-5]$/.test(manual)?Number(manual):retry??(first>=0?first:Math.floor(Math.random()*dishes.length));
+  state.orderDishId=id;
+  if(state.scene==="fridge"){
+    // 硬件由共用页面持有，地图 iframe 不再抢占串口/蓝牙连接。
+    get("hardware-controls").hidden=false;
+    get("foot-controls").hidden=true;
+    get("frost-back").textContent=drawnRound?"← 返回抽卡":"← 返回场景选择";
+    state.open="frost";
+    window.KitchenAudio?.sync("fridge");
+    const frost=get("frost-experience");
+    const local=window.location.protocol==="file:"&&!hardwareInput?.active;
+    clearRunInput();
+    frost.src="frost-kitchen.html?level="+id+"&autostart=1"+(local?"&local=1":"")+(footMode()?"&foot=1":"");
+    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("controls").hidden=true;get("pause").hidden=true;
+    return;
+  }
+  if(state.scene==="coffee")state.coffeeLevel=id;
+  if(state.scene==="toilet")state.toiletLevel=id;
+  if(state.scene==="neon")state.neonLevel=id;
+  state.queue=[{id,left:180}];
   toggleMenu(null);
 }
 function phase(mode,id){
   clearRunInput();state.runJourney=null;
+  stageFx?.reset();
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
-  state.view=mode;state.target=null;keys.clear();state.fx=[];state.toast=null;
+  state.view=mode;state.target=null;keys.clear();state.fx=[];state.toast=null;state.noticeQueue=[];
+  if(footMode())get("run-route").textContent="已到站 · "+({chop:"切菜",wok:"颠锅",serve:"端盘"})[mode];
   state.phase={id,left:phaseLimits[mode],cuts:0,nextCut:now,hit:-10,progress:0,flips:0,flipWindow:0,checkpoint:0,burn:0,toss:-10,route:0,integrity:100,tilt:0,vel:0,stable:0,surge:0,nextSurge:1.1,elapsed:0,done:false};
   updateControls();
 }
+window.addEventListener("message",event=>{
+  const frost=get("frost-experience"),data=event.data;
+  const origin=window.location.origin,local=window.location.protocol==="file:";
+  if((event.origin!==origin&&!(local&&event.origin==="null"))||event.source!==frost.contentWindow||data?.type!=="frost-minigame"||state.scene!=="fridge"||!["chop","wok","serve"].includes(data.mode)||!Number.isInteger(data.id)||data.id<0||data.id>5)return;
+  if(state.frostRound)return;
+  state.frostRound=true;state.practice=false;state.time=Number.isFinite(data.clock)?clamp(data.clock,0,180):180;state.queue=[{id:data.id,left:180}];
+  frost.hidden=true;get("frost-back").hidden=true;canvas.hidden=false;get("hardware-controls").hidden=false;
+  get("foot-controls").hidden=!footMode();
+  phase(data.mode,data.id);toggleMenu(null);canvas.focus?.({preventScroll:true});
+});
 function practice(mode){
-  reset();state.practice=true;phase(mode,Number(get("dish-select").value));toggleMenu(null);
+  reset();state.practice=true;const value=get("dish-select").value;phase(mode,/^[0-5]$/.test(value)?Number(value):0);toggleMenu(null);
 }
 function conclude(success,label){
   const p=state.phase;
   if(!p||p.done)return;
-  p.done={success,label,backIn:1.12};
-  toast(label,success?c.green:c.red,1.35);
+  const won=success&&state.view==="serve"&&!state.practice;
+  p.done={success,label,backIn:won?(stageFx?.winHold??2.8):(stageFx?.hold??1.72)};
+  state.noticeQueue=[];state.toast=null;
+  const excellent=success&&label.startsWith("EXCELLENT");
+  const sound=won?"win":!success?"fail":excellent?"excellent":"good";
+  window.KitchenAudio?.cue(sound,state.scene,won&&excellent);
+  if(won&&stageFx)stageFx.celebrate(now);
+  else if(stageFx)stageFx.rate(now,label,success);
+  else toast(label,success?c.green:c.red,1.35,success?"success":"error");
+  stageFx?.hit(state.view,now,480,146,.85);
   burst(484,132,now,success?c.green:c.pink,30);
   keys.clear();
 }
 function returnFromPhase(){
   const p=state.phase, v=state.view;
+  if(state.frostRound){
+    clearRunInput();
+    state.frostRound=false;state.open="frost";state.view="map";keys.clear();
+    window.KitchenAudio?.sync("fridge");
+    const frost=get("frost-experience");frost.hidden=false;canvas.hidden=true;menu.hidden=true;
+    get("controls").hidden=true;get("pause").hidden=true;get("scene-back").hidden=true;get("frost-back").hidden=false;
+    get("hardware-controls").hidden=false;
+    get("foot-controls").hidden=true;
+    const origin=window.location.origin;
+    frost.contentWindow.postMessage({type:"frost-minigame-result",success:p.done.success,label:p.done.label,integrity:p.integrity,clock:state.time},window.location.protocol==="file:"||origin==="null"?"*":origin);
+    return;
+  }
   if(state.practice){state.practiceResult=p.done.label;toggleMenu("practice");return;}
   if(p.done.success){
     if(v==="serve"){
@@ -765,9 +1627,10 @@ function returnFromPhase(){
   }else {
     if(v==="serve")state.score-=25;
     state.held=null;
+    if(state.time<=0){state.failed+=state.queue.length;state.queue=[];}
   }
   backToMap();
-  toast(p.done.label,p.done.success?c.green:c.red);
+  toast(p.done.label,p.done.success?c.green:c.red,1.65,p.done.success?"success":"error");
   if(!state.queue.length)toggleMenu("end");
 }
 function backToMap(){
@@ -782,12 +1645,14 @@ function activate(o){
   const id=state.queue[0].id;
   if(o.type==="trash"){state.held=null;toast("工件已回收");return;}
   if(o.type==="bin"){
-    if(state.held){toast("手上已有工件",c.yellow);return;}
+  if(state.held){toast("手上已有工件",c.yellow,1.65,"info");return;}
     if(o.dish!==id){toast("当前订单 · "+dishes[id].name,c.yellow);return;}
+    window.KitchenAudio?.cue("pickup",state.scene);
     state.held={id,stage:0};toast("已取料 · "+dishes[id].name);
     return;
   }
-  if(!state.held||o.type!==wanted()){toast("先完成上一道工序",c.yellow);return;}
+  if(!state.held||o.type!==wanted()){toast("先完成上一道工序",c.yellow,1.65,"info");return;}
+  window.KitchenAudio?.cue("station",state.scene);
   phase(o.type,id);
 }
 function inReach(o){
@@ -801,10 +1666,74 @@ function segmentDistance(x,y,a,b){
   const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy||1,q=clamp(((x-a[0])*dx+(y-a[1])*dy)/l,0,1);
   return Math.hypot(x-(a[0]+dx*q),y-(a[1]+dy*q));
 }
+function insideToiletRing(x,y){
+  return Math.hypot(x-toiletWater.x,(y-toiletWater.y)/toiletRingProjection)<=toiletRingRadii[1];
+}
+function inToiletWater(x,y){
+  return Math.hypot((x-toiletWater.x)/toiletWater.rx,(y-toiletWater.y)/toiletWater.ry)<=1;
+}
+function stepOnToilet(x,y){
+  Object.assign(state.player,{x,y});
+  if(state.toiletDrain||!inToiletWater(x,y))return;
+  const dx=x-toiletWater.x,dy=(y-toiletWater.y)*toiletWater.rx/toiletWater.ry;
+  window.KitchenAudio?.cue("hazard","toilet");
+  state.toiletDrain={radius:Math.hypot(dx,dy),angle:Math.atan2(dy,dx),elapsed:0,turn:0};
+  state.moving=false;state.target=null;keys.clear();
+  burst(x,y,now,"#ffffff",22);
+  toast("落水了！被卷向排水口",c.red,toiletDrainDuration,"error");
+  updateControls();
+}
+function advanceDrain(dt,drain,bowl,direction){
+  drain.elapsed=Math.min(toiletDrainDuration,drain.elapsed+dt);
+  const progress=drain.elapsed/toiletDrainDuration;
+  const radius=drain.radius*(1-Math.pow(progress,1.25));
+  drain.turn=direction*progress*(2.1+4.25*progress);
+  const angle=drain.angle+drain.turn;
+  state.player.x=bowl.x+Math.cos(angle)*radius;
+  state.player.y=bowl.y+Math.sin(angle)*radius*bowl.ry/bowl.rx;
+  if(progress<1)return;
+  state.failed++;
+  state.held=null;state.queue=[];state.toast=null;
+  window.KitchenAudio?.cue("fail",state.scene);
+  toggleMenu("end");
+}
+function drawDrainingChef(t){
+  const {elapsed,turn}=state.toiletDrain??state.coffeeDrain;
+  if(elapsed>=toiletDrainDuration)return;
+  const progress=elapsed/toiletDrainDuration;
+  const {x,y}=state.player;
+  const size=1-progress*.88;
+  ellipse(x,y+9*size,23*size,8*size,state.scene==="coffee"?"#f6c389":"#e1fff5aa");
+  ctx.save();ctx.translate(x,y);ctx.rotate(turn*.75);ctx.scale(size,size);
+  ctx.globalAlpha=1-progress*.35;
+  chef(0,0,t);
+  ctx.restore();
+}
+function onCoffeeRail(x,y){
+  return coffeeRoutes.some(points=>points.some((b,i)=>i>0&&segmentDistance(x,y,points[i-1],b)<=18));
+}
+function inCoffeeWheel(x,y){
+  return Math.hypot((x-coffeeWheel.x)/coffeeWheel.rx,(y-coffeeWheel.y)/coffeeWheel.ry)<=1;
+}
+function isCoffeeWheelGoal(goal){
+  return !goal.type&&inCoffeeWheel(goal.x,goal.y)&&!onCoffeeRail(goal.x,goal.y);
+}
+function enterCoffeeWheel(){
+  const {x,y}=state.player;
+  if(onCoffeeRail(x,y)||!inCoffeeWheel(x,y))return;
+  const dx=x-coffeeWheel.x,dy=(y-coffeeWheel.y)*coffeeWheel.rx/coffeeWheel.ry;
+  window.KitchenAudio?.cue("hazard","coffee");
+  state.coffeeDrain={radius:Math.hypot(dx,dy),angle:Math.atan2(dy,dx),elapsed:0,turn:0};
+  state.moving=false;state.target=null;keys.clear();
+  burst(x,y,now,c.yellow,32);
+  toast("踩进研磨轮了！",c.red,toiletDrainDuration,"error");
+}
 function valid(x,y){
+  if(state.scene==="toilet"){
+    return insideToiletRing(x,y)||toiletRoutes.some(points=>points.some((b,i)=>i>0&&segmentDistance(x,y,points[i-1],b)<=7));
+  }
   if(state.scene==="coffee"){
-    const onRail=coffeeRoutes.some(points=>points.slice(1).some((b,i)=>segmentDistance(x,y,points[i],b)<=24));
-    return onRail&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
+    return (onCoffeeRail(x,y)||inCoffeeWheel(x,y))&&!activeStations().some(o=>hit({x,y},{...o,w:o.w+14,h:o.h+14}));
   }
   const left=x>=108&&x<=437,right=x>=523&&x<=851;
   const crossing=x>=425&&x<=535&&bridges.some(b=>Math.abs(y-b)<=14);
@@ -812,26 +1741,70 @@ function valid(x,y){
 }
 function walk(dx,dy){
   const p=state.player;
-  if(valid(p.x+dx,p.y))p.x+=dx;
-  if(valid(p.x,p.y+dy))p.y+=dy;
+  if(state.scene==="toilet"){
+    // 逐小步检查整个移动过程，不能因快跑或低帧率直接跳到另一圈。
+    const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/2));
+    for(let i=0;i<steps&&!state.toiletDrain;i++){
+      if(dx&&valid(p.x+dx/steps,p.y))stepOnToilet(p.x+dx/steps,p.y);
+      if(!state.toiletDrain&&dy&&valid(p.x,p.y+dy/steps))stepOnToilet(p.x,p.y+dy/steps);
+    }
+    return;
+  }
+  const railOnly=state.scene==="coffee"&&state.target&&!isCoffeeWheelGoal(state.target.goal);
+  if(valid(p.x+dx,p.y)&&(!railOnly||onCoffeeRail(p.x+dx,p.y)))p.x+=dx;
+  if(valid(p.x,p.y+dy)&&(!railOnly||onCoffeeRail(p.x,p.y+dy)))p.y+=dy;
 }
-const grid=12;
+// 环路寻路直接沿道路折线行进，不再走横竖栅格形成锯齿。
+function toiletRouteTo(goal){
+  const nodes=[],edges=[],byKey=new Map();
+  function node(x,y){const key=x.toFixed(3)+","+y.toFixed(3);if(byKey.has(key))return byKey.get(key);const id=nodes.length;nodes.push({x,y});edges.push([]);byKey.set(key,id);return id;}
+  for(const points of toiletRoutes)for(let i=1;i<points.length;i++){
+    const a=node(...points[i-1]),b=node(...points[i]);
+    const cost=Math.hypot(nodes[a].x-nodes[b].x,nodes[a].y-nodes[b].y);edges[a].push([b,cost]);edges[b].push([a,cost]);
+  }
+  const p=state.player,dist=nodes.map(n=>Math.hypot(n.x-p.x,n.y-p.y)),start=dist.indexOf(Math.min(...dist));
+  const costs=nodes.map(()=>Infinity),prev=new Map(),pending=new Set(nodes.map((_,i)=>i));costs[start]=0;
+  while(pending.size){
+    let a=-1;for(const id of pending)if(a<0||costs[id]<costs[a])a=id;
+    if(!Number.isFinite(costs[a]))break;pending.delete(a);
+    const n=nodes[a],d=Math.hypot(Math.max(0,Math.abs(n.x-goal.x)-(goal.w||0)/2),Math.max(0,Math.abs(n.y-goal.y)-(goal.h||0)/2));
+    if(d<(goal.type?25:15)){
+      const path=[];for(let id=a;id!==undefined;id=prev.get(id))path.unshift(nodes[id]);
+      return path.filter((n,i)=>i>0||Math.hypot(n.x-p.x,n.y-p.y)>.1);
+    }
+    for(const [b,cost] of edges[a])if(costs[a]+cost<costs[b]){costs[b]=costs[a]+cost;prev.set(b,a);}
+  }
+  return [];
+}
 function routeTo(goal){
+  if(state.scene==="toilet"){
+    if(goal.type||!inToiletWater(goal.x,goal.y))return toiletRouteTo(goal);
+    const p=state.player;
+    if(insideToiletRing(p.x,p.y))return [goal];
+    const [x,y]=toiletRings[1].reduce((nearest,point)=>
+      Math.hypot(point[0]-p.x,point[1]-p.y)<Math.hypot(nearest[0]-p.x,nearest[1]-p.y)?point:nearest
+    );
+    const entry=toiletRouteTo({x,y});
+    return entry.length||Math.hypot(x-p.x,y-p.y)<=.1?[...entry,{x,y},goal]:[];
+  }
+  const grid=12,coffee=state.scene==="coffee";
+  const enterWheel=coffee&&isCoffeeWheelGoal(goal);
+  const canWalk=(x,y)=>valid(x,y)&&(!coffee||enterWheel||onCoffeeRail(x,y));
   const p=state.player, startX=Math.round(p.x/grid),startY=Math.round(p.y/grid);
   const start=[startX,startY];
   const queue=[start], seen=new Map([[start.join(),null]]);
   for(let j=0;j<queue.length;j++){
     const a=queue[j], [x,y]=a, at={x:x*grid,y:y*grid};
     const d=Math.hypot(Math.max(0,Math.abs(at.x-goal.x)-goal.w/2),Math.max(0,Math.abs(at.y-goal.y)-goal.h/2));
-    if(j>0&&d<(goal.type?25:15)){
+    if(j>0&&d<(goal.type?25:15)&&(!enterWheel||!onCoffeeRail(at.x,at.y))){
       const points=[];
       for(let b=a;b;b=seen.get(b.join()))points.unshift({x:b[0]*grid,y:b[1]*grid});
       points.shift();return points;
     }
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
       const b=[x+dx,y+dy],k=b.join();
-      const clear=state.scene!=="coffee"||[.25,.5,.75].every(f=>valid((x+dx*f)*grid,(y+dy*f)*grid));
-      if(!seen.has(k)&&clear&&valid(b[0]*grid,b[1]*grid)){seen.set(k,a);queue.push(b);}
+      const clear=!coffee||[.25,.5,.75].every(f=>canWalk((x+dx*f)*grid,(y+dy*f)*grid));
+      if(!seen.has(k)&&clear&&canWalk(b[0]*grid,b[1]*grid)){seen.set(k,a);queue.push(b);}
     }
   }
   return [];
@@ -852,6 +1825,16 @@ function move(dt){
   const {goal,route}=state.target;
   const next=route[0];
   if(!next||(goal.type&&inReach(goal))){state.target=null;if(goal.type&&inReach(goal))activate(goal);return;}
+  if(state.scene==="toilet"){
+    // 一帧剩余距离继续用于下一段，避免每经过一个弧线采样点都停顿一下。
+    let remaining=speed;
+    while(route.length&&remaining>0&&!state.toiletDrain){
+      const to=route[0],dx=to.x-state.player.x,dy=to.y-state.player.y,d=Math.hypot(dx,dy);
+      if(d<=remaining){stepOnToilet(to.x,to.y);remaining-=d;route.shift();}
+      else {walk(dx/d*remaining,dy/d*remaining);remaining=0;}
+    }
+    return;
+  }
   const x=next.x-state.player.x,y=next.y-state.player.y,n=Math.hypot(x,y);
   if(n<=speed+1){if(valid(next.x,next.y))Object.assign(state.player,next);route.shift();}
   else walk(x/n*speed,y/n*speed);
@@ -907,27 +1890,32 @@ function cutOnce(source="manual"){
   const p=state.phase;
   if(p.done||(source!=="hardware"&&now<p.nextCut))return;
   p.nextCut=now+.29;p.hit=now;p.cuts++;
-  burst(348+Math.random()*130,260,now,p.cuts%3?c.light:c.pink,p.cuts%3?12:28);
+  window.KitchenAudio?.cue("chop",state.scene,p.cuts%3===0);
+  stageFx?.hit("chop",now,455,282,p.cuts%3===0?1.24:1);
+  burst(455,282,now,p.cuts%3?"#ffe5a1":"#fff6da",p.cuts%3?34:60);
   if(p.cuts===10)conclude(true,p.left>8?"EXCELLENT · 零件齐全":"GOOD · 零件齐全");
 }
 function flip(){
   const p=state.phase;
   if(p.done)return;
   p.toss=now;
-  if(p.flipWindow>0){p.flips++;p.flipWindow=0;p.checkpoint++;burst(468,246,now,c.yellow,25);toast("PERFECT · 翻面命中",c.yellow,.72);}
-  else {p.burn+=13;toast("时机错误 · 焦糊上升",c.red,.72);}
+  window.KitchenAudio?.cue(p.flipWindow>0?"flip":"miss",state.scene);
+  stageFx?.hit("wok",now,450,277,p.flipWindow>0?1.3:.72);
+  if(p.flipWindow>0){p.flips++;p.flipWindow=0;p.checkpoint++;burst(468,246,now,c.yellow,80);toast("PERFECT · 翻面命中",c.yellow,1,"success");}
+  else {p.burn+=5;toast("稍早了 · 等待翻面提示",c.red,.72,"warning");}
 }
 function cook(dt){
   const p=state.phase;
   if(p.flipWindow>0){
     p.flipWindow-=dt;
-    if(p.flipWindow<=0){p.checkpoint++;p.burn+=42;toast("错过翻面 · 焦糊上升",c.red,1.1);}
+    if(p.flipWindow<=0){p.burn+=16;p.flipWindow=4.5;toast("再试一次 · 向上颠锅",c.red,1.1,"warning");}
   }else if(stirring()){
-    p.progress+=dt/7.7;
+    p.progress+=dt/6;
     const limit=[.34,.72][p.checkpoint];
-    if(limit!==undefined&&p.progress>=limit){p.progress=limit;p.flipWindow=2.8;}
-  }else p.burn+=dt*13;
-  if(p.progress>=1&&p.flips<2)p.burn+=dt*25;
+    if(limit!==undefined&&p.progress>=limit){p.progress=limit;p.flipWindow=4.5;window.KitchenAudio?.cue("warn",state.scene);}
+    p.burn=Math.max(0,p.burn-dt*3);
+  }else p.burn+=dt*5;
+  if(p.progress>=1&&p.flips<2)p.burn+=dt*8;
   if(p.burn>=100)conclude(false,"焦糊报废 · 重新取料");
   else if(p.progress>=1&&p.flips===2)conclude(true,p.burn<15?"EXCELLENT · 工件重组完成":"GOOD · 工件重组完成");
 }
@@ -941,6 +1929,8 @@ function balance(dt){
   if(p.elapsed>=p.nextSurge){
     p.vel+=(Math.sin(p.elapsed*2.61)>0?1:-1)*.92;p.surge=.27;p.nextSurge+=1.45+Math.random()*.48;
     burst(330,335,now,c.pink,10);burst(630,335,now,c.light,10);
+    window.KitchenAudio?.cue("surge",state.scene);
+    stageFx?.hit("serve",now,p.vel>0?279:680,320,1.16);
   }
   p.vel+=((plate?input*6:input*4)+shock-p.tilt*.74)*dt;
   p.vel*=Math.exp(-2.4*dt);
@@ -950,24 +1940,57 @@ function balance(dt){
   const centered=Math.abs(p.tilt)<.19&&!keys.has("e")&&(!plate||Math.abs(plate.roll)<.19);
   if(p.route>=1)p.stable=centered?p.stable+dt:0;
   if(p.integrity<=0)conclude(false,"食材洒落 · 重新取料");
-  else if(p.stable>=1.2)conclude(true,p.integrity>=90?"EXCELLENT · 稳盘送达":"GOOD · 已出餐");
+  else if(p.route>=1&&Math.abs(p.tilt)<.3)conclude(true,p.integrity>=90?"EXCELLENT · 稳盘送达":"GOOD · 已出餐");
+}
+function advanceMap(dt){
+  const neon=state.scene==="neon";
+  if(neon&&now<state.shockUntil){state.moving=false;return;}
+  const {x,y}=state.player;
+  move(dt);
+  if(state.scene==="coffee"&&state.view==="map")enterCoffeeWheel();
+  if(!neon||state.view!=="map"||now<state.shockReadyAt)return;
+  const p=state.player;
+  if(Math.hypot(p.x-x,p.y-y)<.25)return;
+  const onLiveWire=neonLiveTraces.some(points=>points.some((b,i)=>i>0&&segmentDistance(p.x,p.y,points[i-1],b)<6));
+  if(onLiveWire){
+    state.shockUntil=now+.28;state.shockReadyAt=now+7;
+    state.moving=false;
+    window.KitchenAudio?.cue("hazard","neon");
+    burst(p.x,p.y-8,now,c.light,15);
+    toast("线路漏电 · 短暂麻痹",c.yellow,.9,"warning");
+  }
 }
 function advance(dt){
   if(state.open)return;
+  if(state.toiletDrain||state.coffeeDrain){
+    const coffee=!!state.coffeeDrain;
+    advanceDrain(dt,state.coffeeDrain??state.toiletDrain,coffee?coffeeWheel:toiletWater,coffee?-1:1);return;
+  }
+  if(state.view!=="map"&&state.phase?.done){
+    state.phase.done.backIn-=dt;
+    if(state.phase.done.backIn<=0)returnFromPhase();
+    return;
+  }
   if(!state.practice){
     state.time-=dt;
     for(const order of state.queue)order.left-=dt;
-    if(state.time<=0){state.time=0;state.failed+=state.queue.length;toggleMenu("end");return;}
+    if(state.time<=0){
+      state.time=0;
+      if(state.view!=="map"){conclude(false,"营业时间到 · 本关结束");return;}
+      state.failed+=state.queue.length;
+      window.KitchenAudio?.cue("fail",state.scene);
+      toggleMenu("end");return;
+    }
     if(state.queue[0]?.left<=0&&!state.phase?.done){
+      window.KitchenAudio?.cue("fail",state.scene);
       state.queue.shift();state.failed++;state.held=null;backToMap();
-      toast("订单超时",c.red);
+      toast("订单超时",c.red,1.65,"error");
       if(!state.queue.length)toggleMenu("end");
       return;
     }
   }
-  if(state.view==="map"){move(dt);return;}
+  if(state.view==="map"){advanceMap(dt);return;}
   const p=state.phase;
-  if(p.done){p.done.backIn-=dt;if(p.done.backIn<=0)returnFromPhase();return;}
   p.left=Math.max(0,p.left-dt);
   if(p.left===0){conclude(false,"工序超时 · 重新取料");return;}
   if(state.view==="chop"&&keys.has("e"))cutOnce();
@@ -981,15 +2004,15 @@ function input(k,down){
     else if(!state.open)toggleMenu("pause");
     return;
   }
-  if(state.open||keys.has(k))return;
+  if(state.open||state.toiletDrain||state.coffeeDrain||keys.has(k))return;
   if(footMode()&&state.view==="map"&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"," "].includes(k))return;
   keys.add(k);
-  if(state.view==="map"&&k===" "){const o=nearStation();if(o)activate(o);else toast("靠近工作台后按空格");}
+  if(state.view==="map"&&k===" "&&now>=state.shockUntil){const o=nearStation();if(o)activate(o);else toast("靠近工作台后按空格");}
   if(state.view==="chop"&&k==="e")cutOnce();
   if(state.view==="wok"&&k==="f")flip();
 }
 window.addEventListener("keydown",e=>{
-  if(["SELECT","INPUT"].includes(e.target.tagName))return;
+  if(e.target.id==="audio-toggle"||["SELECT","INPUT"].includes(e.target.tagName))return;
   const k=e.key.toLowerCase();
   if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k)&&!state.open)e.preventDefault();
   if(!e.repeat)input(k,true);
@@ -997,7 +2020,7 @@ window.addEventListener("keydown",e=>{
 window.addEventListener("keyup",e=>input(e.key.toLowerCase(),false));
 window.addEventListener("blur",()=>{if(!state.open)toggleMenu("pause");});
 canvas.addEventListener("pointerdown",e=>{
-  if(state.open)return;
+  if(state.open||state.toiletDrain||state.coffeeDrain)return;
   const box=canvas.getBoundingClientRect(),p={x:(e.clientX-box.left)*W/box.width,y:(e.clientY-box.top)*H/box.height,w:0,h:0};
   if(state.view==="map"){if(!footMode())target(activeStations().find(o=>hit(p,o))||p);}
   else if(state.view==="chop")cutOnce();
@@ -1005,47 +2028,83 @@ canvas.addEventListener("pointerdown",e=>{
 function sceneQuery(scene){
   const query=new URLSearchParams(window.location.search);query.set("scene",scene);return "?"+query;
 }
-function selectScene(scene){
+function selectScene(scene,{updateUrl=true}={}){
   if(!state.open||state.open==="pause")return;
-  get("hardware-controls").hidden=scene==="fridge";
-  get("foot-controls").hidden=scene==="fridge"||!get("foot-mode").checked;
-  get("foot-mode").disabled=scene==="fridge";
-  if(scene==="fridge"){
-    state.scene="fridge";dishes=fridgeDishes;
-    const frost=get("frost-experience");
-    if(frost.src==="about:blank")frost.src="frost-kitchen.html"+(new URLSearchParams(window.location.search).get("esp")==="1"?"?esp=1":"");
-    frost.hidden=false;get("frost-back").hidden=false;canvas.hidden=true;menu.hidden=true;get("pause").hidden=true;get("controls").hidden=true;
-    document.body.classList.toggle("fridge-scene",true);document.body.classList.toggle("toilet-scene",false);document.body.classList.toggle("coffee-scene",false);
-    document.title="极限出餐｜冰封后厨";
-    if(window.history?.replaceState)window.history.replaceState(null,"",sceneQuery("fridge"));
-    return;
-  }
+  get("hardware-controls").hidden=false;
+  get("foot-controls").hidden=!get("foot-mode").checked;
   get("frost-experience").hidden=true;get("frost-back").hidden=true;canvas.hidden=false;menu.hidden=false;
-  state.scene=["neon","fridge","toilet","coffee"].includes(scene)?scene:"neon";
-  dishes={neon:officeDishes,fridge:fridgeDishes,toilet:toiletDishes,coffee:coffeeDishes}[state.scene];
+  state.scene=Object.hasOwn(sceneDishes,scene)?scene:"neon";
+  document.body.classList.toggle("neon-scene",state.scene==="neon");
+  dishes=sceneDishes[state.scene];
   document.body.classList.toggle("toilet-scene",state.scene==="toilet");
   document.body.classList.toggle("fridge-scene",state.scene==="fridge");document.body.classList.toggle("coffee-scene",state.scene==="coffee");
   document.querySelector(".tag").textContent={neon:"⚡ OFFICE ARCADE / NEON KITCHEN",fridge:"FROZEN SHELF / ICE KITCHEN",toilet:"PORCELAIN BOWL / PIXEL KITCHEN",coffee:"BEAN HOPPER / MICRO KITCHEN"}[state.scene];
   document.title="极限出餐｜"+{neon:"赛博办公室",fridge:"冰箱内部",toilet:"冲水马桶内部",coffee:"咖啡机豆仓内部"}[state.scene];
-  if(window.history?.replaceState)window.history.replaceState(null,"",sceneQuery(state.scene));
+  if(updateUrl&&window.history?.replaceState)window.history.replaceState(null,"",sceneQuery(state.scene));
   for(const button of document.querySelectorAll("[data-scene]"))button.classList.toggle("selected",button.dataset.scene===state.scene);
   get("dish-select").replaceChildren();
+  const automatic=document.createElement("option");automatic.value="auto";automatic.textContent="根据心情匹配 / 随机";get("dish-select").append(automatic);
   dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
+  get("dish-select").value="auto";get("dish-select").ariaLabel="选择物品，手动选择优先";
   get("menu-hint").textContent=state.scene==="neon"?"WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停":"WASD 移动 · 空格取菜 · E 切菜/翻炒/端盘 · F 翻面";
   if(footMode())get("menu-hint").textContent="原地小跑沿路线前进 · 到站自动操作 · 手持板完成工序 · Esc 暂停";
   reset();toggleMenu("menu");
 }
-get("frost-back").onclick=()=>{state.open="menu";selectScene("neon");};
-get("start").onclick=start;get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
-for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>selectScene(button.dataset.scene);
+let drawnRound=false,reconnectHardware=false;
+get("frost-back").onclick=()=>{
+  get("frost-experience").src="about:blank";state.open="menu";
+  selectScene("fridge",{updateUrl:!drawnRound});
+  if(reconnectHardware)hardwareInput?.connect();
+  reconnectHardware=false;
+  if(drawnRound)opening?.show("draw");
+  drawnRound=false;
+};
+get("start").onclick=()=>start();get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
+get("scene-back").onclick=()=>{
+  state.open="menu";
+  drawnRound=false;
+  selectScene(state.scene);
+};
+get("dish-select").onchange=()=>{const value=get("dish-select").value;if(state.scene==="coffee"&&/^[0-5]$/.test(value))state.coffeeLevel=Number(value);};
+for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>{drawnRound=false;selectScene(button.dataset.scene);window.KitchenAudio?.cue("select",state.scene);};
 for(const button of document.querySelectorAll("[data-mode]"))button.onclick=()=>practice(button.dataset.mode);
 dishes.forEach((d,id)=>{const option=document.createElement("option");option.value=id;option.textContent=d.name;get("dish-select").append(option);});
 const requestedScene=new URLSearchParams(window.location.search).get("scene");
-selectScene(["neon","fridge","toilet","coffee"].includes(requestedScene)?requestedScene:"toilet");
+const hasRequestedScene=Object.hasOwn(sceneDishes,requestedScene);
+selectScene(hasRequestedScene?requestedScene:"toilet",{updateUrl:false});
+const opening=window.KitchenOpening?.bind({
+  game:document.querySelector("main"),
+  dishes:sceneDishes,
+  openManual(){
+    drawnRound=false;
+    state.open="menu";
+    selectScene(state.scene,{updateUrl:false});
+  },
+  launch(scene,dish){
+    state.open="menu";
+    drawnRound=true;
+    selectScene(scene,{updateUrl:false});
+    get("dish-select").value=String(dish);
+    start();
+    if(scene!=="fridge")canvas.focus({preventScroll:true});
+  }
+});
+get("opening-return").onclick=()=>opening?.show("draw");
+get("game-exit").onclick=()=>{
+  const frost=get("frost-experience");
+  if(!frost.hidden)frost.src="about:blank";
+  state.open="menu";
+  drawnRound=false;
+  selectScene(state.scene,{updateUrl:false});
+  if(reconnectHardware)hardwareInput?.connect();
+  reconnectHardware=false;
+  opening.show("cover");
+};
+if(!hasRequestedScene)opening?.show("cover");
 if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   button:get("hardware-connect"),status:get("hardware-status"),
   onChop(){
-    if(!document.hidden&&state.scene!=="fridge"&&!state.open&&state.view==="chop"&&state.phase&&!state.phase.done)cutOnce("hardware");
+    if(!document.hidden&&!state.open&&state.view==="chop"&&state.phase&&!state.phase.done)cutOnce("hardware");
   },
   onStir(){return !!hardwareWokReady();},
   onFlip(){if(hardwareWokReady())flip();}
@@ -1054,18 +2113,21 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
 if(window.KitchenFoot){
   footInput=window.KitchenFoot.create({
     onCycle(packet){
-      if(!footMode()||document.hidden||state.open||state.view!=="map"||state.practice)return false;
+      if(!footMode()||document.hidden||canvas.parentElement?.inert)return false;
+      if(state.open==="frost"&&!get("frost-experience").hidden){relayFoot(packet);return true;}
+      if(state.open||state.view!=="map"||state.practice||state.toiletDrain||state.coffeeDrain)return false;
       if(!state.target)planRunRoute();
       if(!state.target)return false;
       state.footCycles+=packet.cycles;
       state.runBudget=Math.min((state.runBudget||0)+packet.cycles*cycleDistance,cycleDistance*2);
       return true;
     },
-    onLost:clearRunInput,
+    onLost(){clearRunInput();relayFootLink();},
     onStatus(status){
       const labels={disabled:"脚踝小跑已关闭",connecting:"正在连接脚踝传感器…",connected:"脚踝已连接 · 原地小跑前进",
         running:"小跑周期已收到",retrying:"脚踝连接中断 · 正在重连",ambiguous:"发现多个脚部传感器",unsupported:"浏览器不支持脚部连接"};
       get("foot-status").textContent=labels[status];
+      relayFootLink();
     }
   });
   get("foot-mode").onchange=()=>{
@@ -1080,13 +2142,61 @@ if(window.KitchenFoot){
 }else if(footMode()){
   get("foot-status").textContent="脚部模块未加载 · 请按 Ctrl+Shift+R 刷新";
 }
+window.addEventListener("message",event=>{
+  const frost=get("frost-experience"),origin=window.location.origin;
+  if(event.source!==frost.contentWindow||event.data?.type!=="frost-foot-ready")return;
+  if(event.origin!==origin&&!(window.location.protocol==="file:"&&event.origin==="null"))return;
+  relayFootLink();
+});
+const updateViewport=window.KitchenViewport?.bind(canvas,()=>{
+  const id=state.phase?.id??state.queue[0]?.id;
+  if(id==null)return "";
+  if(state.view==="map"&&state.queue.length)return instructions();
+  return dishes[id].name+" · "+({chop:"切菜",wok:"翻炒",serve:"端盘"})[state.view];
+});
+window.KitchenAudio?.mount();
+window.addEventListener("message",event=>{
+  const frost=get("frost-experience"),data=event.data,origin=window.location.origin;
+  if(frost.hidden||state.open!=="frost"||event.source!==frost.contentWindow||data?.type!=="frost-audio")return;
+  if(event.origin!==origin&&!(window.location.protocol==="file:"&&event.origin==="null"))return;
+  if(typeof data.cue==="string")window.KitchenAudio?.cue(data.cue,"fridge",data.heavy===true);
+  else if(["map","chop","wok","serve"].includes(data.stage)){
+    window.KitchenAudio?.sync(data.theme==="fridge"?"fridge":null,data.stage,Boolean(data.urgent),data.action===true);
+  }
+});
 function frameLoop(ms){
+  if(canvas.parentElement?.inert){requestAnimationFrame(frameLoop);return;}
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
   advance(dt);
+  if(state.open!=="frost"){
+    const active=!state.open||state.open==="menu";
+    const urgent=!state.open&&!state.phase?.done&&((!state.practice&&state.time<24)||(state.phase?.left??Infinity)<5);
+    const playing=!state.open&&state.phase&&!state.phase.done;
+    const action=playing&&((state.view==="wok"&&stirring())||(state.view==="serve"&&state.phase.route<1&&keys.has("e")));
+    window.KitchenAudio?.sync(active?state.scene:null,state.view,urgent,action);
+  }
   if(state.view==="map"){map(now);drawRunRoute();}
-  else {circuitry(now,true);trim(now);({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);}
+  else {
+    const [dx,dy]=stageFx?.shake(now)??[0,0];
+    ctx.save();
+    if(dx||dy){
+      const zoom=1+2*Math.max(Math.abs(dx)/W,Math.abs(dy)/H);
+      ctx.translate(W/2+dx,H/2+dy);ctx.scale(zoom,zoom);ctx.translate(-W/2,-H/2);
+    }
+    if(state.scene!=="coffee"){circuitry(now,true);trim(now);}
+    ({chop:drawChop,wok:drawWok,serve:drawServe})[state.view](now);
+    if(!state.open&&!state.phase.done){
+      if(state.view==="wok")stageFx?.ambient("wok",now,450,293,stirring());
+      if(state.view==="serve")stageFx?.ambient("serve",now,Math.sin(now*5)>0?290:670,334,keys.has("e"));
+    }
+    stageFx?.paint(now);
+    ctx.restore();
+    stageFx?.paintGrade(now);
+    stageFx?.paintCelebration(now);
+  }
   visuals(now);
+  updateViewport?.(ms);
   requestAnimationFrame(frameLoop);
 }
 requestAnimationFrame(frameLoop);
