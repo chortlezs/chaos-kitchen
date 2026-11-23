@@ -25,7 +25,7 @@ for(const scene of scenes){
   for(let id=0;id<6;id++)for(const mode of ['chop','wok','serve']){
     element('dish-select').value=String(id);g.practice(mode);draws.length=0;cookware.length=0;
     ({chop:g.drawChop,wok:g.drawWok,serve:g.drawServe})[mode](1);
-    const layout=draws.filter(([s])=>/^(阶段剩余|炒制进度|A ◀|▶ D|翻面   |路程 )/.test(s)).map(([s,x,y])=>[s.replace(/\d/g,'#'),x,y]);
+    const layout=draws.filter(([s])=>/^(阶段剩余|炒制进度|◀ 左倾|右倾 ▶|翻面   |路程 )/.test(s)).map(([s,x,y])=>[s.replace(/\d/g,'#'),x,y]);
     if(id===0){baseline??={};if(scene==='neon')baseline[mode]=layout;else assert.deepEqual(layout,baseline[mode],scene+' '+mode+' shared UI placement');}
     if(mode==='chop')assert(cookware.some(([kind,x,y,scale])=>kind==='board'&&x===480&&y===275&&scale===1.1),scene+' board geometry');
     if(mode==='wok')assert(cookware.some(([kind,x,y,scale])=>kind==='pan'&&x===448&&y===302&&scale===1),scene+' pan geometry');

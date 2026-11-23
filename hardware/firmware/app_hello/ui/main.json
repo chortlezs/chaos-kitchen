@@ -1,0 +1,22 @@
+{
+  "screen": "hello",
+  "w": 480,
+  "h": 480,
+  "screen_bg": "#11152b",
+  "font": "fonts/DejaVuSans.ttf",
+  "font_charset": " ",
+  "objects": [
+    {
+      "type": "image",
+      "parent": -1,
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 480,
+      "image": "canvas.png",
+      "codec": "lossless",
+      "bind": "surface",
+      "name": "surface"
+    }
+  ]
+}

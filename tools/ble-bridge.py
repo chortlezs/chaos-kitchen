@@ -14,6 +14,7 @@ from http.server import ThreadingHTTPServer
 from ble_protocol import Decoder, SERVICE_UUID, EVENT_UUID, IDENTITY_UUID
 
 from motion_sse import EventHub, Handler as SseHandler
+from screen_protocol import SCREEN_UUID, encode_screen
 
 
 class BlePump(EventHub):
@@ -23,8 +24,25 @@ class BlePump(EventHub):
         self.device_mac = device_mac.replace(':', '').lower() if device_mac else None
         self.link = {'type': 'link', 'transport': 'ble', 'state': 'scanning', 'connected': False}
         self.last_event_ms = None
+        self.screen_supported = False
+        self.screen_lock = threading.Lock()
+        self.screen_pending = None
+        self.screen_writes = 0
+        self.screen_last = None
+
+    def queue_screen(self, value):
+        frame=encode_screen(value)
+        if not self.link['connected'] or not self.screen_supported:
+            return False
+        with self.screen_lock:
+            self.screen_pending=(time.monotonic(),frame)
+        return True
 
     def set_link(self, state, **details):
+        with self.screen_lock:
+            self.screen_pending=None
+        if state!='connected':
+            self.screen_supported=False
         self.link = {'type': 'link', 'transport': 'ble', 'state': state,
                      'connected': state == 'connected', **details}
         self.broadcast(self.link)
@@ -37,6 +55,8 @@ class BlePump(EventHub):
 
     def health(self):
         return {'ok': True, 'source': 'ble', **self.link,
+                'screen_supported':self.screen_supported,'screen_writes':self.screen_writes,
+                'screen_last':self.screen_last,
                 'last_event_age_ms': None if self.last_event_ms is None else
                 time.time_ns() // 1000000 - self.last_event_ms}
 
@@ -94,8 +114,16 @@ class BlePump(EventHub):
 
                     await client.start_notify(EVENT_UUID, receive)
                     self.set_link('connected', address=device.address, identity=identity)
+                    services=getattr(client,'services',None)
+                    self.screen_supported=bool(services and services.get_characteristic(SCREEN_UUID))
                     while client.is_connected and not self.stopped.is_set():
-                        await asyncio.sleep(.2)
+                        await asyncio.sleep(.08)
+                        with self.screen_lock:
+                            pending=self.screen_pending;self.screen_pending=None
+                        if pending and time.monotonic()-pending[0]<1 and self.screen_supported:
+                            await client.write_gatt_char(SCREEN_UUID,pending[1],response=True)
+                            self.screen_writes+=1
+                            self.screen_last={'stage':pending[1][1],'theme':pending[1][2],'dish':pending[1][3]}
                         if time.monotonic() - last_received > 3:
                             raise TimeoutError('No fresh motion heartbeat for 3 seconds')
                     if client.is_connected:
@@ -125,7 +153,26 @@ def main():
         parser.error('Install BLE dependencies: python -m pip install -r tools/requirements-ble.txt')
     pump = BlePump(args.device_mac)
     class Handler(SseHandler):
-        pass
+        def do_POST(self):
+            if self.path!='/screen':
+                self.send_error(404);return
+            origin=self.headers.get('Origin')
+            if origin and origin not in ('http://localhost:8767','http://127.0.0.1:8767'):
+                self.send_error(403);return
+            if self.headers.get_content_type()!='application/json':
+                self.send_error(415);return
+            try:
+                length=int(self.headers.get('Content-Length','0'))
+                if not 0<length<=2048:raise ValueError('Invalid screen body')
+                self.connection.settimeout(2)
+                accepted=pump.queue_screen(json.loads(self.rfile.read(length)))
+                payload=json.dumps({'accepted':accepted}).encode()
+                self.send_response(200 if accepted else 503)
+                self.send_header('Content-Type','application/json')
+                self.send_header('Content-Length',str(len(payload)))
+                self.end_headers();self.wfile.write(payload)
+            except (ValueError,TypeError,OSError):
+                self.send_error(400)
     Handler.pump = pump
     server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
     server.daemon_threads = True

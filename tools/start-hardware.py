@@ -1,7 +1,6 @@
 """Start the local V1 game and reuse/start the ESP-Iris motion bridge."""
 import argparse
-import functools
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from kitchen_server import create_server
 import json
 import os
 from pathlib import Path
@@ -64,8 +63,7 @@ def main():
         except (OSError, ValueError, urllib.error.URLError):
             pass
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", args.web_port),
-                                     functools.partial(SimpleHTTPRequestHandler, directory=str(root)))
+        server = create_server(args.web_port, root)
     except OSError as error:
         print(f"Cannot start V1 web server: {error}. Close the previous V1 launcher or choose --web-port.")
         return 1

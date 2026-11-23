@@ -37,15 +37,15 @@
   outline-offset: 5px;
 }
 
-.kitchen-opening .opening-manual {
+.kitchen-opening .opening-nav {
   border: 2px solid var(--ink);
   background: var(--paper);
   padding: 9px 14px;
   font-size: 14px;
 }
 
-.opening-manual span { margin-left: 6px; }
-.kitchen-opening .opening-manual:hover { background: #ffe1c8; }
+.opening-nav span { margin-left: 6px; }
+.kitchen-opening .opening-nav:hover { background: #ffe1c8; }
 
 .kitchen-opening .opening-primary {
   min-height: 53px;
@@ -92,6 +92,24 @@
   white-space: nowrap;
 }
 
+/* Emotion kitchen: write a story on the left, reveal today's order on the right. */
+.cover-mood-note {
+  position: absolute;
+  top: 4%;
+  left: 4%;
+  max-width: 60%;
+  margin: 0;
+  padding: .6em 1em;
+  border: 2px solid #642e24;
+  background: #fff1cfed;
+  box-shadow: 3px 3px #75311f;
+  color: #54281e;
+  font-size: clamp(11px, 1.35cqw, 20px);
+  font-weight: 800;
+  line-height: 1.6;
+}
+.cover-mood-note span { display: block; font-size: .7em; letter-spacing: .16em; color: #a2452d; }
+
 @keyframes opening-reveal {
   from { transform: perspective(560px) rotateY(-75deg) translateY(-4px); }
   to { transform: perspective(560px) rotateY(0); }
@@ -99,7 +117,7 @@
 
 
 .opening-top { gap: 12px; }
-.opening-manual:last-child { margin-left: auto; }
+.opening-nav:last-child { margin-left: auto; }
 
 .kitchen-opening[data-page="cover"] {
   --cover-ratio: 1.94;
@@ -126,7 +144,7 @@
   border: 0;
 }
 
-.kitchen-opening[data-page="cover"] .opening-manual {
+.kitchen-opening[data-page="cover"] .opening-nav {
   padding: .5em .75em;
   border: 2px solid #642e24;
   border-radius: 4px;
@@ -137,7 +155,7 @@
   font-weight: 800;
 }
 
-.kitchen-opening[data-page="cover"] .opening-manual:hover { background: #fff8e0; }
+.kitchen-opening[data-page="cover"] .opening-nav:hover { background: #fff8e0; }
 
 .opening-cover, .cover-art {
   position: absolute;
@@ -234,7 +252,7 @@
   [data-page="cover"] .opening-top { right: 8%; bottom: -56px; }
   .cover-actions { left: 8%; top: auto; bottom: -56px; transform: none; }
   .kitchen-opening #opening-play,
-  .kitchen-opening[data-page="cover"] .opening-manual { min-height: 44px; }
+  .kitchen-opening[data-page="cover"] .opening-nav { min-height: 44px; }
 }
 
 .opening-wordmark { display: none; }
@@ -286,7 +304,6 @@
   border-bottom: 2px solid #9e4a2790;
   box-shadow: 0 2px #ffe6a3;
 }
-[data-page="draw"] #opening-manual { grid-column: 1; grid-row: 1; justify-self: start; margin-left: 0; }
 [data-page="draw"] #opening-home { grid-column: 3; grid-row: 1; justify-self: end; }
 
 [data-page="draw"] .opening-wordmark {
@@ -303,7 +320,7 @@
 }
 .opening-wordmark span { color: #ffd871; }
 
-.kitchen-opening[data-page="draw"] .opening-manual {
+.kitchen-opening[data-page="draw"] .opening-nav {
   min-height: 40px;
   padding: 7px clamp(9px, 1.4vw, 19px);
   border: 2px solid #713324;
@@ -314,7 +331,7 @@
   font-weight: 800;
   white-space: nowrap;
 }
-.kitchen-opening[data-page="draw"] .opening-manual:hover { background: #fff8e2; }
+.kitchen-opening[data-page="draw"] .opening-nav:hover { background: #fff8e2; }
 
 .opening-draw {
   flex: 1 0 auto;
@@ -878,3 +895,79 @@
   .kitchen-opening .chef-answers button { padding-left: 10px; }
   .kitchen-opening .opening-card { aspect-ratio: 1.12; min-height: 125px; }
 }
+
+
+/* AI emotion intake and editable recommendation ticket. */
+.kitchen-opening[data-page="draw"] {
+  background: radial-gradient(ellipse at 15% 20%, #ffe5a1, transparent 60%), #fbc58b;
+}
+[data-page="draw"] .opening-shell { width: min(calc(100% - 64px), 1240px); padding-bottom: 40px; }
+[data-page="draw"] .opening-top { min-height: 70px; }
+.opening-draw { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; padding-top: 30px; }
+.opening-draw .chef-chat { grid-template-columns: 72px minmax(0, 1fr); gap: 16px 18px; padding: 25px; background: #fff3d5; box-shadow: 5px 6px #b36746; }
+.opening-draw .chef-chat::before { border-color: #e9b67e; box-shadow: none; }
+.opening-draw .draw-medallion { display: none; }
+.opening-draw .chef-portrait { width: 66px; align-self: center; outline: 0; border-width: 2px; box-shadow: 3px 3px #b87453; }
+.opening-draw .chef-portrait::before, .opening-draw .chef-portrait::after { display: none; }
+.opening-draw .chef-line { padding: 0; border: 0; box-shadow: none; background: none; }
+.opening-draw .chef-line::before { display: none; }
+.opening-draw .chef-line h2 { margin-bottom: 8px; box-shadow: none; font-size: 11px; letter-spacing: .04em; }
+.opening-draw .chef-line p { font-size: clamp(16px, 1.6vw, 21px); line-height: 1.55; font-weight: 800; }
+.mood-form { grid-column: 1 / -1; width: 100%; }
+.mood-form > label { display: block; margin: 5px 0 10px; font-size: 15px; font-weight: 900; }
+.kitchen-opening .mood-form textarea {
+  display: block; width: 100%; min-height: 138px; resize: vertical; padding: 14px;
+  border: 2px solid #a6654a; border-radius: 4px; background: #fffdf5; color: #462823;
+  font: 500 16px/1.7 "Microsoft YaHei", system-ui, sans-serif; box-shadow: inset 0 2px #eddac1;
+}
+.kitchen-opening .mood-form textarea:focus { outline: 3px solid #ef9a4b; outline-offset: 2px; }
+.kitchen-opening .mood-form textarea::placeholder { color: #9a7b6c; }
+.mood-input-meta { display: flex; gap: 12px; justify-content: space-between; margin: 8px 0 15px; font-size: 11px; line-height: 1.5; color: #855d4c; }
+#mood-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.mood-examples { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+.kitchen-opening .mood-examples button { min-height: 33px; padding: 5px 10px; font-size: 12px; font-weight: 650; border: 1px solid #d6a37d; background: #fce7c6; border-radius: 20px; box-shadow: none; }
+.kitchen-opening .mood-examples button:hover { background: #ffdcaa; }
+.kitchen-opening .mood-submit { width: 100%; min-height: 48px; border-radius: 3px; font-size: 15px; }
+.mood-status { min-height: 20px; margin: 12px 0 6px; color: #77533d; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.mood-status[data-kind="error"] { color: #a1352e; }
+.mood-status[data-kind="success"] { color: #386653; }
+.mood-status[data-kind="loading"]::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 7px; background: #d47a32; animation: mood-pulse 1s ease-in-out infinite alternate; }
+@keyframes mood-pulse { to { opacity: .25; transform: scale(.7); } }
+.kitchen-opening .mood-text-button { padding: 5px 0; min-height: 30px; color: #965035; border: 0; background: none; box-shadow: none; font-size: 12px; font-weight: 750; text-decoration: underline; text-underline-offset: 4px; }
+.kitchen-opening .mood-text-button:hover { background: none; color: #be4929; }
+.mood-privacy { margin: 10px 0 0; font-size: 10px; line-height: 1.7; color: #91705b; }
+.opening-draw .draw-picks { padding: 22px; background: #fff1ce; box-shadow: 5px 6px #ae664b; }
+.opening-draw .draw-atlas { margin-bottom: 13px; }
+.opening-draw .draw-world i { width: clamp(32px, 4.5vw, 58px); }
+.opening-draw .opening-steps { margin-bottom: 15px; }
+.opening-draw .opening-steps li { font-size: 12px; }
+.mood-ticket { padding: 12px 0 15px; border-bottom: 1px dashed #c7956d; margin-bottom: 15px; }
+.mood-ticket-kicker { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #ac6547; }
+.mood-ticket h3 { margin: 9px 0; font-size: clamp(19px, 2vw, 26px); line-height: 1.4; color: #542b24; }
+.mood-ticket p { margin: 0 0 10px; font-size: 13px; line-height: 1.8; color: #77513d; overflow-wrap: anywhere; }
+.mood-source { font-size: 10px; line-height: 1.6; color: #a0755b; }
+.mood-editor { margin-bottom: 15px; border: 1px solid #d6a67d; background: #ffe8bf; padding: 10px; }
+.mood-editor > p { margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #6e4735; }
+.mood-editor .chef-answers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.kitchen-opening .mood-editor .chef-answers button { min-height: 58px; grid-template: auto auto / 25px minmax(0, 1fr); gap: 2px 6px; padding: 7px; border: 1px solid #b98264; box-shadow: 1px 2px #cd9b71; background: #fff8df; }
+.mood-editor .chef-answers button::after { display: none; }
+.mood-editor .chef-answers canvas { grid-row: 1 / 3; width: 25px; height: 25px; align-self: center; image-rendering: pixelated; }
+.mood-editor .chef-answers strong { font-size: 13px; }
+.mood-editor .chef-answers small { font-size: 10px; }
+.mood-adjustments { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; font-size: 12px; color: #77513d; }
+.mood-adjustments > label { margin-left: auto; }
+.kitchen-opening .mood-adjustments select { width: auto; max-width: 100%; padding: 6px; border: 1px solid #c18b61; border-radius: 3px; background: #fff8e4; color: #663b2c; font: 650 12px system-ui; }
+.opening-draw .opening-decks { background: #edbd8240; border: 1px solid #d5a47a; padding: 12px; gap: 12px; }
+.kitchen-opening .opening-card:disabled { cursor: default; opacity: .65; filter: saturate(.55); transform: none; }
+.opening-draw .opening-card { width: 100%; height: 155px; min-height: 0; aspect-ratio: auto; }
+.opening-draw .draw-readout { font-size: 12px; }
+@media (max-width: 800px) {
+  [data-page="draw"] .opening-shell { width: calc(100% - 40px); }
+  .opening-draw { grid-template-columns: 1fr; gap: 24px; padding-top: 20px; }
+  .opening-draw .chef-chat { padding: 20px; }
+  .opening-draw .draw-picks { padding: 18px; }
+  .opening-draw .draw-world i { width: 48px; }
+  .mood-editor .chef-answers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cover-mood-note { max-width: 65%; font-size: clamp(10px, 2.1vw, 16px); }
+}
+@media (prefers-reduced-motion: reduce) { .mood-status[data-kind="loading"]::before { animation: none; } }

@@ -74,11 +74,11 @@
 
   function bind({ button, status, onChop, onStir, onFlip, onPlate }) {
     const labels = {
-      disconnected: "键盘 / 触屏可用", connecting: "正在连接本地网关…",
+      disconnected: "体感未连接 · 触屏可用", connecting: "正在连接本地网关…",
       waiting: "网关已连接 · 等待动作", receiving: "动作已收到 · 一下一上一刀",
       bleConnected: "蓝牙已连接 · 等待动作", bleScanning: "正在搜索并重连蓝牙板子…",
       bleAmbiguous: "发现多块板子 · 请指定设备",
-      stirring: "画圈翻炒中 · 停止即松开 E", stopped: "翻炒已停止 · 继续画圈",
+      stirring: "画圈翻炒中 · 停止画圈即停止翻炒", stopped: "翻炒已停止 · 继续画圈",
       flip: "上颠已收到 · 翻面一次",
       plate: "盘面修正已收到",
       retrying: "连接中断 · 正在重试", unsupported: "浏览器不支持硬件连接",

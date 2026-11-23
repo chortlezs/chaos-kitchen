@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .hardware-runtime/
+.env
+.env.*
+!.env.example
+deepseek.local.json

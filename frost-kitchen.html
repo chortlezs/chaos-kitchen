@@ -28,8 +28,8 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 <main>
 <canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
 <div class="pocket-order"></div>
-<button id="scene-back" type="button" style="position:absolute;left:1.2%;top:2%;z-index:5;padding:.4em .7em;font-size:1.1cqw">← 返回选厨房</button>
-<div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">键盘 / 触屏可用</span></div>
+<button id="scene-back" type="button" style="position:absolute;left:1.2%;top:2%;z-index:5;padding:.4em .7em;font-size:1.1cqw">← 返回配菜</button>
+<div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">体感未连接 · 触屏可用</span></div>
 <div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="run-route" aria-live="polite"></span></div>
 <canvas width="1280" height="720" id="game" tabindex="-1" aria-label="冰箱厨房游戏画面"></canvas>
 <button class="pause" id="pause" aria-label="暂停" hidden>Ⅱ</button>
@@ -50,7 +50,7 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 </div>
 <div class="actions" id="actions"></div>
 <noscript><p>请用浏览器打开网页并启用 JavaScript。</p></noscript>
-<p class="hint" id="hint">WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停</p>
+<p class="hint" id="hint">原地小跑移动 · 到站自动操作 · 手持板完成工序</p>
 </section>
 </div>
 <div class="sr" id="live" aria-live="polite"></div>
@@ -63,6 +63,7 @@ h1{color:#efffff;text-shadow:0 2px #279cf4,0 5px #3547aa,0 0 26px #73edffc0}
 <script src="kitchen-items.js"></script>
 <script src="kitchen-art.js"></script>
 <script src="kitchen-stage-fx.js"></script>
+<script src="kitchen-screen.js?v=screen-1"></script>
 <script src="kitchen-audio.js?v=excellent-vocoder-1"></script>
 <script>
 'use strict';
@@ -150,12 +151,17 @@ const sparks = [];
 let selected = 0, scene = 'map', overlay = 'menu', practice = false, step = 0;
 let clock = 180, phase, now = 0, last = 0, toast, delay = 0, result;
 let hardwareInput=null;
+const deviceScreen=window.KitchenScreen?.create(window.parent===window?{}:{send:snapshot=>{
+  const origin=window.location.origin;
+  window.parent.postMessage({type:'kitchen-screen-state',snapshot},origin==='null'?'*':origin);
+}});
 function hardwareWokReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='wok'&&phase&&!delay;}
 function hardwareServeReady(){return !document.hidden&&!window.frameElement?.hidden&&!overlay&&scene==='serve'&&phase&&!delay;}
 let player = {...spawn}, target = null, evaluations = [];
 const footEnabled=new URLSearchParams(window.location.search).get('foot')==='1';
 let footInput=null,runBudget=0,runJourney=null,footCycles=0;
-function clearRunInput(){runBudget=0;}
+function clearRunInput(){runBudget=0;if(phase)phase.runSeconds=0;}
+function servingForward(){return is('e')||(footEnabled&&footInput?.connected&&!document.hidden&&!window.frameElement?.hidden&&(phase?.runSeconds||0)>0);}
 const is = (...names) => names.some(k=>keys.has(k));
 const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
 const mix = (a,b,t) => a+(b-a)*t;
@@ -634,13 +640,11 @@ function stationMachine(step,active){
 }
 function displayStation(o){
   const active=o.step===step,tone=stationTones[o.step];
-  const distance=Math.hypot(player.x-o.x,player.y-o.y);
   g.save();g.translate(o.x,o.y-28);
   stationMachine(o.step,active);
   window.KitchenArt?.station(g,0,0,102,'fridge',['bin','chop','wok','serve'][o.step],active,now);
   box(-63,-84,126,31,active?tone:'#688ee7',active?'#1d3172':'#1c306a');
   label(o.label,0,-68,16);
-  if(active&&distance<=54){box(-28,55,56,24,C.aqua,'#203d58');label('空格',0,67,13,C.ice);}
   g.restore();
 }
 function chef(){
@@ -700,7 +704,7 @@ function closeHeader(){
   ticket(396,19,488,125);
   ticketText('CHAOS KITCHEN / 冰封后厨',640,36,15,'#376e94');
   ticketText(titles[scene],640,78,35);
-  const controls={chop:'按住 E 上下切开冰壳 · 共 10 刀',wok:'平持画圈 / E 翻炒 · 提示时向上颠 / F 翻面',serve:'按住 E 前进 · A / D 压向相反方向'};
+  const controls={chop:'手持板下切并抬回 · 共 10 刀',wok:'平持画圈翻炒 · 提示时向上短颠翻面',serve:footEnabled?'原地小跑前进 · 手持板左右轻倾保持平衡':'按住前进按钮 · 手持板左右轻倾保持平衡'};
   ticketText(controls[scene],640,124,21);
   ticket(1047,72,168,75);ticketText('本步倒计时',1131,94,14);
   ticketText(timeText(phase.left),1131,124,27,phase.left<6?'#a1346a':'#294778');
@@ -772,7 +776,7 @@ function drawWok(){
   }
   g.restore();
   frostPanel(983,183,169,47);ticketText('翻面 '+p.flips+' / 2',1067,207,22,'#36596b');
-  if(p.window>0){frostPanel(466,174,348,53,true);ticketText('F  翻面！  '+p.window.toFixed(1)+' 秒',640,201,27,'#93572e');}
+  if(p.window>0){frostPanel(466,174,348,53,true);ticketText('向上颠翻面！  '+p.window.toFixed(1)+' 秒',640,201,27,'#93572e');}
   ticketText('炒制进度',298,595,20,'#36596b','left');
   rect(290,612,700,26,'#789aa6');rect(293,615,694,20,'#e6f1ed');rect(296,618,688*clamp(p.progress,0,1),14,'#d5ad70');
   for(const t of [.34,.72]){rect(293+694*t-1,609,2,32,'#7494a0');}
@@ -826,8 +830,8 @@ function drawServe(){
   g.restore();
   const warning=p.kick>.25?'脚下打滑！':'路程 100% 即出餐';
   frostPanel(482,542,316,39,p.kick>.25);ticketText(warning,640,562,20,p.kick>.25?'#965d3c':'#36596b');
-  frostPanel(241,590,94,34);ticketText('A 向左',288,608,17,'#36596b');
-  frostPanel(945,590,94,34);ticketText('D 向右',992,608,17,'#36596b');
+  frostPanel(241,590,94,34);ticketText('向左倾',288,608,17,'#36596b');
+  frostPanel(945,590,94,34);ticketText('向右倾',992,608,17,'#36596b');
   frostPanel(350,589,580,38);
   const {x:barX,width:barW}=balanceTrack, safeLeft=balanceMarker(-safeTilt), safeRight=balanceMarker(safeTilt);
   const danger=g.createLinearGradient(barX,0,barX+barW,0);
@@ -872,7 +876,7 @@ function render(){
     penguin(1138,653,1.46);
     if(!overlay&&!delay){
       if(scene==='wok')stageFx?.ambient('wok',now,636,380,is('e')||(hardwareWokReady()&&hardwareInput?.stirring()));
-      if(scene==='serve')stageFx?.ambient('serve',now,Math.sin(now*5)>0?380:900,454,is('e'));
+      if(scene==='serve')stageFx?.ambient('serve',now,Math.sin(now*5)>0?380:900,454,servingForward());
     }
     stageFx?.paint(now);
     g.restore();
@@ -902,11 +906,11 @@ function refreshMenu(){
   if(overlay==='menu'){
     $('title').textContent='冰封后厨';
     $('copy').textContent='点击任意物品直接进入关卡。';
-    $('hint').textContent='WASD / 方向键移动 · Shift 快跑 · 空格操作 · Esc 暂停';
+    $('hint').textContent='原地小跑移动 · 到站自动操作 · 手持板完成工序';
     actions.append(button('开始营业',()=>start(),'primary'));
     for(const [mode,name] of [['chop','切菜练习'],['wok','颠锅练习'],['serve','端盘练习']])actions.append(button(name,()=>start(mode)));
   }else if(overlay==='paused'){
-    $('title').textContent='已暂停';$('copy').textContent=dishes[selected][0];$('hint').textContent='Esc 继续';
+    $('title').textContent='已暂停';$('copy').textContent=dishes[selected][0];$('hint').textContent='点击继续游戏恢复挑战';
     actions.append(button('继续游戏',pause,'primary'),button('返回选关',home));
   }else{
     $('title').textContent=result.ok?(practice?'练习完成':'大成功！！！'):'挑战失败';
@@ -1043,7 +1047,7 @@ function route(destination){
   return path;
 }
 function activate(o){
-  if(!o){say('靠近亮起的工作台后按空格');return;}
+  if(!o){say('点击亮起的工作台前往');return;}
   if(o.step!==step){say('先完成：'+stageNames[step],C.gold);return;}
   if(step===0){window.KitchenAudio?.cue('pickup','fridge');step=1;burst(player.x,player.y-20);say('已领取冻品，前往分解砧板',C.gold,2);return;}
   window.KitchenAudio?.cue('station','fridge');
@@ -1150,7 +1154,10 @@ function spawnJet(p){
   stageFx?.hit('serve',now,p.sign>0?325:955,475,1.16);
 }
 function balance(dt){
-  const p=phase,active=is('e')&&p.progress<1;
+  const p=phase;
+  const runTime=footEnabled&&footInput?.connected&&!document.hidden&&!window.frameElement?.hidden?Math.min(dt,p.runSeconds||0):0;
+  const forwardTime=is('e')?dt:runTime,active=forwardTime>0&&p.progress<1;
+  p.runSeconds=Math.max(0,(p.runSeconds||0)-dt);
   const plate=hardwareServeReady()?hardwareInput?.plate():null;
   const plateCorrection=plate?(Math.abs(plate.roll)<.08?0:Math.max(-1,Math.min(1,plate.roll*1.6))):null;
   const direction=plate?plateCorrection:Number(is('d','arrowright'))-Number(is('a','arrowleft'));
@@ -1170,7 +1177,8 @@ function balance(dt){
   if(Math.abs(p.tilt)>1.15)p.velocity*=.87;
   if(Math.abs(p.tilt)>.69)p.integrity=clamp(p.integrity-dt*(16+Math.abs(p.tilt)*15),0,100);
   if(p.integrity<=0){fail('盘子失衡，冻品全洒了');return;}
-  if(active)p.progress=Math.min(1,p.progress+dt*(Math.abs(p.tilt)>.65?.084:.121));
+  if(active)p.progress=Math.min(1,p.progress+forwardTime*(Math.abs(p.tilt)>.65?.084:.121));
+  if(p.progress>=1)p.runSeconds=0;
   if(p.progress>=1)complete(p.integrity>=85?'EXCELLENT':'GOOD');
 }
 function tick(dt){
@@ -1229,12 +1237,21 @@ for(const [i,card] of Array.from($('choices').children).entries()){
 }
 const updateViewport=window.KitchenViewport?.bind(canvas,()=>dishes[selected][0]+" · "+(stageNames[step]||"已交单"));
 function frame(ms){
+  if(deviceScreen){
+    const stage=overlay==='paused'?'pause':result?(result.ok?'win':'fail'):overlay==='menu'?'idle':
+      scene==='wok'&&phase?.window>0?'flip':scene;
+    deviceScreen.sync({stage,theme:'fridge',dish:selected,
+      progress:scene==='map'?(runJourney?.distance?runJourney.traveled/runJourney.distance*100:0):scene==='chop'?(phase?.cuts||0)*10:(phase?.progress||0)*100,
+      integrity:phase?.integrity??100,cuts:phase?.cuts||0,flips:phase?.flips||0,burn:phase?.burn||0,
+      tilt:phase?.tilt||0,active:scene==='wok'&&(is('e')||hardwareInput?.stirring()),
+      running:scene==='serve'?servingForward():runBudget>0,seconds:phase?.left??clock});
+  }
   const dt=last?Math.min((ms-last)/1000,.045):0;last=ms;
   if(!overlay||overlay==='menu')now+=dt;
   tick(dt);
   const urgent=!overlay&&!delay&&((!practice&&clock<24)||(phase?.left??Infinity)<5);
   const action=!overlay&&!delay&&((scene==='wok'&&(is('e')||(hardwareWokReady()&&hardwareInput?.stirring())))||
-    (scene==='serve'&&phase.progress<1&&is('e')));
+    (scene==='serve'&&phase.progress<1&&servingForward()));
   window.KitchenAudio?.sync(!overlay||overlay==='menu'?'fridge':null,scene,Boolean(urgent),action);
   render();drawRunRoute();updateViewport?.(ms);requestAnimationFrame(frame);
 }
@@ -1242,7 +1259,13 @@ if(footEnabled&&window.KitchenFoot){
   $('foot-controls').hidden=false;
   footInput=window.KitchenFoot.create({
     onCycle(packet){
-      if(document.hidden||window.frameElement?.hidden||overlay||delay>0||scene!=='map'||practice)return false;
+      if(document.hidden||window.frameElement?.hidden||overlay||delay>0)return false;
+      if(scene==='serve'&&phase.progress<1){
+        footCycles+=packet.cycles;
+        phase.runSeconds=Math.min((phase.runSeconds||0)+packet.cycles*.68,.8);
+        return true;
+      }
+      if(scene!=='map'||practice)return false;
       if(!target)planRunRoute();if(!target)return false;
       footCycles+=packet.cycles;runBudget=Math.min(runBudget+packet.cycles*64,128);return true;
     },
@@ -1281,11 +1304,12 @@ if(window.parent===window){
   $('game-exit').onclick=()=>{
     const entry=new URL('neon-chaos-kitchen.html',window.location.href);
     if(hardwareInput?.active)entry.searchParams.set('esp','1');
+    if(footEnabled)entry.searchParams.set('foot','1');
     window.location.replace(entry.href);
   };
 }
 $('scene-back').hidden=window.parent!==window;
-$('scene-back').onclick=()=>{window.location.href='neon-chaos-kitchen.html?scene=fridge'+(launchParams.get('esp')==='1'?'&esp=1':'');};
+$('scene-back').onclick=()=>{clearKeys();window.location.href='neon-chaos-kitchen.html?opening=draw'+(launchParams.get('esp')==='1'?'&esp=1':'')+(footEnabled?'&foot=1':'');};
 if(launchParams.get('autostart')==='1'){
   const level=Number(launchParams.get('level'));selected=Number.isInteger(level)&&level>=0&&level<6?level:0;
   const practiceMode=launchParams.get('practice');

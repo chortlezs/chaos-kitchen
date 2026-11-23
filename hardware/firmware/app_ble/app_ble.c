@@ -25,6 +25,8 @@ enum { FRAME_SIZE = 20, QUEUE_LENGTH = 12, MAX_AGE_US = 150000 };
 static const ble_uuid128_t service_uuid = KITCHEN_UUID(1);
 static const ble_uuid128_t event_uuid = KITCHEN_UUID(2);
 static const ble_uuid128_t identity_uuid = KITCHEN_UUID(3);
+static const ble_uuid128_t screen_uuid = KITCHEN_UUID(4);
+static portMUX_TYPE screen_lock = portMUX_INITIALIZER_UNLOCKED;
 
 typedef struct {
     uint8_t bytes[FRAME_SIZE];
@@ -46,6 +48,8 @@ static struct {
     char name[28];
     char identity[48];
     bool started;
+    uint8_t screen[20];
+    bool screen_pending;
 } context;
 
 static void advertise(void);
@@ -54,6 +58,17 @@ static int access_value(uint16_t connection, uint16_t handle,
                         struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     (void)connection; (void)handle; (void)arg;
+    if(ble_uuid_cmp(ctxt->chr->uuid,&screen_uuid.u)==0){
+        if(ctxt->op!=BLE_GATT_ACCESS_OP_WRITE_CHR||OS_MBUF_PKTLEN(ctxt->om)!=KITCHEN_SCREEN_FRAME_SIZE)
+            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        uint8_t frame[20];
+        if(os_mbuf_copydata(ctxt->om,0,sizeof(frame),frame)!=0||!kitchen_screen_valid(frame,sizeof(frame)))
+            return BLE_ATT_ERR_VALUE_NOT_ALLOWED;
+        portENTER_CRITICAL(&screen_lock);
+        memcpy(context.screen,frame,sizeof(frame));context.screen_pending=true;
+        portEXIT_CRITICAL(&screen_lock);
+        return 0;
+    }
     if (ctxt->op != BLE_GATT_ACCESS_OP_READ_CHR ||
         ble_uuid_cmp(ctxt->chr->uuid, &identity_uuid.u) != 0) {
         return BLE_ATT_ERR_READ_NOT_PERMITTED;
@@ -68,6 +83,7 @@ static const struct ble_gatt_svc_def services[] = {
          {.uuid = &event_uuid.u, .access_cb = access_value,
           .flags = BLE_GATT_CHR_F_NOTIFY, .val_handle = &context.event_handle},
          {.uuid = &identity_uuid.u, .access_cb = access_value, .flags = BLE_GATT_CHR_F_READ},
+         {.uuid = &screen_uuid.u, .access_cb = access_value, .flags = BLE_GATT_CHR_F_WRITE},
          {0}}},
     {0}
 };
@@ -76,6 +92,20 @@ static void clear_subscription(void)
 {
     atomic_store(&context.subscribed_generation, 0);
     xQueueReset(context.queue);
+    portENTER_CRITICAL(&screen_lock);
+    context.screen_pending=false;
+    portEXIT_CRITICAL(&screen_lock);
+}
+
+bool app_ble_read_screen(void *ctx,uint8_t frame[KITCHEN_SCREEN_FRAME_SIZE])
+{
+    (void)ctx;
+    if(!frame)return false;
+    portENTER_CRITICAL(&screen_lock);
+    const bool pending=context.screen_pending;
+    if(pending){memcpy(frame,context.screen,KITCHEN_SCREEN_FRAME_SIZE);context.screen_pending=false;}
+    portEXIT_CRITICAL(&screen_lock);
+    return pending;
 }
 
 static int gap_event(struct ble_gap_event *event, void *arg)

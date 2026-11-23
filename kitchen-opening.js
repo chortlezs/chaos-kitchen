@@ -67,28 +67,20 @@
       ["#6bc5d7", 16, 24, 2, 5], ["#6bc5d7", 21, 23, 2, 4]
     ]
   };
-  const moods = [
-    { label: "困得睁不开眼", scenes: ["coffee", "neon"], reply: "豆仓里咖啡正香，隔壁工位的屏幕也还亮着。" },
-    { label: "热到冒烟", scenes: ["fridge", "toilet"], reply: "我翻出了两张凉快的厨房卡，一张带霜，一张带水。" },
-    { label: "今天想摸鱼", scenes: ["neon", "fridge"], reply: "主机在休眠，冰柜在冻货。两处都能偷偷开火。" },
-    { label: "有点烦", scenes: ["toilet", "coffee"], reply: "烦心事可以冲走，也可以丢进豆仓磨碎。" }
+
+  const emotions = [
+    { id: "joy", label: "快乐", dish: 0, scene: "coffee", note: "咔哒一下，收好今天的小成就。" },
+    { id: "sadness", label: "悲伤", dish: 2, scene: "fridge", note: "把暂时说不出口的心事，慢慢整理。" },
+    { id: "anger", label: "愤怒", dish: 1, scene: "toilet", note: "把这股火气，交给今天的锅。" },
+    { id: "fear", label: "恐惧", dish: 3, scene: "neon", note: "先从眼前的一步开始，把失控感拆开。" },
+    { id: "surprise", label: "惊讶", dish: 4, scene: "neon", note: "给今天的意外，留一个特别的位置。" },
+    { id: "disgust", label: "厌恶", dish: 5, scene: "toilet", note: "把那些不舒服，冲进今天的厨房。" }
   ];
-  const cravings = [
-    { label: "咔嚓脆的", reply: "好，来点咔嚓响的！", dishes: [0, 4] },
-    { label: "一层一层的", reply: "给你留两份千层的。", dishes: [2, 3] },
-    { label: "来点火气", reply: "锅已经烧热了！", dishes: [1, 5] },
-    { label: "冰凉清爽", reply: "收到，给这锅降降温。", dishes: [5, 2] }
+  const examples = [
+    ["终于做完了", "忙了一周的方案终于通过了，老板也表扬了我，好开心！"],
+    ["有点憋火", "改了五版又让我重做，真的很生气，想把烦心事冲走。"],
+    ["想安静一下", "准备了很久却没被看见，有点难过，想一个人安静一下。"]
   ];
-
-  // A future dialogue provider can return the same scene and dish IDs.
-  function recommendCards(mood, craving) {
-    return { scenes: scenes.filter(scene => mood.scenes.includes(scene.id)), dishes: craving.dishes };
-  }
-
-  function sample(options) {
-    return options[Math.floor(Math.random() * options.length)];
-  }
-
   function drawMark(canvas, mark, theme) {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -102,238 +94,242 @@
     }
   }
 
-  function bind({ game, dishes, launch, openManual }) {
+
+  function bind({ game, dishes, launch }) {
     const get = id => document.getElementById(id);
-    const opening = get("kitchen-opening");
-    const cover = get("opening-cover");
-    const draw = get("opening-draw");
-    const play = get("opening-play");
-    const cook = get("opening-cook");
-    const sceneCard = get("opening-scene");
-    const dishCard = get("opening-dish");
-    const result = get("opening-result");
-    let scene = null;
-    let dish = null;
-
-    const question = get("chef-question");
-    const answers = get("chef-answers");
-    const decks = draw.querySelector(".opening-decks");
-    const steps = draw.querySelectorAll(".opening-steps li");
-    const home = get("opening-home");
-    let pool = null;
-    let coverTransition = null;
+    const opening = get("kitchen-opening"), cover = get("opening-cover"), draw = get("opening-draw");
+    const play = get("opening-play"), cook = get("opening-cook"), home = get("opening-home");
+    const sceneCard = get("opening-scene"), dishCard = get("opening-dish"), result = get("opening-result");
+    const question = get("chef-question"), answers = get("chef-answers");
+    const decks = draw.querySelector(".opening-decks"), steps = draw.querySelectorAll(".opening-steps li");
+    const worlds = draw.querySelectorAll("[data-world]"), readout = get("draw-readout");
+    const form = get("mood-form"), description = get("mood-description"), submit = get("mood-submit");
+    const status = get("mood-status"), editor = get("mood-editor"), adjustments = get("mood-adjustments");
+    let scene = null, dish = null, recommendation = null, coverTransition = null, pending = null, revision = 0;
     drawMark(draw.querySelector(".draw-medallion canvas"), "hat");
-    const worlds = draw.querySelectorAll("[data-world]");
-    const readout = get("draw-readout");
-    function updateAtlas(){
+
+    function showStep(active) {
+      draw.dataset.step = active;
+      steps.forEach((step, index) => index === active ? step.setAttribute("aria-current", "step") : step.removeAttribute("aria-current"));
+    }
+    function updateAtlas() {
       worlds.forEach(world => {
-        const id = world.dataset.world;
-        world.dataset.state = id === scene?.id ? "selected" :
-          !pool || (!scene && pool.scenes.some(option => option.id === id)) ? "available" : "dimmed";
+        world.dataset.state = world.dataset.world === (scene?.id ?? recommendation?.scene) ? "selected" : recommendation ? "dimmed" : "available";
       });
-      draw.dataset.world = scene?.id ?? "";
+      draw.dataset.world = scene?.id ?? recommendation?.scene ?? "";
     }
-
-    function showStep(activeStep) {
-      draw.dataset.step = activeStep;
-      steps.forEach((step, index) => {
-        if (index === activeStep) step.setAttribute("aria-current", "step");
-        else step.removeAttribute("aria-current");
-      });
-    }
-
-    function ask(line, choices, respond) {
-      question.textContent = line;
-      answers.hidden = false;
-      answers.replaceChildren(...choices.map(choice => {
-        const button = document.createElement("button");
-        button.type = "button";
-        const title = document.createElement("strong");
-        title.textContent = choice.label;
-        const icons = document.createElement("span");
-        icons.className = "draw-option-icons";
-        icons.setAttribute("aria-hidden", "true");
-        for (const value of choice.scenes ?? choice.dishes) {
-          const icon = document.createElement("canvas");
-          icon.width = icon.height = 32;
-          drawMark(icon,value);
-          icons.append(icon);
-        }
-        button.append(icons,title);
-        if (choice.scenes) {
-          const destinations = document.createElement("small");
-          destinations.textContent = choice.scenes.map(id => scenes.find(scene => scene.id === id).name).join(" / ");
-          button.append(destinations);
-        }
-        button.onclick = () => {
-          window.KitchenAudio?.cue("select","cover");
-          respond(choice);
-        };
-        return button;
-      }));
-      question.focus({ preventScroll: true });
-    }
-
-    function beginConversation() {
-      pool = null;
-      scene = null;
-      dish = null;
-      decks.hidden = true;
-      cook.hidden = true;
-      cook.disabled = true;
-      result.textContent = "";
-      readout.hidden = true;
-      updateAtlas();
-      showStep(0);
-      ask("开锅啦！今天想吃什么口感？", cravings, craving => {
-        showStep(1);
-        ask(craving.reply + " 今天上班什么状态？", moods, mood => {
-          pool = recommendCards(mood, craving);
-          answers.hidden = true;
-          decks.hidden = false;
-          cook.hidden = false;
-          showStep(2);
-          question.textContent = mood.reply + " 两叠各翻一张吧！";
-          renderCards();
-          sceneCard.focus({ preventScroll: true });
-        });
-      });
-    }
-
     function renderCard(card, name, mark, theme) {
       const revealed = mark !== "mystery";
       card.dataset.skin = theme ?? (revealed ? mark : "");
-      if (revealed && !card.hasAttribute("data-revealed") &&
-          !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (revealed && !card.hasAttribute("data-revealed") && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         card.animate?.([
-          { transform: "perspective(550px) rotateY(-89deg) scale(.91)", filter: "brightness(1.75)" },
-          { transform: "perspective(550px) rotateY(12deg) scale(1.045)", offset: .74 },
+          { transform: "perspective(550px) rotateY(-89deg) scale(.91)" },
+          { transform: "perspective(550px) rotateY(8deg) scale(1.03)", offset: .74 },
           { transform: "perspective(550px) rotateY(0) scale(1)" }
         ], { duration: 440, easing: "cubic-bezier(.2,.75,.23,1)" });
       }
       card.toggleAttribute("data-revealed", revealed);
-      card.setAttribute("aria-disabled", String(revealed));
+      card.setAttribute("aria-disabled", String(revealed || !recommendation));
+      card.disabled = !recommendation;
       card.querySelector(".opening-card-name").textContent = name;
       drawMark(card.querySelector("canvas"), mark, theme);
     }
-
     function renderCards() {
-      const dishName = dish === null ? null : scene ? dishes[scene.id][dish].name : foods[dish];
-      renderCard(sceneCard, scene?.name ?? pool.scenes.map(option => option.name).join(" / "), scene?.id ?? "mystery");
-      renderCard(dishCard, dishName ?? pool.dishes.map(id => foods[id]).join(" / "), dish ?? "mystery", scene?.id ?? pool.scenes[0].id);
-      cook.disabled = !scene || dish === null;
+      const chosenScene = scene?.id ?? recommendation?.scene;
+      const name = dish === null ? null : dishes[chosenScene][dish].name;
+      renderCard(sceneCard, scene?.name ?? (recommendation ? "翻开你的厨房" : "等待心情入锅"), scene?.id ?? "mystery");
+      renderCard(dishCard, name ?? (recommendation ? "翻开你的菜品" : "今日菜品待揭晓"), dish ?? "mystery", chosenScene);
+      decks.hidden = false;
       decks.dataset.reveals = Number(Boolean(scene)) + Number(dish !== null);
+      cook.hidden = !recommendation;
+      cook.disabled = !scene || dish === null;
+      readout.hidden = !recommendation;
+      readout.textContent = cook.disabled ? (!scene && dish === null ? "两张卡都翻开，就可以开锅啦。" : !scene ? "再翻开场景卡。" : "再翻开菜品卡。") : `${scene.name} · ${name}`;
+      result.textContent = cook.disabled ? "" : `本局订单：${scene.name}，${name}`;
       updateAtlas();
-      readout.hidden = false;
-      readout.textContent = cook.disabled ? (scene ? "再翻菜品卡" : dish !== null ? "再翻场景卡" : "翻开两张卡，确定本局的厨房和菜品") :
-        `${scene.name} · ${dishName}`;
-      if (!cook.disabled) question.textContent = "走，去" + scene.name + "做「" + dishName + "」！";
-      result.textContent = [scene?.name, dishName].filter(Boolean).join(" · ");
     }
-
+    function setBusy(busy) {
+      draw.dataset.loading = String(busy);
+      form.setAttribute("aria-busy", String(busy));
+      description.disabled = busy;
+      submit.disabled = busy;
+      submit.textContent = busy ? "小厨师正在读懂你的心情…" : "把心情交给小厨师 →";
+      for (const button of get("mood-examples").querySelectorAll("button")) button.disabled = busy;
+    }
+    function cancelRequest() {
+      revision++;
+      pending?.abort();
+      pending = null;
+      setBusy(false);
+    }
+    function clearRecommendation() {
+      recommendation = null; scene = null; dish = null;
+      adjustments.hidden = true;
+      editor.hidden = true;
+      get("mood-summary").textContent = "今天的心情，准备下锅。";
+      get("mood-reason").textContent = "小厨师会配好厨房与菜品。翻开两张卡，再决定要不要开锅。";
+      get("mood-source").textContent = "六种心情 · 四个厨房 · 你来确认";
+      renderCards();
+      showStep(0);
+    }
+    function applyRecommendation(data) {
+      const emotion = emotions.find(item => item.id === data.emotion);
+      if (!emotion || !scenes.some(item => item.id === data.scene)) throw new Error("订单还没配好，请再试一次。");
+      recommendation = { ...data, dish: emotion.dish };
+      scene = null; dish = null;
+      question.textContent = data.reply;
+      get("mood-summary").textContent = data.needs_clarification ? "这份心情，还想多听一点。" : `听起来，你有一点${emotion.label}。`;
+      get("mood-reason").textContent = data.reason;
+      get("mood-source").textContent = data.source === "deepseek" ? "DeepSeek 为这份心情配的菜 · 随时可以修改" : "按你的心情选择配菜 · 你最了解自己";
+      get("mood-scene-select").value = data.scene;
+      adjustments.hidden = false;
+      editor.hidden = !data.needs_clarification;
+      get("mood-correct").textContent = "心情不太对？";
+      showStep(2);
+      renderCards();
+      if (window.matchMedia("(max-width: 800px)").matches) get("mood-ticket").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    function showManual() {
+      cancelRequest();
+      editor.hidden = false;
+      question.textContent = "你自己的感受最重要。选一个最接近此刻的心情吧。";
+      status.textContent = "手动选择同样可以开锅。";
+      status.dataset.kind = "";
+      showStep(1);
+      answers.querySelector("button")?.focus({ preventScroll: true });
+      if (window.matchMedia("(max-width: 800px)").matches) editor.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    emotions.forEach(emotion => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.emotion = emotion.id;
+      const icon = document.createElement("canvas"); icon.width = icon.height = 32;
+      drawMark(icon, emotion.dish);
+      const label = document.createElement("strong"); label.textContent = emotion.label;
+      const ingredient = document.createElement("small"); ingredient.textContent = foods[emotion.dish];
+      button.append(icon, label, ingredient);
+      button.onclick = () => {
+        applyRecommendation({ emotion: emotion.id, scene: recommendation?.scene ?? emotion.scene,
+          reply: emotion.note, reason: "按你的选择配好这一份，厨房也可以换成你喜欢的。", source: "manual" });
+        status.textContent = "已按你的选择更新订单。";
+      };
+      answers.append(button);
+    });
+    examples.forEach(([label, text]) => {
+      const button = document.createElement("button");
+      button.type = "button"; button.textContent = label;
+      button.onclick = () => {
+        clearRecommendation(); description.value = text;
+        get("mood-count").textContent = `${text.length} / 600`;
+        status.textContent = "可以改成自己的故事，再交给小厨师。";
+        description.focus();
+      };
+      get("mood-examples").append(button);
+    });
+    description.oninput = () => {
+      get("mood-count").textContent = `${description.value.length} / 600`;
+      if (recommendation) clearRecommendation();
+      status.textContent = "";
+    };
+    form.onsubmit = async event => {
+      event.preventDefault();
+      const text = description.value.trim();
+      if (pending) return;
+      if (text.length < 2 || text.length > 600) { status.textContent = "再多告诉小厨师一点，写 2–600 个字就好。"; return; }
+      if (window.location.protocol === "file:") { status.textContent = "请使用本地游戏链接打开 AI 厨房，或先手动选择心情。"; return; }
+      clearRecommendation();
+      const ticket = ++revision, controller = new AbortController();
+      pending = controller; setBusy(true); showStep(1);
+      status.dataset.kind = "loading";
+      status.textContent = "正在给今天的故事配一道菜…";
+      question.textContent = "收到你的故事了，让我想想今天适合开什么锅。";
+      const timeout = window.setTimeout(() => controller.abort(), 28000);
+      try {
+        const response = await window.fetch("/api/recommend", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }), signal: controller.signal });
+        const data = await response.json().catch(() => ({}));
+        if (ticket !== revision) return;
+        if (!response.ok) throw new Error(data.error || "AI 厨房暂时没回应，可以重试或自己选。请用新版启动入口打开游戏。");
+        applyRecommendation(data);
+        status.dataset.kind = "success";
+        status.textContent = data.needs_clarification ? "小厨师还想听多一点，也可以直接在右侧选心情。" : "今日订单已配好，去翻开两张卡吧。";
+      } catch (error) {
+        if (ticket !== revision) return;
+        status.dataset.kind = "error";
+        status.textContent = error.name === "AbortError" ? "小厨师这次回应慢了，重试一下，或自己选择心情。" : error.message;
+        question.textContent = "还没收到小厨师的订单。你的故事还在这里，可以再试一次。";
+        editor.hidden = false;
+        showStep(0);
+      } finally {
+        window.clearTimeout(timeout);
+        if (ticket === revision) { pending = null; setBusy(false); }
+      }
+    };
+    get("mood-manual").onclick = showManual;
+    get("mood-correct").onclick = showManual;
+    get("mood-scene-select").onchange = event => {
+      if (!recommendation) return;
+      recommendation.scene = event.target.value;
+      scene = null;
+      get("mood-source").textContent = "已换成你选择的厨房";
+      get("mood-reason").textContent = "同一份心情，也可以换一个地方下锅。";
+      renderCards();
+    };
     function show(screen) {
-      window.KitchenAudio?.sync("cover",screen);
-      opening.hidden = false;
-      game.inert = true;
-      cover.hidden = screen !== "cover";
-      draw.hidden = screen !== "draw";
-      opening.dataset.page = screen;
-      home.hidden = screen === "cover";
-      document.title = screen === "cover" ? "CHAOS KITCHEN" : "CHAOS KITCHEN · 抽卡";
+      cancelRequest();
+      window.KitchenAudio?.sync("cover", screen);
+      opening.hidden = false; game.inert = true;
+      cover.hidden = screen !== "cover"; draw.hidden = screen !== "draw";
+      opening.dataset.page = screen; home.hidden = screen === "cover";
+      document.title = screen === "cover" ? "CHAOS KITCHEN · AI 情绪厨房" : "说说今天 · AI 情绪厨房";
       opening.scrollTop = 0;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("scene"); url.searchParams.delete("opening");
+      window.history.replaceState(null, "", url.href);
       if (screen === "draw") {
-        beginConversation();
+        clearRecommendation();
+        question.textContent = "今天，想把什么下锅？开心的、烦心的，我都听着。";
+        status.textContent = ""; status.dataset.kind = "";
+        description.focus({ preventScroll: true });
       } else {
-        const url = new URL(window.location.href);
-        if (url.searchParams.has("scene")) {
-          url.searchParams.delete("scene");
-          window.history.replaceState(null, "", url.href);
-        }
         play.focus();
       }
     }
-
-    function hide() {
-      opening.hidden = true;
-      game.inert = false;
-    }
-
-    function exitOpening() {
-      coverTransition?.cancel();
-      show("cover");
-    }
-    home.onclick = exitOpening;
+    function hide() { cancelRequest(); opening.hidden = true; game.inert = false; }
+    home.onclick = () => { coverTransition?.cancel(); show("cover"); };
     opening.onkeydown = event => {
-      if (event.key === "Escape" && !home.hidden) {
-        event.stopPropagation();
-        exitOpening();
-      }
+      if (event.key === "Escape" && !home.hidden) { event.stopPropagation(); home.onclick(); }
     };
     play.onclick = async () => {
       if (play.disabled) return;
-      window.KitchenAudio?.unlock?.();
-      window.KitchenAudio?.cue("start","cover");
-      const manual = get("opening-manual");
+      window.KitchenAudio?.unlock?.(); window.KitchenAudio?.cue("start", "cover");
       const art = get("cover-art");
-      play.disabled = manual.disabled = true;
-      home.hidden = false;
-      cover.classList.add("is-launching");
+      play.disabled = true; home.hidden = false; cover.classList.add("is-launching");
       try {
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && art.animate) {
           const { width, height } = art.getBoundingClientRect();
-          const dx = -.155 * width;
-          const dy = .08 * height;
-          const centered = `translate(${dx}px, ${dy}px)`;
-          const rush = art.animate([
-            { transform: "scale(1)" },
-            { transform: "scale(1.025)", offset: .22 },
-            { transform: centered + " scale(2.2)", offset: .62 },
-            { transform: centered + " scale(5.5)", opacity: .15 }
-          ], { duration: 680, easing: "cubic-bezier(.45,0,.75,.6)", fill: "forwards" });
+          const centered = `translate(${-width * .155}px, ${height * .08}px)`;
+          const rush = art.animate([{ transform: "scale(1)" }, { transform: "scale(1.025)", offset: .22 },
+            { transform: centered + " scale(2.2)", offset: .62 }, { transform: centered + " scale(5.5)", opacity: .15 }],
+            { duration: 680, easing: "cubic-bezier(.45,0,.75,.6)", fill: "forwards" });
           coverTransition = rush;
-          try {
-            await rush.finished;
-          } catch (error) {
-            if (error.name === "AbortError") return;
-            throw error;
-          } finally {
-            coverTransition = null;
-            rush.cancel();
-          }
+          try { await rush.finished; } catch (error) { if (error.name === "AbortError") return; throw error; }
+          finally { coverTransition = null; rush.cancel(); }
         }
         show("draw");
-      } finally {
-        cover.classList.remove("is-launching");
-        play.disabled = manual.disabled = false;
-        if (!cover.hidden) play.focus();
-      }
-    };
-    get("opening-manual").onclick = () => {
-      window.KitchenAudio?.cue("select","cover");
-      hide();
-      openManual();
-      get("start").focus();
+      } finally { cover.classList.remove("is-launching"); play.disabled = false; }
     };
     sceneCard.onclick = () => {
-      if (scene) return;
-      window.KitchenAudio?.cue("card","cover");
-      scene = sample(pool.scenes);
-      renderCards();
+      if (!recommendation || scene) return;
+      window.KitchenAudio?.cue("card", "cover");
+      scene = scenes.find(item => item.id === recommendation.scene); renderCards();
     };
     dishCard.onclick = () => {
-      if (dish !== null) return;
-      window.KitchenAudio?.cue("card","cover");
-      dish = sample(pool.dishes);
-      renderCards();
+      if (!recommendation || dish !== null) return;
+      window.KitchenAudio?.cue("card", "cover"); dish = recommendation.dish; renderCards();
     };
-    cook.onclick = () => {
-      if (cook.disabled) return;
-      hide();
-      launch(scene.id, dish);
-    };
-
+    cook.onclick = () => { if (!cook.disabled) { hide(); launch(scene.id, dish); } };
     return { show };
   }
-
   window.KitchenOpening = { bind };
 })();

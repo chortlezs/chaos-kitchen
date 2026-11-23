@@ -17,6 +17,12 @@ Notify: `b1730002-2a7d-4e51-913c-4f79b150cc01`.
 Read identity: `b1730003-2a7d-4e51-913c-4f79b150cc01` (ASCII
 `kitchen_link:v1:<12 lowercase Wi-Fi MAC hex digits>`).
 
+Screen write (with response): `b1730004-2a7d-4e51-913c-4f79b150cc01`.
+Accepts only validated 20-byte `kitchen_screen.h` packets. NimBLE copies into a
+single latest-state mailbox under a short critical section; the GSP render-task
+timer consumes it through `app_ble_read_screen`. Disconnect/unsubscribe discards
+pending commands. It does not touch motion queues, renderer memory or game rules.
+
 All notifications are exactly 20 bytes (fits default ATT MTU 23), little-endian:
 
 | Offset | Type | Meaning |
