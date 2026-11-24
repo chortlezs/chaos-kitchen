@@ -14,4 +14,8 @@ Pause, idle, map, chopping, stirring, flip window, serving and results are expli
 states. app_motion and its 100 Hz gesture sampling remain independent.
 
 Portable app_hello/screen_renderer code is shared with the native sim backend.
+Idle and disconnected states reuse the browser's `assets/opening-cover.webp`,
+fitted in full inside a square golden frame with the same headline, copy and
+start-button styling. The button is a visual prompt to start on the webpage.
+The generated RGB565 cover uses 115,200 flash bytes and no additional framebuffer.
 Device operations must use the workspace's mosaico.py and retained update flow.

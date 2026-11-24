@@ -1,6 +1,7 @@
 /* Export the actual browser artwork into compact RGB565 sprite spans. */
 const fs=require('fs'),path=require('path'),vm=require('vm');
-const {createCanvas,GlobalFonts}=require('../.hardware-runtime/node_modules/@napi-rs/canvas');
+const {createCanvas,GlobalFonts,loadImage}=require('../.hardware-runtime/node_modules/@napi-rs/canvas');
+(async()=>{
 const out=path.resolve(process.argv[2]||'hardware/firmware/app_hello');
 fs.mkdirSync(path.join(out,'ui'),{recursive:true});
 GlobalFonts.registerFromPath('C:/Windows/Fonts/msyhbd.ttc','Kitchen');
@@ -50,7 +51,44 @@ h.push('extern const kitchen_sprite_t *const kitchen_parts[72];');
 c.push(`const kitchen_sprite_t *const kitchen_parts[]={${themes.flatMap(t=>Array.from({length:6},(_,i)=>Array.from({length:3},(_,j)=>`&part_${t}_${i}_${j}`))).flat().join(',')}};`);
 for(const [name,count] of [['title',9],['hint',9],['theme',4],['dish',6]]){h.push(`extern const kitchen_sprite_t *const kitchen_${name}[${count}];`);c.push(`const kitchen_sprite_t *const kitchen_${name}[]={${Array.from({length:count},(_,i)=>'&'+name+'_'+i).join(',')}};`);}
 fs.writeFileSync(path.join(out,'screen_assets.h'),h.join('\n')+'\n');fs.writeFileSync(path.join(out,'screen_assets.c'),c.join('\n')+'\n');
+// Preserve the complete landscape cover inside a square, with the same warm
+// background, headline and start-button treatment as the browser. RGB565 raw
+// pixels use less flash than spans for this detailed, fully opaque artwork.
+const cover=createCanvas(240,240),cg=cover.getContext('2d');
+const coverArt=await loadImage(path.join(__dirname,'..','assets','opening-cover.webp'));
+const gold=cg.createRadialGradient(120,115,4,120,115,190);
+gold.addColorStop(0,'#ffe6a1');gold.addColorStop(.6,'#ffc05d');gold.addColorStop(1,'#e88b35');
+cg.fillStyle=gold;cg.fillRect(0,0,240,240);
+for(let i=0;i<24;i++){
+  const angle=i*Math.PI/12;
+  cg.fillStyle=i%2?'#fff0b52a':'#e9792020';cg.beginPath();cg.moveTo(120,115);
+  cg.lineTo(120+340*Math.cos(angle),115+340*Math.sin(angle));
+  cg.lineTo(120+340*Math.cos(angle+.11),115+340*Math.sin(angle+.11));cg.fill();
+}
+for(const [inset,color] of [[0,'#60271e'],[2,'#ffde82'],[4,'#b75b24'],[5,'#fff0bb']]){
+  cg.strokeStyle=color;cg.lineWidth=1;cg.strokeRect(inset+.5,inset+.5,239-inset*2,239-inset*2);
+}
+cg.textAlign='center';cg.textBaseline='middle';cg.fillStyle='#60271e';
+cg.font='bold 14px Kitchen';cg.fillText('AI 情绪厨房',120,23);
+cg.imageSmoothingEnabled=true;cg.drawImage(coverArt,8,42,224,224*coverArt.height/coverArt.width);
+cg.fillStyle='#60271e';cg.font='bold 10px Kitchen';cg.fillText('把今天的心情，做成一道菜。',120,174);
+cg.fillStyle='#60271e';cg.fillRect(60,192,122,27);
+cg.fillStyle='#a43a20';cg.fillRect(60,189,122,27);
+cg.fillStyle='#60271e';cg.fillRect(58,187,122,27);
+const button=cg.createLinearGradient(0,189,0,211);button.addColorStop(0,'#fff4b7');button.addColorStop(1,'#ffb947');
+cg.fillStyle=button;cg.fillRect(60,189,118,23);
+cg.strokeStyle='#ffed94';cg.strokeRect(61.5,190.5,115,20);
+cg.font='bold 16px Kitchen';cg.lineWidth=2;cg.strokeStyle='#59251a';cg.strokeText('心情开锅',119,201);
+cg.fillStyle='#fff5d0';cg.fillText('心情开锅',119,201);
+cg.font='bold 8px Kitchen';cg.fillStyle='#75311f';cg.fillText('在网页点击，开启今日料理',120,226);
+const rgba=cg.getImageData(0,0,240,240).data,coverPixels=[];
+for(let i=0;i<rgba.length;i+=4)coverPixels.push(((rgba[i]>>3)<<11)|((rgba[i+1]>>2)<<5)|(rgba[i+2]>>3));
+const rows=Array.from({length:240},(_,y)=>coverPixels.slice(y*240,(y+1)*240).join(',')).join(',\n');
+fs.writeFileSync(path.join(out,'screen_cover.h'),'#pragma once\n#include <stdint.h>\nextern const uint16_t kitchen_cover_pixels[240*240];\n');
+fs.writeFileSync(path.join(out,'screen_cover.c'),'/* Generated from assets/opening-cover.webp; regenerate with tools/generate-screen-assets.cjs. */\n#include "screen_cover.h"\nconst uint16_t kitchen_cover_pixels[240*240]={\n'+rows+'\n};\n');
+fs.writeFileSync(path.join(__dirname,'..','.hardware-runtime','cover-preview.png'),cover.toBuffer('image/png'));
 const blank=createCanvas(480,480);blank.getContext('2d').fillRect(0,0,480,480);
 fs.writeFileSync(path.join(out,'ui','canvas.png'),blank.toBuffer('image/png'));
 fs.writeFileSync(path.join(out,'ui','main.json'),JSON.stringify({screen:'hello',w:480,h:480,screen_bg:'#11152b',font:'fonts/DejaVuSans.ttf',font_charset:' ',objects:[{type:'image',parent:-1,x:0,y:0,w:480,h:480,image:'canvas.png',codec:'lossless',bind:'surface',name:'surface'}]},null,2));
 console.log(JSON.stringify({sprites:sprites.length,bytes:sprites.reduce((n,s)=>n+s.spans.length*2,0),output:out}));
+})().catch(error=>{console.error(error);process.exitCode=1;});

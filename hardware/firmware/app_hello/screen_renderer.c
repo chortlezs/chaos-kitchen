@@ -1,7 +1,9 @@
 #include "screen_renderer.h"
 #include "screen_assets.h"
+#include "screen_cover.h"
 #include <math.h>
 #include <stddef.h>
+#include <string.h>
 
 typedef struct {uint16_t bg,panel,edge,accent,light,muted;} palette_t;
 #define RGB(r,g,b) (uint16_t)((((r)>>3)<<11)|(((g)>>2)<<5)|((b)>>3))
@@ -75,6 +77,12 @@ void kitchen_render(uint16_t *pixels,const uint8_t f[20],unsigned tick,unsigned 
 {
     canvas_t c={pixels};
     const unsigned stage=linked?f[1]:KITCHEN_IDLE,theme=f[2]<4?f[2]:0,dish=f[3]<6?f[3]:0;
+    if(stage==KITCHEN_IDLE){
+        /* Opening and stale-link fallback share the browser's golden cover;
+         * the previous kitchen must not leak into the next opening screen. */
+        memcpy(pixels,kitchen_cover_pixels,240*240*sizeof(*pixels));
+        return;
+    }
     const palette_t *p=&palettes[theme];
     rect(&c,0,0,240,240,p->bg);
     for(int x=0;x<240;x+=16)rect(&c,x,67,1,127,p->panel);

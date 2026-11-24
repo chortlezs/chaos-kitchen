@@ -21,6 +21,6 @@ endif()
 
 add_subdirectory("${ESP_GSP_COMPONENT_DIR}/tools/sim_bridge" sim_bridge)
 gsp_add_backend(hello_backend
-    SOURCES ../app_hello.c ../screen_renderer.c ../screen_assets.c platform_pc.c
+    SOURCES ../app_hello.c ../screen_renderer.c ../screen_assets.c ../screen_cover.c platform_pc.c
     INCLUDE_DIRECTORIES ../include ../../kitchen_protocol/include
     SCENES ../ui/main.json)

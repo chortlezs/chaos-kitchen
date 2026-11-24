@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "screen_renderer.h"
+#include "screen_cover.h"
 
 int main(int argc,char **argv)
 {
@@ -23,6 +24,16 @@ int main(int argc,char **argv)
             }
             fclose(file);
         }
+    }
+    /* Cover is independent of a previous scene, food or a stale BLE frame. */
+    for(unsigned theme=0;theme<4;theme++){
+        frame[1]=KITCHEN_IDLE;frame[2]=theme;
+        kitchen_render(pixels,frame,100,4,true);
+        assert(memcmp(pixels,kitchen_cover_pixels,240*240*sizeof(*pixels))==0);
+        frame[1]=KITCHEN_WOK;
+        kitchen_render(pixels,frame,100,4,false);
+        assert(memcmp(pixels,kitchen_cover_pixels,240*240*sizeof(*pixels))==0);
+        assert(memory[0]==0x1234&&memory[240*240+1]==0x5678);
     }
     frame[6]=11;assert(!kitchen_screen_valid(frame,20));
     free(memory);puts("PASS: 216 theme/food/stage renders, protocol bounds and framebuffer canaries.");return 0;
