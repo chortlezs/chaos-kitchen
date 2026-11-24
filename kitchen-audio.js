@@ -37,7 +37,7 @@
   let mood=null,stage='map',urgent=false,action=false,activityLevel=0,embedded=false,button;
   let muted=false, pending=null, resultBus=null, resultUntil=0;
   let announcement=null, recordedExcellent=null;
-  let speech=null,speechTimer=null;
+  let speech=null,speechTimer=null,speechToken=0;
   try{muted=root.localStorage.getItem(storeKey)==='1';}catch{}
   const hz=note=>440*2**((note-69)/12);
 
@@ -375,14 +375,17 @@
     announcement=null;
   }
   function stopSpeech(){
-    if(!speech)return;
-    speech=null;root.clearTimeout(speechTimer);root.speechSynthesis?.cancel();
+    speechToken++;
+    const active=speech;
+    speech=null;
+    if(speechTimer!=null)root.clearTimeout(speechTimer);
+    if(active?.controller)active.controller.abort();
+    if(active?.audio){active.audio.pause();active.audio.removeAttribute('src');}
+    if(active?.url)URL.revokeObjectURL(active.url);
+    root.speechSynthesis?.cancel();
     if(context&&music)duck(context.currentTime,0);
   }
-  function speak(text,kind='slow'){
-    if(muted||embedded||doc.hidden||!context||context.state!=='running')return false;
-    if(typeof text!=='string'||!text.trim()||text.length>40)return false;
-    stopAnnouncement();stopSpeech();
+  function speakBrowser(text,kind){
     const synth=root.speechSynthesis,Utterance=root.SpeechSynthesisUtterance;
     if(!synth||!Utterance){cue(kind==='recover'?'good':'warn');return false;}
     const voices=synth.getVoices(),voice=voices.find(v=>/^zh[-_]CN/i.test(v.lang))||voices.find(v=>/^zh/i.test(v.lang));
@@ -400,6 +403,39 @@
     duck(context.currentTime,5,.12);
     speechTimer=root.setTimeout(stopSpeech,8000);
     try{synth.speak(utterance);return true;}catch{done();cue('warn');return false;}
+  }
+  function speak(text,kind='slow'){
+    if(muted||embedded||doc.hidden||!context||context.state!=='running')return false;
+    if(typeof text!=='string'||!text.trim()||text.length>40)return false;
+    stopAnnouncement();stopSpeech();
+    const token=++speechToken;
+    const canUseRemote=typeof root.fetch==='function'&&typeof root.Audio==='function'&&root.location.protocol!=='file:';
+    if(!canUseRemote)return speakBrowser(text,kind);
+    const controller=new AbortController(),state={token,controller,audio:null,url:null};
+    speech=state;
+    duck(context.currentTime,5,.12);
+    const timer=root.setTimeout(()=>controller.abort(),3200);
+    root.fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,
+      body:JSON.stringify({text,kind})})
+      .then(response=>{if(!response.ok)throw new Error('CosyVoice unavailable');return response.blob();})
+      .then(blob=>{
+        if(speech!==state)return;
+        state.url=URL.createObjectURL(blob);state.audio=new root.Audio(state.url);state.audio.volume=.92;
+        const done=()=>{
+          if(speech!==state)return;
+          speech=null;root.clearTimeout(speechTimer);if(state.url)URL.revokeObjectURL(state.url);
+          if(music)duck(context.currentTime,0);
+        };
+        state.audio.onended=done;
+        state.audio.onerror=()=>{if(speech===state){stopSpeech();speakBrowser(text,kind);}};
+        return state.audio.play();
+      })
+      .catch(()=>{if(speech===state){stopSpeech();speakBrowser(text,kind);}})
+      .finally(()=>root.clearTimeout(timer));
+    speechTimer=root.setTimeout(()=>stopSpeech(),8000);
+    // Audio playback starts asynchronously. Keep the historical boolean API
+    // reserved for speech that starts synchronously in the browser.
+    return false;
   }
   function shoutExcellent(t){
     stopAnnouncement();

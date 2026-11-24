@@ -1,4 +1,4 @@
-"""Local game server and DeepSeek emotion recommendations (stdlib only)."""
+"""Local game server, DeepSeek recommendations and optional CosyVoice TTS."""
 from __future__ import annotations
 
 import argparse
@@ -25,6 +25,9 @@ COACH_KINDS = ("slow", "urgent", "recover", "balance")
 COACH_CACHE = {}
 COACH_LOCK = threading.Lock()
 ANKLE_CACHE = {}
+TTS_CACHE = {}
+TTS_LOCK = threading.Lock()
+TTS_KINDS = set(COACH_KINDS)
 ANKLE_PROMPT = """你是《极限出餐》的小厨师，结合脚踝动作模型摘要和游戏状态，决定是否给玩家一句反馈。
 输入只有枚举与数值。activity 是公开 MHEALTH 数据训练的模型输出：still静止、walk行走、jog慢跑、run跑步、other其他。
 confidence 是未校准的分类分数，不是正确概率；模型未验证适用于此玩家，不能根据它判断疲劳或身体状况。
@@ -90,6 +93,57 @@ def load_settings():
         "api_key": os.environ.get("DEEPSEEK_API_KEY") or config.get("api_key", ""),
         "model": os.environ.get("DEEPSEEK_MODEL") or config.get("model", "deepseek-flash"),
     }
+
+
+def load_tts_settings():
+    return {
+        "api_key": os.environ.get("DASHSCOPE_API_KEY", ""),
+        "workspace": os.environ.get("DASHSCOPE_WORKSPACE_ID", ""),
+        "region": os.environ.get("COSYVOICE_REGION", "cn-beijing"),
+        "model": os.environ.get("COSYVOICE_MODEL", "cosyvoice-v3-flash"),
+        "voice": os.environ.get("COSYVOICE_VOICE", "longanyang"),
+    }
+
+
+def validate_tts_request(value):
+    if not isinstance(value, dict):
+        raise ApiError(400, "语音请求无效。")
+    text = value.get("text")
+    kind = value.get("kind", "slow")
+    if not isinstance(text, str) or not 1 <= len(text.strip()) <= 40:
+        raise ApiError(400, "语音台词长度应为 1–40 个字。")
+    if not isinstance(kind, str) or kind not in TTS_KINDS:
+        raise ApiError(400, "语音类型无效。")
+    return text.strip(), kind
+
+
+def synthesize_tts(text, kind="slow", settings=None):
+    text, kind = validate_tts_request({"text": text, "kind": kind})
+    settings = settings or load_tts_settings()
+    if not settings["api_key"] or not settings["workspace"]:
+        raise ApiError(503, "CosyVoice 尚未配置。")
+    cache_key = (settings["model"], settings["voice"], kind, text)
+    with TTS_LOCK:
+        cached = TTS_CACHE.get(cache_key)
+        if cached:
+            return cached
+    try:
+        from dashscope import Client
+        client = Client(api_key=settings["api_key"], workspace=settings["workspace"], region=settings["region"])
+        audio = client.audio.tts.synthesize(text, model=settings["model"], voice=settings["voice"],
+                                            format="mp3", sample_rate=22050)
+    except ApiError:
+        raise
+    except Exception as exc:
+        raise ApiError(503, "CosyVoice 暂时无法合成语音。") from exc
+    if not isinstance(audio, (bytes, bytearray)) or not audio:
+        raise ApiError(502, "CosyVoice 返回的音频无效。")
+    audio = bytes(audio)
+    with TTS_LOCK:
+        if len(TTS_CACHE) >= 128:
+            TTS_CACHE.pop(next(iter(TTS_CACHE)))
+        TTS_CACHE[cache_key] = audio
+    return audio
 
 
 def validate_text(body):
@@ -279,6 +333,16 @@ class KitchenHandler(SimpleHTTPRequestHandler):
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
+    def audio_response(self, status, content):
+        self.send_response(status)
+        self.send_header("Content-Type", "audio/mpeg")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        try:
+            self.wfile.write(content)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
     def local_request(self):
         host = self.headers.get("Host", "")
         try:
@@ -294,7 +358,11 @@ class KitchenHandler(SimpleHTTPRequestHandler):
                 self.json_response(403, {"error": "只接受本地游戏页面的请求。"})
                 return
             settings = load_settings()
-            self.json_response(200, {"ok": True, "provider": "deepseek", "configured": bool(settings["api_key"]), "model": settings["model"]})
+            tts = load_tts_settings()
+            self.json_response(200, {"ok": True, "provider": "deepseek", "configured": bool(settings["api_key"]),
+                                     "model": settings["model"], "tts_provider": "cosyvoice",
+                                     "tts_configured": bool(tts["api_key"] and tts["workspace"]),
+                                     "tts_model": tts["model"], "tts_voice": tts["voice"]})
             return
         super().do_GET()
 
@@ -307,6 +375,9 @@ class KitchenHandler(SimpleHTTPRequestHandler):
             return
         if parse.urlsplit(self.path).path == '/api/coach':
             self.coach_request()
+            return
+        if parse.urlsplit(self.path).path == '/api/tts':
+            self.tts_request()
             return
         if parse.urlsplit(self.path).path != "/api/recommend":
             self.json_response(404, {"error": "接口不存在。"})
@@ -363,6 +434,30 @@ class KitchenHandler(SimpleHTTPRequestHandler):
             self.json_response(429, {'error': '小厨师正在忙。'});return
         try:
             self.json_response(200, assess_ankle(context) if assessment else coach_pack(context))
+        except ApiError as exc:
+            self.json_response(exc.status, {'error': exc.message})
+        finally:
+            self.api_slots.release()
+
+    def tts_request(self):
+        if not self.local_request():
+            self.json_response(403, {'error': '只接受本地游戏页面的请求。'});return
+        if self.headers.get_content_type() != 'application/json':
+            self.json_response(415, {'error': '请发送 JSON。'});return
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+            self.connection.settimeout(8)
+            if not 0 < length <= 2048:
+                raise ValueError('size')
+            text, kind = validate_tts_request(json.loads(self.rfile.read(length)))
+        except (ValueError, UnicodeError, OSError):
+            self.json_response(400, {'error': '语音请求无效。'});return
+        except ApiError as exc:
+            self.json_response(exc.status, {'error': exc.message});return
+        if not self.api_slots.acquire(blocking=False):
+            self.json_response(429, {'error': '语音服务正在处理其他请求。'});return
+        try:
+            self.audio_response(200, synthesize_tts(text, kind))
         except ApiError as exc:
             self.json_response(exc.status, {'error': exc.message})
         finally:
