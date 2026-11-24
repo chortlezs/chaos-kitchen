@@ -283,6 +283,11 @@ function relayFootLink(){
 function hardwareWokReady(){return !document.hidden&&!state.open&&state.view==="wok"&&state.phase&&!state.phase.done;}
 function stirring(){return keys.has("e")||(hardwareWokReady()&&hardwareInput?.stirring());}
 function hardwareServeReady(){return !document.hidden&&!state.open&&state.view==="serve"&&state.phase&&!state.phase.done;}
+function coachRunExpected(){
+  if(state.practice||state.toiletDrain||state.coffeeDrain)return false;
+  if(state.view==="map")return state.queue.length>0;
+  return state.view==="serve"&&(state.phase?.route??1)<.97;
+}
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const timeText=n=>{const s=Math.ceil(Math.max(n,0));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
 const snap=n=>Math.round(n/2)*2;
@@ -2217,7 +2222,7 @@ function updateCoach(){
   coach.update({active:!state.open&&!state.toiletDrain&&!state.coffeeDrain&&!p?.done,
     key:state.view+":"+(state.view==="map"?wanted():p?.id),theme:state.scene,stage:state.view,
     foot:footMode()&&footInput?.connected===true,
-    runExpected:state.view==="map"?!state.practice&&!!state.target:state.view==="serve"&&(p?.route??1)<.97,
+    runExpected:coachRunExpected(),
     tilt:p?.tilt??0,seconds:state.practice?(p?.left??180):Math.min(state.time,p?.left??180)});
 }
 window.addEventListener("message",event=>{

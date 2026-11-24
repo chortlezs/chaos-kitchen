@@ -166,6 +166,11 @@ const footEnabled=new URLSearchParams(window.location.search).get('foot')==='1';
 let footInput=null,runBudget=0,runJourney=null,footCycles=0;
 function clearRunInput(){runBudget=0;if(phase)phase.runSeconds=0;}
 function servingForward(){return is('e')||(footEnabled&&footInput?.connected&&!document.hidden&&!window.frameElement?.hidden&&(phase?.runSeconds||0)>0);}
+function coachRunExpected(){
+  if(practice)return false;
+  if(scene==='map')return step<4;
+  return scene==='serve'&&(phase?.progress??1)<.97;
+}
 const is = (...names) => names.some(k=>keys.has(k));
 const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
 const mix = (a,b,t) => a+(b-a)*t;
@@ -1256,7 +1261,7 @@ function frame(ms){
   tick(dt);
   const coachState={stage:scene,key:scene+':'+step,theme:'fridge',
     active:!overlay&&!delay&&!document.hidden&&!window.frameElement?.hidden,
-    runExpected:scene==='map'?!practice&&!!target:scene==='serve'&&(phase?.progress??1)<.97,
+    runExpected:coachRunExpected(),
     tilt:phase?.tilt??0,seconds:Math.max(0,practice?(phase?.left??180):Math.min(clock,phase?.left??180))};
   if(coach)coach.update({...coachState,foot:footEnabled&&footInput?.connected===true});
   else if(window.parent!==window&&(ms-coachSent>=180||coachKey!==coachState.key+coachState.active)){
