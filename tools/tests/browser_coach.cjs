@@ -13,6 +13,9 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
       const context=await browser.newContext({viewport:{width:1280,height:800}});
       context.setDefaultTimeout(10000);
       const errors=[];
+      const assessments=[];
+      const checkAssessment=scene==='coffee'||scene==='fridge';
+      const assessmentLine='找回刚才的小跑节奏，下一站就在前面！';
       await context.addInitScript(()=>{
         window.__clock=0;window.__spoken=[];window.__streams=[];window.__cancelled=0;window.__voices=[{lang:'zh-CN'}];
         Date.now=()=>1700000000000+window.__clock;
@@ -28,7 +31,12 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
           cancel:()=>window.__cancelled++}});
       });
       await context.route('**/api/screen',route=>route.fulfill({json:{accepted:false}}));
-      await context.route('**/api/coach/assess',route=>route.fulfill({json:{decision:'speak',kind:'slow',text:aiLines.slow[0],source:'deepseek'}}));
+      await context.route('**/api/coach/assess',route=>{
+        const summary=route.request().postDataJSON();
+        assessments.push(summary);
+        const message=summary.event==='recover'?aiLines.recover[0]:assessmentLine;
+        return route.fulfill({json:{decision:'speak',kind:summary.event,text:message,source:'deepseek'}});
+      });
       await context.route('**/api/coach',route=>scene==='toilet'?
         route.fulfill({status:503,json:{error:'Offline fixture'}}):route.fulfill({json:{lines:aiLines,source:'deepseek'}}));
       await context.route('**/*.html*',async route=>{
@@ -60,14 +68,16 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
       async function tick(cadence,n=1){
         for(let i=0;i<n;i++){
           if(child)await child.evaluate(()=>{window.__clock+=200;window.__game.frame(window.__clock);});
-          await page.evaluate(({cadence,seq})=>{
+          await page.evaluate(({cadence,seq,checkAssessment})=>{
             window.__clock+=200;
             window.__game.frameLoop(window.__clock);
             const foot=window.__streams.find(s=>s.url.includes('8768'));
+            if(checkAssessment)foot.send({type:'activity',source:'xiao-foot',label:cadence>=80?'jog':'walk',
+              confidence:.85,window_ms:2000,t_ms:seq*680,event_id:'activity:'+seq,sent_at_ms:Date.now()});
             foot.send({type:'pace',source:'xiao-foot',cadence,cycle_ms:seq*680,t_ms:seq*680+20,
               event_id:'pace:'+seq,sent_at_ms:Date.now()});
             window.__game.updateCoach();
-          },{cadence,seq:++seq});
+          },{cadence,seq:++seq,checkAssessment});
         }
       }
       // No run events: live pace feedback never moves the avatar or grants travel.
@@ -76,8 +86,15 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
       await bubble.waitFor({state:'visible'});
       assert.equal(await bubble.getAttribute('data-kind'),'slow',scene+' slowdown reaches the real UI');
       assert((await page.evaluate(()=>window.__spoken.length))>0,scene+' requests Chinese narration');
+      if(checkAssessment){
+        assert.equal(await bubble.locator('p').textContent(),assessmentLine);
+        assert.equal(assessments[0]?.activity,'walk');
+        assert.equal(assessments[0]?.cadence,60);
+        assert.equal(assessments[0]?.scene,scene);
+        const status=(child||page).locator('#foot-activity');
+        assert.equal(await status.textContent(),'脚踝 AI：行走 · 85%');
+      }
       if(scene==='coffee'){
-        assert.equal(await bubble.locator('p').textContent(),aiLines.slow[0]);
         await page.screenshot({path:path.join(root,'.hardware-runtime/coach-slow.png'),animations:'disabled'});
       }
       if(scene==='toilet')assert.notEqual(await bubble.locator('p').textContent(),aiLines.slow[0],'offline fallback is visible');
@@ -86,7 +103,9 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
         await page.screenshot({path:path.join(root,'.hardware-runtime/coach-fridge.png'),animations:'disabled'});
       }
       await tick(60,28);await tick(90,10);
+      await page.waitForFunction(()=>document.querySelector('.kitchen-coach').dataset.kind==='recover',null,{polling:100});
       assert.equal(await bubble.getAttribute('data-kind'),'recover',scene+' recovery follows a slowdown');
+      if(checkAssessment)assert.equal(assessments.at(-1)?.activity,'jog');
       await page.evaluate(()=>window.__game.toggleMenu('pause'));
       assert(await bubble.isHidden(),'pause immediately hides the bubble');
       await tick(40,20);assert(await bubble.isHidden(),'paused input cannot re-open a bubble');

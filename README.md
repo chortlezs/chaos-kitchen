@@ -35,15 +35,16 @@ DeepSeek 在开局通过 `POST /api/coach` 提前生成四类短台词，按场�
 宏平均 F1 为 97.77%，拒绝低置信度后覆盖率为 96.92%、已接受样本准确率为 98.11%。这只是公开数据上的基线，
 不能当作 XIAO 佩戴者和原地小跑的实机准确率保证。
 
-重新训练或替换公开数据模型：
+首次配置电脑时，用启动脚本所用的 Python 安装 `tools/requirements-ble.txt`。日常游玩直接使用随仓库提供的模型。
+如需重训公开数据模型，运行以下命令。
 
 ```powershell
 python -m pip install -r tools/requirements-ankle.txt
 python tools/train_ankle_model.py
 ```
 
-训练脚本下载 UCI MHEALTH 官方压缩包到被 `.gitignore` 忽略的 `.hardware-runtime/datasets/`，只提交 535 KB 的推理模型和元数据，
-不提交公开原始数据，也不读取项目已有的脚踝录音。DeepSeek 只接收动作类别、分类分数、节奏、游戏阶段和剩余时间等摘要，
+训练脚本把 UCI MHEALTH 官方压缩包下载到 `.hardware-runtime/datasets/`，仓库提供约 536 KB 的推理模型和元数据。
+DeepSeek 接收动作类别、分类分数、节奏、游戏阶段和剩余时间等摘要，
 由 `/api/coach/assess` 决定 `speak` 或 `quiet` 并生成短台词；质量门、超时和过期响应会在本地丢弃。
 
 ## ESP 屏幕同步动画

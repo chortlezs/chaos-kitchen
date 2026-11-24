@@ -5,7 +5,6 @@ import argparse
 import functools
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
-import math
 import os
 from pathlib import Path
 import socket
@@ -208,7 +207,7 @@ def validate_ankle_context(value):
         result[name] = value[name]
     for name, lower, upper in (('confidence', 0, 1), ('cadence', 0, 240), ('baseline', 40, 240), ('seconds', 0, 180)):
         number = value.get(name)
-        if type(number) not in (int, float) or not math.isfinite(number) or not lower <= number <= upper:
+        if type(number) not in (int, float) or not lower <= number <= upper:
             raise ApiError(400, '脚踝动作摘要无效。')
         result[name] = number
     return result
