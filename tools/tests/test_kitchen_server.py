@@ -108,6 +108,24 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(json.load(response)["dish"], 0)
             mocked.assert_called_once_with("老板表扬我了")
 
+    def test_coach_context_validation_and_same_origin_boundary(self):
+        expected={'lines':{kind:['测试台词'] for kind in kitchen.COACH_KINDS},'source':'deepseek'}
+        with patch.object(kitchen,'coach_pack',return_value=expected) as mocked:
+            with self.fetch('/api/coach',b'{"scene":"coffee","emotion":"joy"}',
+                            {'Content-Type':'application/json','Origin':self.base}) as response:
+                self.assertEqual(json.load(response),expected)
+            mocked.assert_called_once_with({'scene':'coffee','emotion':'joy'})
+        for body,headers,status in [
+            (b'{"scene":"coffee","emotion":"joy"}',{'Content-Type':'application/json','Origin':'https://other.example'},403),
+            (b'{}',{'Content-Type':'text/plain'},415),(b'[]',{'Content-Type':'application/json'},400),
+            (b'{"scene":[],"emotion":"joy"}',{'Content-Type':'application/json'},400),
+            (b'{"scene":"coffee","emotion":"unknown"}',{'Content-Type':'application/json'},400),
+            (b'x'*1025,{'Content-Type':'application/json'},400)]:
+            with patch.object(kitchen,'coach_pack') as mocked,self.assertRaises(error.HTTPError) as caught:
+                self.fetch('/api/coach',body,headers)
+            self.assertEqual(caught.exception.code,status);mocked.assert_not_called()
+
+
     def test_rejects_cross_origin_and_invalid_bodies_without_calling_model(self):
         cases = [(b'{}', {"Content-Type": "application/json", "Origin": "https://other.example"}, 403),
                  (b'{}', {"Content-Type": "text/plain"}, 415),
@@ -120,6 +138,35 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(caught.exception.code, status)
             mocked.assert_not_called()
 
+
+class CoachTests(unittest.TestCase):
+    def setUp(self):
+        kitchen.COACH_CACHE.clear()
+
+    def test_ai_lines_are_cached_and_only_scene_emotion_are_sent(self):
+        lines={kind:['跟着自己的节奏往前跑！','小厨师陪着你！'] for kind in kitchen.COACH_KINDS}
+        response=io.BytesIO(json.dumps({'choices':[{'message':{'content':json.dumps(lines)}}]}).encode())
+        settings={'api_key':'private-key','model':'test'}
+        context={'scene':'coffee','emotion':'joy','raw_samples':'never send this'}
+        with patch.object(kitchen.request,'urlopen',return_value=response) as mocked:
+            result=kitchen.coach_pack(context,settings)
+            self.assertEqual(kitchen.coach_pack(context,settings),result)
+            mocked.assert_called_once()
+        payload=json.loads(mocked.call_args.args[0].data)
+        self.assertEqual(json.loads(payload['messages'][1]['content']),{'scene':'coffee','emotion':'joy'})
+        self.assertEqual(result['source'],'deepseek')
+        self.assertNotIn('private-key',json.dumps(result))
+
+    def test_invalid_lines_missing_configuration_and_provider_timeout(self):
+        valid={kind:['稳稳端好盘子！'] for kind in kitchen.COACH_KINDS}
+        for value in ([],{},dict(valid,balance=['x'*41]),dict(valid,slow=['']),dict(valid,recover='文本')):
+            with self.assertRaises(kitchen.ApiError):kitchen.validate_coach_lines(value)
+        with self.assertRaises(kitchen.ApiError) as caught:
+            kitchen.coach_pack({'scene':'coffee','emotion':'joy'},{'api_key':''})
+        self.assertEqual(caught.exception.status,503)
+        with patch.object(kitchen.request,'urlopen',side_effect=TimeoutError),self.assertRaises(kitchen.ApiError) as caught:
+            kitchen.coach_pack({'scene':'coffee','emotion':'joy'},{'api_key':'private','model':'test'})
+        self.assertEqual(caught.exception.status,504)
 
 if __name__ == "__main__":
     unittest.main()

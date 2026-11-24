@@ -43,6 +43,22 @@ connection. Parent link loss immediately clears the child movement budget.
 
 The foot bridge uses localhost port 8768, independently of the hand bridge on
 8766. It checks the sensor identity against the calibration before accepting data.
+It also publishes live `type: pace` heartbeats about every 200 ms, including slow
+gait and zero cadence at rest. `cadence` counts complete cycles per minute of the
+single instrumented ankle; it is not both-foot step rate. These heartbeats never
+grant travel credit. The browser uses them for personalized slowdown/recovery
+feedback, and missing heartbeats suspend pace feedback. `/health` advertises
+`pace_protocol: 1`; close older launchers before updating to this receiver.
+
+The bridge also publishes `type: activity` about every 500 ms after a causal
+2-second window is warm. The bundled public-data model uses only acceleration in
+`g` at 50 Hz and returns `still`, `walk`, `jog`, `run`, `other` or `unknown`, with
+an uncalibrated confidence score. It is trained from UCI MHEALTH left-ankle data
+with participant-disjoint splits; no project recordings are used. `/health`
+advertises `activity_protocol: 1` and `classifier_ready`. This classification is
+informational and feeds the local feedback gate; it never grants route distance,
+overrides the existing jog detector, or claims to identify fatigue. DeepSeek sees
+only the compact class/score/game summary through the local web server.
 Two consecutive jogging intervals are required before crediting their complete
 cycles. Slow marching, stationary rotation without acceleration variation, stale
 data, reconnection gaps, menus and paused/hidden pages cannot accumulate movement.

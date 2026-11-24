@@ -51,6 +51,11 @@ def main():
     foot_profile = args.foot_calibration or root / '.hardware-runtime' / 'foot-calibration.json'
     reuse_foot = False
     if args.foot:
+        try:
+            from ankle_classifier import ActivityModel
+            ActivityModel()
+        except (ImportError, OSError, ValueError) as error:
+            parser.error('Ankle AI model unavailable. Install tools/requirements-ankle.txt and run tools/train_ankle_model.py. '+str(error))
         if not foot_profile.is_file():
             parser.error('Ankle calibration missing: supply --foot-calibration <profile.json>.')
         profile = json.loads(foot_profile.read_text(encoding='utf-8'))
@@ -59,6 +64,10 @@ def main():
                 health = json.load(response)
             if health.get('source') != 'xiao-ble' or health.get('calibration_identity') != profile.get('identity'):
                 parser.error('Port 8768 is occupied by a different sensor bridge.')
+            if health.get('pace_protocol') != 1:
+                parser.error('Foot bridge is outdated. Close the previous foot/game launcher and restart to enable motion feedback.')
+            if health.get('activity_protocol') != 1 or not health.get('classifier_ready'):
+                parser.error('Foot AI receiver is outdated or has no model. Close the previous foot/game launcher and restart.')
             reuse_foot = True
         except (OSError, ValueError, urllib.error.URLError):
             pass

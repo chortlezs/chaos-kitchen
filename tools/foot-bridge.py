@@ -15,7 +15,7 @@ from motion_sse import EventHub, Handler as SseHandler
 
 
 class FootPump(EventHub):
-    def __init__(self, profile, address=None):
+    def __init__(self, profile, address=None, classifier=None):
         super().__init__()
         self.profile = profile
         self.address = address
@@ -25,15 +25,28 @@ class FootPump(EventHub):
         self.total_cycles = 0
         self.missing = 0
         self.running = False
+        self.activity = None
+        self.classifier_error = None
+        self.classifier = classifier
+        if self.classifier is None:
+            try:
+                from ankle_classifier import AnkleClassifier
+                self.classifier = AnkleClassifier()
+            except (ImportError, OSError, ValueError):
+                self.classifier_error = 'model_unavailable'
 
     def set_link(self, state, **details):
         self.running = False
+        self.activity = None
+        if self.classifier:self.classifier.reset()
         self.link = {'type':'link','transport':'xiao-ble','state':state,'connected':state=='connected',**details}
         self.broadcast(self.link)
         print(json.dumps(self.link),flush=True)
 
     def health(self):
-        return {'ok':True,'source':'xiao-ble',**self.link,'calibration_identity':self.profile['identity'],
+        return {'ok':True,'source':'xiao-ble','pace_protocol':1,'activity_protocol':1,
+                'classifier_ready':self.classifier is not None,'classifier_error':self.classifier_error,
+                'activity':self.activity,**self.link,'calibration_identity':self.profile['identity'],
                 'total_cycles':self.total_cycles,'missing_notifications':self.missing,'running':self.running,
                 'last_sample_age_ms':None if self.last_sample_ms is None else time.time_ns()//1000000-self.last_sample_ms}
 
@@ -66,11 +79,12 @@ class FootPump(EventHub):
                     detector=JogDetector(self.profile)
                     session=uuid.uuid4().hex
                     sequence=0
+                    pace_sent=0
                     anchor=None
                     last_received=time.monotonic()
 
                     def receive(_,data):
-                        nonlocal sequence,anchor,last_received
+                        nonlocal sequence,anchor,last_received,pace_sent
                         try:
                             sample=decoder.decode(data)
                         except ValueError:
@@ -84,6 +98,8 @@ class FootPump(EventHub):
                         if age>.35 or age<-.35:
                             anchor=(now,sample['t_ms'])
                             detector.reset()
+                            if self.classifier:self.classifier.reset()
+                            self.activity=None
                             self.running=False
                             return
                         last_received=now
@@ -91,6 +107,19 @@ class FootPump(EventHub):
                         self.missing=decoder.dropped
                         cycles=detector.accept(sample)
                         self.running=detector.running
+                        if self.classifier:
+                            activity=self.classifier.accept(sample)
+                            if activity is not None:
+                                self.activity={'type':'activity','source':'xiao-foot',**activity,
+                                    'event_id':f'{session}:activity:{sample["seq"]}:{sample["t_ms"]}',
+                                    't_ms':sample['t_ms'],'sent_at_ms':self.last_sample_ms}
+                                self.broadcast(self.activity)
+                        if now-pace_sent >= .2:
+                            pace_sent=now
+                            self.broadcast({'type':'pace','source':'xiao-foot',
+                                'event_id':f'{session}:pace:{sample["seq"]}:{sample["t_ms"]}',
+                                't_ms':sample['t_ms'],'sent_at_ms':self.last_sample_ms,
+                                **detector.pace(sample['t_ms'])})
                         if cycles:
                             sequence+=1
                             self.total_cycles+=cycles

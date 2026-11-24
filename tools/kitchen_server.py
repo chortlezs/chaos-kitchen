@@ -5,10 +5,12 @@ import argparse
 import functools
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 import os
 from pathlib import Path
 import socket
 import threading
+import time
 from urllib import error, parse, request
 from screen_protocol import encode_screen
 
@@ -20,6 +22,37 @@ EMOTIONS = {
     "surprise": ("惊讶", 4, "键盘"), "disgust": ("厌恶", 5, "空调"),
 }
 SCENES = {"neon", "fridge", "toilet", "coffee"}
+COACH_KINDS = ("slow", "urgent", "recover", "balance")
+COACH_CACHE = {}
+COACH_LOCK = threading.Lock()
+ANKLE_CACHE = {}
+ANKLE_PROMPT = """你是《极限出餐》的小厨师，结合脚踝动作模型摘要和游戏状态，决定是否给玩家一句反馈。
+输入只有枚举与数值。activity 是公开 MHEALTH 数据训练的模型输出：still静止、walk行走、jog慢跑、run跑步、other其他。
+confidence 是未校准的分类分数，不是正确概率；模型未验证适用于此玩家，不能根据它判断疲劳或身体状况。
+cadence/baseline 是单脚踝周期频率及本局基准。event 是本地已持续观察到的节奏变化：slow变慢、urgent变慢且时间紧、recover恢复节奏。
+stage=map表示前往工作台，serve表示端盘前进。scene是coffee豆仓、fridge冰箱、toilet马桶水箱、neon办公室。
+只在证据一致、反馈对玩家有帮助时说话，否则quiet。分类结果与节奏明显矛盾时选择quiet，不编造动作。
+慢跑与跑步都是有效游戏动作，不因为类别从run变成jog就断言变慢；参考实际cadence/baseline。
+玩家静止可温和提醒准备好再出发；端盘阶段提醒稳稳前进，不催冲刺。recover只鼓励，不催促。
+emotion仅表示开场心情，用于语气，不能断言玩家现在的情绪。不改变游戏分数，不做健康判断。
+台词中文8-32字，活泼、有场景感，不羞辱、不要求拼命跑。不输出解释。
+只返回JSON：{"decision":"speak或quiet","text":"一句台词，quiet时为空"}。
+"""
+COACH_PROMPT = """你是《极限出餐》中陪玩家一起忙活的小厨师，生成简短、生动的中文游戏语音台词。
+根据用户给出的厨房场景和开场情绪调整比喻与语气。只生成指定的四类台词，每类两句，每句8-32字。
+slow：已通过实时传感器检测到玩家小跑节奏持续变慢，轻松提醒找回自己的节奏。
+urgent：同样检测到变慢，且游戏倒计时紧张，可以着急但不责备、不羞辱、不要求拼命跑。
+recover：玩家在提醒后恢复了原来的节奏，具体鼓励，不再催促。
+balance：端盘持续倾斜，提醒手上轻轻反向修正，优先稳住，不催加速。
+这是游戏动作反馈，不推断疲劳、健康或当前心情，不声称看到了摄像头或身体轨迹。
+场景：coffee咖啡豆仓、fridge冰封后厨、toilet马桶水箱、neon赛博办公室。
+开场情绪仅用于语气：joy快乐、sadness悲伤、anger愤怒、fear恐惧、surprise惊讶、disgust厌恶。
+不要解释规则，不要Markdown，只返回JSON：
+{"slow":["脚步慢下来啦，找回刚才的小跑节奏！","菜还在等你，跟着自己的节奏往前跑！"],
+"urgent":["来不及啦！这盘菜还等着你送呢！","订单倒计时啦，找回刚才的节奏！"],
+"recover":["对对对，就是这个节奏！","节奏回来啦，小厨师给你加颗星！"],
+"balance":["脚下可以快，手上可得稳！","盘子在跳舞啦，轻轻往反方向扶一扶！"]}
+"""
 SYSTEM_PROMPT = """你是《极限出餐》的小厨师，为用户把今天的心情做成一道菜。
 理解整段描述的语境，选择一个主要情绪；不能只根据出现的物品关键词判断。
 情绪只能是 joy 快乐、sadness 悲伤、anger 愤怒、fear 恐惧、surprise 惊讶、disgust 厌恶。
@@ -112,6 +145,121 @@ def recommend(text, settings=None):
         raise ApiError(502, "小厨师的订单没写完整，请再试一次，或自己选择心情。") from None
 
 
+def validate_coach_context(value):
+    if (not isinstance(value, dict) or not isinstance(value.get('scene'), str)
+            or value['scene'] not in SCENES or not isinstance(value.get('emotion'), str)
+            or value['emotion'] not in EMOTIONS):
+        raise ApiError(400, '厨房或心情无效。')
+    return {'scene': value['scene'], 'emotion': value['emotion']}
+
+
+def validate_coach_lines(value):
+    if not isinstance(value, dict):
+        raise ApiError(502, '小厨师的台词还没准备好。')
+    result = {}
+    for kind in COACH_KINDS:
+        lines = value.get(kind)
+        if (not isinstance(lines, list) or not 1 <= len(lines) <= 3
+                or any(not isinstance(line, str) or not 1 <= len(line.strip()) <= 40 for line in lines)):
+            raise ApiError(502, '小厨师的台词还没准备好。')
+        result[kind] = [line.strip() for line in lines]
+    return result
+
+
+def coach_pack(context, settings=None):
+    context = validate_coach_context(context)
+    settings = settings or load_settings()
+    if not settings.get('api_key'):
+        raise ApiError(503, 'AI 未配置，游戏将使用本地小厨师台词。')
+    key = (context['scene'], context['emotion'], settings['model'])
+    with COACH_LOCK:
+        cached = COACH_CACHE.get(key)
+        if cached and time.monotonic()-cached[0] < 600:
+            return cached[1]
+    payload = {'model': settings['model'], 'stream': False, 'thinking': {'type': 'disabled'},
+               'max_tokens': 650, 'response_format': {'type': 'json_object'},
+               'messages': [{'role': 'system', 'content': COACH_PROMPT},
+                            {'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]}
+    call = request.Request('https://api.deepseek.com/chat/completions',
+        data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+        headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+settings['api_key']})
+    try:
+        with request.urlopen(call, timeout=12) as response:
+            value = json.loads(response.read(131072))
+        lines = validate_coach_lines(json.loads(value['choices'][0]['message']['content']))
+    except error.HTTPError:
+        raise ApiError(503, 'AI 暂时无法准备台词，游戏继续使用本地台词。') from None
+    except (TimeoutError, socket.timeout, error.URLError):
+        raise ApiError(504, 'AI 台词准备超时，游戏继续使用本地台词。') from None
+    except (ValueError, KeyError, IndexError, TypeError):
+        raise ApiError(502, 'AI 台词无效，游戏继续使用本地台词。') from None
+    result = {'lines': lines, 'source': 'deepseek'}
+    with COACH_LOCK:
+        COACH_CACHE[key] = (time.monotonic(), result)
+    return result
+
+
+def validate_ankle_context(value):
+    result = validate_coach_context(value)
+    for name, allowed in (('stage', ('map', 'serve')), ('event', ('slow', 'urgent', 'recover')),
+                          ('activity', ('still', 'walk', 'jog', 'run', 'other', 'unknown'))):
+        if not isinstance(value.get(name), str) or value[name] not in allowed:
+            raise ApiError(400, '脚踝动作摘要无效。')
+        result[name] = value[name]
+    for name, lower, upper in (('confidence', 0, 1), ('cadence', 0, 240), ('baseline', 40, 240), ('seconds', 0, 180)):
+        number = value.get(name)
+        if type(number) not in (int, float) or not math.isfinite(number) or not lower <= number <= upper:
+            raise ApiError(400, '脚踝动作摘要无效。')
+        result[name] = number
+    return result
+
+
+def assess_ankle(context, settings=None):
+    context = validate_ankle_context(context)
+    kind = context['event']
+    quiet = {'decision': 'quiet', 'kind': kind, 'text': '', 'source': 'quality_gate'}
+    # An uncertain public-data model must not acquire certainty from a language model.
+    if context['activity'] in ('unknown', 'other') or context['confidence'] < .65:
+        return quiet
+    ratio = context['cadence']/context['baseline']
+    if (kind == 'recover' and ratio < .88) or (kind != 'recover' and ratio >= .75):
+        return quiet
+    settings = settings or load_settings()
+    if not settings.get('api_key'):
+        raise ApiError(503, 'AI 未配置，将使用本地节奏反馈。')
+    cache_key = json.dumps(context, sort_keys=True)
+    with COACH_LOCK:
+        cached = ANKLE_CACHE.get(cache_key)
+        if cached and time.monotonic()-cached[0] < 20:return cached[1]
+    payload = {'model': settings['model'], 'stream': False, 'thinking': {'type': 'disabled'}, 'max_tokens': 120,
+        'response_format': {'type': 'json_object'},
+        'messages': [{'role': 'system', 'content': ANKLE_PROMPT},
+                     {'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]}
+    call = request.Request('https://api.deepseek.com/chat/completions',
+        data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+        headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+settings['api_key']})
+    try:
+        with request.urlopen(call, timeout=2) as response:
+            value = json.loads(response.read(16384))
+        value = json.loads(value['choices'][0]['message']['content'])
+        if not isinstance(value, dict) or value.get('decision') not in ('speak', 'quiet'):
+            raise ValueError('decision')
+        if value['decision'] == 'speak' and (not isinstance(value.get('text'), str) or not 1 <= len(value['text'].strip()) <= 40):
+            raise ValueError('text')
+        result = {'decision': value['decision'], 'kind': kind,
+                  'text': value['text'].strip() if value['decision'] == 'speak' else '', 'source': 'deepseek'}
+    except error.HTTPError:
+        raise ApiError(503, 'AI 暂时无法判断，将使用本地节奏反馈。') from None
+    except (TimeoutError, socket.timeout, error.URLError):
+        raise ApiError(504, 'AI 判断超时，将使用本地节奏反馈。') from None
+    except (ValueError, KeyError, IndexError, TypeError):
+        raise ApiError(502, 'AI 判断无效，将使用本地节奏反馈。') from None
+    with COACH_LOCK:
+        if len(ANKLE_CACHE) >= 128:ANKLE_CACHE.pop(next(iter(ANKLE_CACHE)))
+        ANKLE_CACHE[cache_key] = (time.monotonic(), result)
+    return result
+
+
 class KitchenHandler(SimpleHTTPRequestHandler):
     api_slots = threading.BoundedSemaphore(2)
 
@@ -155,6 +303,12 @@ class KitchenHandler(SimpleHTTPRequestHandler):
         if parse.urlsplit(self.path).path == '/api/screen':
             self.screen_request()
             return
+        if parse.urlsplit(self.path).path == '/api/coach/assess':
+            self.coach_request(assessment=True)
+            return
+        if parse.urlsplit(self.path).path == '/api/coach':
+            self.coach_request()
+            return
         if parse.urlsplit(self.path).path != "/api/recommend":
             self.json_response(404, {"error": "接口不存在。"})
             return
@@ -183,6 +337,35 @@ class KitchenHandler(SimpleHTTPRequestHandler):
             self.json_response(200, recommend(text))
         except ApiError as exc:
             self.json_response(exc.status, {"error": exc.message})
+        finally:
+            self.api_slots.release()
+
+    def coach_request(self, assessment=False):
+        if not self.local_request():
+            self.json_response(403, {'error': '只接受本地游戏页面的请求。'});return
+        if self.headers.get_content_type() != 'application/json':
+            self.json_response(415, {'error': '请发送 JSON。'});return
+        try:
+            length = int(self.headers.get('Content-Length', '0'))
+            self.connection.settimeout(3)
+            # Drain a small oversized request before replying so Windows does
+            # not reset the connection while the caller reads the JSON error.
+            if 1024 < length <= 8192:
+                self.rfile.read(length)
+            if not 0 < length <= 1024:
+                raise ValueError('size')
+            value = json.loads(self.rfile.read(length))
+            context = validate_ankle_context(value) if assessment else validate_coach_context(value)
+        except (ValueError, UnicodeError, OSError):
+            self.json_response(400, {'error': '台词请求无效。'});return
+        except ApiError as exc:
+            self.json_response(exc.status, {'error': exc.message});return
+        if not self.api_slots.acquire(blocking=False):
+            self.json_response(429, {'error': '小厨师正在忙。'});return
+        try:
+            self.json_response(200, assess_ankle(context) if assessment else coach_pack(context))
+        except ApiError as exc:
+            self.json_response(exc.status, {'error': exc.message})
         finally:
             self.api_slots.release()
 

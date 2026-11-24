@@ -27,6 +27,15 @@ class JogDetector:
         self.running = False
         self.last_cycle_t = None
         self.accel_history = deque()
+        self.pace_interval = None
+        self.pace_peak_t = None
+
+    def pace(self, t):
+        """Single-ankle cycles/minute, including slower gait; never grants distance."""
+        fresh = (self.pace_peak_t is not None and self.pace_interval is not None
+                 and ((t-self.pace_peak_t) & 0xffffffff)/1000 <= max(1.5, self.pace_interval*1.7))
+        return {'cadence': round(60/self.pace_interval, 1) if fresh else 0,
+                'cycle_ms': self.pace_peak_t if fresh else None}
 
     def accept(self, sample):
         """Return complete cycles (0, 1 or 2), never up/down half-cycle peaks."""
@@ -65,6 +74,9 @@ class JogDetector:
             return 0
         interval = ((peak_t-previous)&0xffffffff)/1000
         norms=[a for _,a in self.accel_history]
+        if .25 <= interval <= 2.5 and max(norms)-min(norms) >= .18:
+            self.pace_interval = interval
+            self.pace_peak_t = peak_t
         if not self.minimum <= interval <= self.maximum or max(norms)-min(norms)<.18:
             self.streak = 0
             self.running = False

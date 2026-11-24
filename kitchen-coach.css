@@ -1,0 +1,25 @@
+.kitchen-coach {
+  position:absolute;z-index:25;right:2%;top:29%;width:35%;display:flex;align-items:center;gap:1cqw;
+  padding:1.1cqw 1.3cqw;background:#fff8e8;color:#452115;border:3px solid #65321d;
+  box-shadow:4px 5px 0 #45211555;pointer-events:none;animation:coach-pop .18s ease-out;
+  font-family:"Microsoft YaHei",system-ui,sans-serif;
+}
+.kitchen-coach::after{content:"";position:absolute;right:2.3cqw;bottom:-1cqw;width:1.2cqw;height:1.2cqw;background:#fff8e8;border-right:3px solid #65321d;border-bottom:3px solid #65321d;transform:rotate(45deg);}
+.coach-portrait{flex:0 0 4.4cqw;width:4.4cqw;height:4.4cqw;display:grid;place-items:center;font-size:3.2cqw;background:#ffe0a3;border:2px solid #d99a4c;}
+.coach-portrait canvas{width:100%;height:100%;image-rendering:pixelated;}
+.coach-copy{min-width:0;flex:1;}
+.coach-label{display:block;font-size:.95cqw;font-weight:800;letter-spacing:.08em;color:#975329;}
+.coach-copy p{margin:.4cqw 0;font-size:1.5cqw;line-height:1.5;font-weight:800;text-wrap:pretty;}
+.coach-note{font-size:.85cqw;color:#946e50;}
+.kitchen-coach[data-kind="recover"]{border-color:#467346;background:#f0ffe8;}
+.kitchen-coach[data-kind="recover"]::after{background:#f0ffe8;border-color:#467346;}
+.kitchen-coach[data-kind="urgent"],.kitchen-coach[data-kind="balance"]{border-color:#bb5127;}
+.kitchen-coach[data-theme="fridge"]{box-shadow:4px 5px 0 #54778355;}
+@keyframes coach-pop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.kitchen-coach{animation:none;}}
+@media(max-width:600px){.kitchen-coach{width:44%;padding:1.2cqw;}.coach-copy p{font-size:1.8cqw;}.coach-note{display:none;}.coach-label{font-size:1.2cqw;}}
+@media(orientation:portrait){
+  .kitchen-coach{left:5%;right:5%;top:calc(46% + 28.125vw + 72px);width:auto;padding:10px 12px;gap:10px;}
+  .coach-portrait{flex-basis:42px;width:42px;height:42px;}
+  .coach-copy p{font-size:15px;margin:4px 0;}.coach-label{font-size:11px;}.coach-note{display:none;}
+}

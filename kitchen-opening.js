@@ -328,7 +328,7 @@
       if (!recommendation || dish !== null) return;
       window.KitchenAudio?.cue("card", "cover"); dish = recommendation.dish; renderCards();
     };
-    cook.onclick = () => { if (!cook.disabled) { hide(); launch(scene.id, dish); } };
+    cook.onclick = () => { if (!cook.disabled) { hide(); launch(scene.id, dish, recommendation?.emotion); } };
     return { show };
   }
   window.KitchenOpening = { bind };

@@ -20,6 +20,25 @@ def samples(hz,seconds=12,offset=0,accel=True):
 
 
 class JogTests(unittest.TestCase):
+    def test_live_slow_gait_reports_pace_without_granting_running_distance(self):
+        detector=JogDetector(PROFILE)
+        count=sum(detector.accept(s) for s in samples(.8))
+        self.assertEqual(count,0)
+        self.assertAlmostEqual(detector.pace(11980)['cadence'],48,delta=2)
+        self.assertIsNotNone(detector.pace(11980)['cycle_ms'])
+
+    def test_pace_expires_on_stop_gap_and_stationary_rotation(self):
+        detector=JogDetector(PROFILE)
+        for sample in samples(1.5,3):detector.accept(sample)
+        self.assertGreater(detector.pace(2980)['cadence'],80)
+        for sample in samples(0,3,offset=3000):detector.accept(sample)
+        self.assertEqual(detector.pace(5980)['cadence'],0)
+        detector.accept(next(samples(1.5,1,offset=20000)))
+        self.assertIsNone(detector.pace(20000)['cycle_ms'])
+        detector=JogDetector(PROFILE)
+        for sample in samples(1.5,accel=False):detector.accept(sample)
+        self.assertEqual(detector.pace(11980)['cadence'],0)
+
     def test_slow_gait_and_stationary_never_credit(self):
         for cadence in (0,.8):
             detector=JogDetector(PROFILE)

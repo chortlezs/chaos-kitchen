@@ -1,0 +1,237 @@
+{
+  "model_id": "mhealth-ankle-rf-v1",
+  "feature_version": "ankle-accel-invariant/v1",
+  "labels": [
+    "still",
+    "walk",
+    "jog",
+    "run",
+    "other"
+  ],
+  "source": "https://archive.ics.uci.edu/dataset/319/mhealth+dataset",
+  "download": "https://archive.ics.uci.edu/static/public/319/mhealth+dataset.zip",
+  "dataset_sha256": "16ad0ce709f3f00df18f348610d15bce0884b79e2143f57f446493673f02b8e0",
+  "license": "MHEALTH dataset: CC BY 4.0 (UCI)",
+  "citation": "Banos, O., Garcia, R., & Saez, A. (2014). MHEALTH. UCI. https://doi.org/10.24432/C5TW22",
+  "input": {
+    "position": "left ankle",
+    "channels": "acceleration XYZ only",
+    "unit": "g",
+    "rate_hz": 50,
+    "window_ms": 2000,
+    "stride_ms": 500
+  },
+  "split": {
+    "train": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "validation": [
+      7,
+      8
+    ],
+    "test": [
+      9,
+      10
+    ]
+  },
+  "algorithm": "RandomForestClassifier, 128 trees, max_depth=14, min_samples_leaf=3, seed=20261124",
+  "training_windows": 8017,
+  "training_seconds": 1.42,
+  "rejection": {
+    "minimum_score": 0.65,
+    "minimum_margin": 0.1,
+    "note": "Forest scores are not calibrated probabilities or an OOD guarantee."
+  },
+  "validation": {
+    "windows": 2588,
+    "accuracy": 0.9470633693972179,
+    "macro_f1": 0.9477201783528917,
+    "coverage": 0.9447449768160742,
+    "accepted_accuracy": 0.96359918200409,
+    "nonrunning_false_running_rate": 0.0,
+    "confusion_matrix": [
+      [
+        702,
+        0,
+        0,
+        0,
+        12
+      ],
+      [
+        0,
+        197,
+        0,
+        0,
+        41
+      ],
+      [
+        0,
+        7,
+        217,
+        0,
+        14
+      ],
+      [
+        0,
+        0,
+        0,
+        238,
+        0
+      ],
+      [
+        63,
+        0,
+        0,
+        0,
+        1097
+      ]
+    ],
+    "classification_report": {
+      "still": {
+        "precision": 0.9176470588235294,
+        "recall": 0.9831932773109243,
+        "f1-score": 0.949290060851927,
+        "support": 714.0
+      },
+      "walk": {
+        "precision": 0.9656862745098039,
+        "recall": 0.8277310924369747,
+        "f1-score": 0.8914027149321267,
+        "support": 238.0
+      },
+      "jog": {
+        "precision": 1.0,
+        "recall": 0.9117647058823529,
+        "f1-score": 0.9538461538461539,
+        "support": 238.0
+      },
+      "run": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 238.0
+      },
+      "other": {
+        "precision": 0.9424398625429553,
+        "recall": 0.9456896551724138,
+        "f1-score": 0.9440619621342513,
+        "support": 1160.0
+      },
+      "accuracy": 0.9470633693972179,
+      "macro avg": {
+        "precision": 0.9651546391752577,
+        "recall": 0.9336757461605331,
+        "f1-score": 0.9477201783528917,
+        "support": 2588.0
+      },
+      "weighted avg": {
+        "precision": 0.9483244103103405,
+        "recall": 0.9470633693972179,
+        "f1-score": 0.946705645399242,
+        "support": 2588.0
+      }
+    }
+  },
+  "test": {
+    "windows": 2626,
+    "accuracy": 0.9714394516374715,
+    "macro_f1": 0.977684706324814,
+    "coverage": 0.9691546077684692,
+    "accepted_accuracy": 0.981139489194499,
+    "nonrunning_false_running_rate": 0.0,
+    "confusion_matrix": [
+      [
+        696,
+        0,
+        0,
+        0,
+        18
+      ],
+      [
+        0,
+        230,
+        0,
+        0,
+        8
+      ],
+      [
+        0,
+        0,
+        233,
+        5,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        238,
+        0
+      ],
+      [
+        43,
+        0,
+        0,
+        1,
+        1154
+      ]
+    ],
+    "classification_report": {
+      "still": {
+        "precision": 0.9418132611637348,
+        "recall": 0.9747899159663865,
+        "f1-score": 0.9580178940123881,
+        "support": 714.0
+      },
+      "walk": {
+        "precision": 1.0,
+        "recall": 0.9663865546218487,
+        "f1-score": 0.9829059829059829,
+        "support": 238.0
+      },
+      "jog": {
+        "precision": 1.0,
+        "recall": 0.9789915966386554,
+        "f1-score": 0.9893842887473461,
+        "support": 238.0
+      },
+      "run": {
+        "precision": 0.9754098360655737,
+        "recall": 1.0,
+        "f1-score": 0.9875518672199171,
+        "support": 238.0
+      },
+      "other": {
+        "precision": 0.9779661016949153,
+        "recall": 0.9632721202003339,
+        "f1-score": 0.9705634987384356,
+        "support": 1198.0
+      },
+      "accuracy": 0.9714394516374715,
+      "macro avg": {
+        "precision": 0.9790378397848448,
+        "recall": 0.9766880374854449,
+        "f1-score": 0.977684706324814,
+        "support": 2626.0
+      },
+      "weighted avg": {
+        "precision": 0.9718985526599474,
+        "recall": 0.9714394516374715,
+        "f1-score": 0.9715164801467339,
+        "support": 2626.0
+      }
+    }
+  },
+  "limits": [
+    "No in-place jogging ground truth is asserted.",
+    "No XIAO or project recordings used for training.",
+    "Public-data validation does not establish accuracy on the deployed wearer/device.",
+    "The classifier observes activity; calibrated movement control stays independent."
+  ],
+  "model_sha256": "c6d85b8c731ad13b8a71f7cbc8d9ad390c780f90c0919bdaae5cb99ff5b4ceb5"
+}

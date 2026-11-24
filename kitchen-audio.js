@@ -37,6 +37,7 @@
   let mood=null,stage='map',urgent=false,action=false,activityLevel=0,embedded=false,button;
   let muted=false, pending=null, resultBus=null, resultUntil=0;
   let announcement=null, recordedExcellent=null;
+  let speech=null,speechTimer=null;
   try{muted=root.localStorage.getItem(storeKey)==='1';}catch{}
   const hz=note=>440*2**((note-69)/12);
 
@@ -248,6 +249,7 @@
 
   function duck(t,duration,level=resultUntil>t?.13:.31){
     if(!music)return;
+    if(speech){level=Math.min(level,.12);duration=Math.max(duration,5);}
     music.gain.cancelScheduledValues(t);
     music.gain.setTargetAtTime(level,t,.011);
     music.gain.setTargetAtTime(.48,Math.max(t+duration,resultUntil),.066);
@@ -306,6 +308,7 @@
     const material=materials[theme]||materials.neon;
     const voiced=name==='excellent'||name==='win'&&heavy;
     if(name==='win'||name==='fail'){
+      stopSpeech();
       finishCue(name==='win',theme,t,song,material);
       if(voiced){
         resultBus.gain.setValueAtTime(.20,t);
@@ -371,6 +374,33 @@
     announcement();
     announcement=null;
   }
+  function stopSpeech(){
+    if(!speech)return;
+    speech=null;root.clearTimeout(speechTimer);root.speechSynthesis?.cancel();
+    if(context&&music)duck(context.currentTime,0);
+  }
+  function speak(text,kind='slow'){
+    if(muted||embedded||doc.hidden||!context||context.state!=='running')return false;
+    if(typeof text!=='string'||!text.trim()||text.length>40)return false;
+    stopAnnouncement();stopSpeech();
+    const synth=root.speechSynthesis,Utterance=root.SpeechSynthesisUtterance;
+    if(!synth||!Utterance){cue(kind==='recover'?'good':'warn');return false;}
+    const voices=synth.getVoices(),voice=voices.find(v=>/^zh[-_]CN/i.test(v.lang))||voices.find(v=>/^zh/i.test(v.lang));
+    if(voices.length&&!voice){cue(kind==='recover'?'good':'warn');return false;}
+    const utterance=new Utterance(text);utterance.lang='zh-CN';
+    if(voice)utterance.voice=voice;
+    utterance.rate=kind==='urgent'?1.16:1.04;utterance.pitch=kind==='recover'?1.3:1.13;utterance.volume=.9;
+    speech=utterance;
+    const done=()=>{if(speech===utterance){speech=null;root.clearTimeout(speechTimer);if(music)duck(context.currentTime,0);}};
+    utterance.onend=done;
+    utterance.onerror=()=>{
+      const active=speech===utterance;done();
+      if(active)cue(kind==='recover'?'good':'warn');
+    };
+    duck(context.currentTime,5,.12);
+    speechTimer=root.setTimeout(stopSpeech,8000);
+    try{synth.speak(utterance);return true;}catch{done();cue('warn');return false;}
+  }
   function shoutExcellent(t){
     stopAnnouncement();
     duck(t,1.46,.085);
@@ -408,6 +438,7 @@
         updateButton();
         if(muted){
           pending=null;
+          stopSpeech();
           stopAnnouncement();stopResult();
           if(master)master.gain.setTargetAtTime(0,context.currentTime,.015);
           reconcile();
@@ -431,8 +462,8 @@
     if(event.target!==button)unlock();
   }
   for(const name of ['pointerdown','pointerup','keydown','click'])doc.addEventListener(name,unlockOnGesture,{capture:true});
-  doc.addEventListener('visibilitychange',()=>{if(doc.hidden)stopAnnouncement();reconcile();});
-  root.addEventListener('pagehide',()=>{stopMusic();stopResult();stopAnnouncement();});
+  doc.addEventListener('visibilitychange',()=>{if(doc.hidden){stopSpeech();stopAnnouncement();}reconcile();});
+  root.addEventListener('pagehide',()=>{stopSpeech();stopMusic();stopResult();stopAnnouncement();});
   root.addEventListener('pageshow',unlock);
-  root.KitchenAudio={sync,cue,mount,unlock,relay(){embedded=true;}};
+  root.KitchenAudio={sync,cue,mount,unlock,speak,stopSpeech,relay(){embedded=true;}};
 })(window);

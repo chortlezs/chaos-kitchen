@@ -23,6 +23,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 </style>
 <link rel="stylesheet" href="kitchen-viewport.css">
 <link rel="stylesheet" href="kitchen-audio.css">
+<link rel="stylesheet" href="kitchen-coach.css">
 <link rel="stylesheet" href="kitchen-theme.css?v=20261120-orange-entry-2">
 </head>
 <body>
@@ -30,7 +31,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
 <div class="pocket-order"></div>
 <div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">体感未连接 · 触屏可用</span></div>
-<div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="run-route" aria-live="polite"></span></div>
+<div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="foot-activity">脚踝 AI：等待连接</span><span id="run-route" aria-live="polite"></span></div>
 <canvas id="game" width="960" height="540" tabindex="-1" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回配菜</button>
@@ -192,6 +193,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <script src="kitchen-screen.js?v=screen-1"></script>
 <script src="kitchen-audio.js?v=excellent-vocoder-1"></script>
 <script src="kitchen-opening.js?v=emotion-kitchen-1"></script>
+<script src="kitchen-coach.js?v=motion-coach-1"></script>
 <script>
 (() => {
 "use strict";
@@ -261,6 +263,8 @@ const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,
 const stageFx=window.KitchenStageFx?.create(ctx,W,H,()=>state.scene);
 const deviceScreen=window.KitchenScreen?.create();
 let frostScreen=null;
+let frostCoach=null;
+const coach=window.KitchenCoach?.mount();
 let hardwareInput=null;
 let footInput=null;
 const footMode=()=>get("foot-mode").checked===true;
@@ -1516,6 +1520,7 @@ function updateControls(){
   get("pause").hidden=!!state.open;
 }
 function toggleMenu(mode){
+  if(mode)coach?.update({active:false});
   clearRunInput();
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
@@ -1554,6 +1559,7 @@ function renderCoffeeLevels(){
   });
 }
 function reset(){
+  coach?.reset();frostCoach=null;
   frostScreen=null;
   stageFx?.reset();
   hardwareInput?.clearStir();
@@ -1573,6 +1579,7 @@ function start(){
   const first=match<0&&/生气|烦|压力大/.test(event)?0:match;
   const id=/^[0-5]$/.test(manual)?Number(manual):retry??(first>=0?first:Math.floor(Math.random()*dishes.length));
   state.orderDishId=id;
+  coach?.prepare(state.scene,state.emotion);
   if(state.scene==="fridge"){
     // 硬件由共用页面持有，地图 iframe 不再抢占串口/蓝牙连接。
     get("hardware-controls").hidden=false;
@@ -1620,6 +1627,7 @@ window.addEventListener("message",event=>{
 });
 function practice(mode){
   reset();state.practice=true;const value=get("dish-select").value;phase(mode,/^[0-5]$/.test(value)?Number(value):0);toggleMenu(null);
+  coach?.prepare(state.scene,state.emotion);
 }
 function conclude(success,label){
   const p=state.phase;
@@ -2109,9 +2117,10 @@ selectScene(hasRequestedScene?requestedScene:"toilet",{updateUrl:false});
 const opening=window.KitchenOpening?.bind({
   game:document.querySelector("main"),
   dishes:sceneDishes,
-  launch(scene,dish){
+  launch(scene,dish,emotion){
     state.open="menu";
     selectScene(scene,{updateUrl:false});
+    state.emotion=emotion;
     get("dish-select").value=String(dish);
     start();
     if(scene!=="fridge")canvas.focus({preventScroll:true});
@@ -2132,6 +2141,12 @@ if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
 });
 if(window.KitchenFoot){
   footInput=window.KitchenFoot.create({
+    onPace(packet){if(footMode())coach?.observe(packet);},
+    onActivity(packet){
+      if(!footMode())return;
+      get('foot-activity').textContent=window.KitchenFoot.describeActivity(packet);
+      coach?.observeActivity(packet);relayFoot(packet);
+    },
     onCycle(packet){
       if(!footMode()||document.hidden||canvas.parentElement?.inert)return false;
       if(state.open==="frost"&&!get("frost-experience").hidden){relayFoot(packet);return true;}
@@ -2148,7 +2163,7 @@ if(window.KitchenFoot){
       state.runBudget=Math.min((state.runBudget||0)+packet.cycles*cycleDistance,cycleDistance*2);
       return true;
     },
-    onLost(){clearRunInput();relayFootLink();},
+    onLost(){clearRunInput();coach?.reset();relayFootLink();get('foot-activity').textContent='脚踝 AI：等待连接';},
     onStatus(status){
       const labels={disabled:"脚踝小跑已关闭",connecting:"正在连接脚踝传感器…",connected:"脚踝已连接 · 原地小跑前进",
         running:"小跑周期已收到",retrying:"脚踝连接中断 · 正在重连",ambiguous:"发现多个脚部传感器",unsupported:"浏览器不支持脚部连接"};
@@ -2183,6 +2198,30 @@ const updateViewport=window.KitchenViewport?.bind(canvas,()=>{
 window.KitchenAudio?.mount();
 window.addEventListener("message",event=>{
   const frost=get("frost-experience"),data=event.data,origin=window.location.origin;
+  if(frost.hidden||state.open!=="frost"||event.source!==frost.contentWindow||data?.type!=="kitchen-coach-state")return;
+  if(event.origin!==origin&&!(window.location.protocol==="file:"&&event.origin==="null"))return;
+  const s=data.snapshot;
+  if(!s||!["map","chop","wok","serve"].includes(s.stage)||typeof s.active!=="boolean"||
+    typeof s.runExpected!=="boolean"||typeof s.key!=="string"||s.key.length>60||
+    !Number.isFinite(s.tilt)||Math.abs(s.tilt)>2||!Number.isFinite(s.seconds)||s.seconds<0||s.seconds>180)return;
+  frostCoach={...s,at:Date.now()};
+});
+function updateCoach(){
+  if(!coach)return;
+  if(state.open==="frost"){
+    const s=frostCoach;
+    coach.update({...s,active:!!s&&Date.now()-s.at<700&&s.active,theme:"fridge",foot:footMode()&&footInput?.connected===true});
+    return;
+  }
+  const p=state.phase;
+  coach.update({active:!state.open&&!state.toiletDrain&&!state.coffeeDrain&&!p?.done,
+    key:state.view+":"+(state.view==="map"?wanted():p?.id),theme:state.scene,stage:state.view,
+    foot:footMode()&&footInput?.connected===true,
+    runExpected:state.view==="map"?!state.practice&&!!state.target:state.view==="serve"&&(p?.route??1)<.97,
+    tilt:p?.tilt??0,seconds:state.practice?(p?.left??180):Math.min(state.time,p?.left??180)});
+}
+window.addEventListener("message",event=>{
+  const frost=get("frost-experience"),data=event.data,origin=window.location.origin;
   if(frost.hidden||state.open!=="frost"||event.source!==frost.contentWindow||data?.type!=="frost-audio")return;
   if(event.origin!==origin&&!(window.location.protocol==="file:"&&event.origin==="null"))return;
   if(typeof data.cue==="string")window.KitchenAudio?.cue(data.cue,"fridge",data.heavy===true);
@@ -2204,10 +2243,11 @@ function frameLoop(ms){
       seconds:p?.left??state.time};
     deviceScreen.sync(state.open==="frost"&&!covering?(frostScreen||{...snapshot,stage:"map"}):snapshot);
   }
-  if(canvas.parentElement?.inert){requestAnimationFrame(frameLoop);return;}
+  if(canvas.parentElement?.inert){coach?.update({active:false});requestAnimationFrame(frameLoop);return;}
   const dt=lastFrame?clamp((ms-lastFrame)/1000,0,.04):0;lastFrame=ms;
   if(!state.open||state.open==="menu")now+=dt;
   advance(dt);
+  updateCoach();
   if(state.open!=="frost"){
     const active=!state.open||state.open==="menu";
     const urgent=!state.open&&!state.phase?.done&&((!state.practice&&state.time<24)||(state.phase?.left??Infinity)<5);
