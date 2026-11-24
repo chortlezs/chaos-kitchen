@@ -100,24 +100,17 @@
     const opening = get("kitchen-opening"), cover = get("opening-cover"), draw = get("opening-draw");
     const play = get("opening-play"), cook = get("opening-cook"), home = get("opening-home");
     const sceneCard = get("opening-scene"), dishCard = get("opening-dish"), result = get("opening-result");
-    const question = get("chef-question"), answers = get("chef-answers");
-    const decks = draw.querySelector(".opening-decks"), steps = draw.querySelectorAll(".opening-steps li");
-    const worlds = draw.querySelectorAll("[data-world]"), readout = get("draw-readout");
+    const answers = get("chef-answers");
+    const decks = draw.querySelector(".opening-decks");
+    const readout = get("draw-readout");
     const form = get("mood-form"), description = get("mood-description"), submit = get("mood-submit");
-    const status = get("mood-status"), editor = get("mood-editor"), adjustments = get("mood-adjustments");
+    const status = get("mood-status");
+    const picker = get("manual-picker");
+    const atlas = draw.querySelector(".draw-atlas");
+    let manual = false;
     let scene = null, dish = null, recommendation = null, coverTransition = null, pending = null, revision = 0;
     drawMark(draw.querySelector(".draw-medallion canvas"), "hat");
 
-    function showStep(active) {
-      draw.dataset.step = active;
-      steps.forEach((step, index) => index === active ? step.setAttribute("aria-current", "step") : step.removeAttribute("aria-current"));
-    }
-    function updateAtlas() {
-      worlds.forEach(world => {
-        world.dataset.state = world.dataset.world === (scene?.id ?? recommendation?.scene) ? "selected" : recommendation ? "dimmed" : "available";
-      });
-      draw.dataset.world = scene?.id ?? recommendation?.scene ?? "";
-    }
     function renderCard(card, name, mark, theme) {
       const revealed = mark !== "mystery";
       card.dataset.skin = theme ?? (revealed ? mark : "");
@@ -129,24 +122,24 @@
         ], { duration: 440, easing: "cubic-bezier(.2,.75,.23,1)" });
       }
       card.toggleAttribute("data-revealed", revealed);
-      card.setAttribute("aria-disabled", String(revealed || !recommendation));
-      card.disabled = !recommendation;
+      card.setAttribute("aria-disabled", String(manual || revealed || !recommendation));
+      card.disabled = manual || revealed || !recommendation;
       card.querySelector(".opening-card-name").textContent = name;
       drawMark(card.querySelector("canvas"), mark, theme);
     }
     function renderCards() {
       const chosenScene = scene?.id ?? recommendation?.scene;
-      const name = dish === null ? null : dishes[chosenScene][dish].name;
-      renderCard(sceneCard, scene?.name ?? (recommendation ? "翻开你的厨房" : "等待心情入锅"), scene?.id ?? "mystery");
-      renderCard(dishCard, name ?? (recommendation ? "翻开你的菜品" : "今日菜品待揭晓"), dish ?? "mystery", chosenScene);
-      decks.hidden = false;
+      const name = dish === null ? null : chosenScene ? dishes[chosenScene][dish].name : foods[dish];
+      renderCard(sceneCard, scene?.name ?? (manual ? "请选择场景" : recommendation ? "翻开场景卡" : "等待配卡"), scene?.id ?? "mystery");
+      renderCard(dishCard, name ?? (manual ? "请选择菜品" : recommendation ? "翻开菜品卡" : "等待配卡"), dish ?? "mystery", chosenScene);
+      decks.hidden = manual;
       decks.dataset.reveals = Number(Boolean(scene)) + Number(dish !== null);
-      cook.hidden = !recommendation;
+      cook.hidden = false;
       cook.disabled = !scene || dish === null;
-      readout.hidden = !recommendation;
+      readout.hidden = !recommendation && (!manual || cook.disabled);
       readout.textContent = cook.disabled ? (!scene && dish === null ? "两张卡都翻开，就可以开锅啦。" : !scene ? "再翻开场景卡。" : "再翻开菜品卡。") : `${scene.name} · ${name}`;
       result.textContent = cook.disabled ? "" : `本局订单：${scene.name}，${name}`;
-      updateAtlas();
+      draw.dataset.world = scene?.id ?? recommendation?.scene ?? "";
     }
     function setBusy(busy) {
       draw.dataset.loading = String(busy);
@@ -164,70 +157,81 @@
     }
     function clearRecommendation() {
       recommendation = null; scene = null; dish = null;
-      adjustments.hidden = true;
-      editor.hidden = true;
-      get("mood-summary").textContent = "今天的心情，准备下锅。";
-      get("mood-reason").textContent = "小厨师会配好厨房与菜品。翻开两张卡，再决定要不要开锅。";
-      get("mood-source").textContent = "六种心情 · 四个厨房 · 你来确认";
       renderCards();
-      showStep(0);
     }
     function applyRecommendation(data) {
       const emotion = emotions.find(item => item.id === data.emotion);
       if (!emotion || !scenes.some(item => item.id === data.scene)) throw new Error("订单还没配好，请再试一次。");
       recommendation = { ...data, dish: emotion.dish };
       scene = null; dish = null;
-      question.textContent = data.reply;
-      get("mood-summary").textContent = data.needs_clarification ? "这份心情，还想多听一点。" : `听起来，你有一点${emotion.label}。`;
-      get("mood-reason").textContent = data.reason;
-      get("mood-source").textContent = data.source === "deepseek" ? "DeepSeek 为这份心情配的菜 · 随时可以修改" : "按你的心情选择配菜 · 你最了解自己";
-      get("mood-scene-select").value = data.scene;
-      adjustments.hidden = false;
-      editor.hidden = !data.needs_clarification;
-      get("mood-correct").textContent = "心情不太对？";
-      showStep(2);
       renderCards();
-      if (window.matchMedia("(max-width: 800px)").matches) get("mood-ticket").scrollIntoView({ behavior: "smooth", block: "start" });
     }
-    function showManual() {
+    function updatePicker() {
+      for (const button of atlas.querySelectorAll("button")) {
+        button.disabled = !manual;
+        button.setAttribute("aria-pressed", String(button.dataset.world === scene?.id && manual));
+      }
+      for (const button of answers.children) {
+        const index = Number(button.dataset.dish);
+        button.disabled = !manual;
+        button.setAttribute("aria-pressed", String(index === dish && manual));
+        button.querySelector("strong").textContent = manual && scene ? dishes[scene.id][index].name : foods[index];
+      }
+    }
+    function setMode(isManual) {
       cancelRequest();
-      editor.hidden = false;
-      question.textContent = "你自己的感受最重要。选一个最接近此刻的心情吧。";
-      status.textContent = "手动选择同样可以开锅。";
-      status.dataset.kind = "";
-      showStep(1);
-      answers.querySelector("button")?.focus({ preventScroll: true });
-      if (window.matchMedia("(max-width: 800px)").matches) editor.scrollIntoView({ behavior: "smooth", block: "center" });
+      manual = isManual;
+      picker.hidden = !manual;
+      get("mode-ai").setAttribute("aria-pressed", String(!manual));
+      get("mode-manual").setAttribute("aria-pressed", String(manual));
+      status.textContent = "";
+      clearRecommendation();
+      updatePicker();
     }
+    get("mode-ai").onclick = () => { if (manual) setMode(false); };
+    get("mode-manual").onclick = () => { if (!manual) setMode(true); };
+    atlas.onclick = event => {
+      const button = event.target.closest("button[data-world]");
+      if (!manual || !button) return;
+      scene = scenes.find(item => item.id === button.dataset.world);
+      updatePicker();
+      renderCards();
+    };
     emotions.forEach(emotion => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.dataset.emotion = emotion.id;
-      const icon = document.createElement("canvas"); icon.width = icon.height = 32;
-      drawMark(icon, emotion.dish);
-      const label = document.createElement("strong"); label.textContent = emotion.label;
-      const ingredient = document.createElement("small"); ingredient.textContent = foods[emotion.dish];
-      button.append(icon, label, ingredient);
-      button.onclick = () => {
-        applyRecommendation({ emotion: emotion.id, scene: recommendation?.scene ?? emotion.scene,
-          reply: emotion.note, reason: "按你的选择配好这一份，厨房也可以换成你喜欢的。", source: "manual" });
-        status.textContent = "已按你的选择更新订单。";
+      const item = document.createElement("button");
+      item.type = "button";
+      item.dataset.dish = emotion.dish;
+      item.onclick = () => {
+        if (!manual) return;
+        dish = emotion.dish;
+        updatePicker();
+        renderCards();
       };
-      answers.append(button);
+      item.className = "food-display";
+      const icon = document.createElement("canvas");
+      icon.width = icon.height = 32;
+      drawMark(icon, emotion.dish);
+      const label = document.createElement("strong");
+      label.textContent = emotion.label;
+      const ingredient = document.createElement("small");
+      ingredient.textContent = emotion.label;
+      item.append(icon, label, ingredient);
+      answers.append(item);
     });
     examples.forEach(([label, text]) => {
       const button = document.createElement("button");
       button.type = "button"; button.textContent = label;
       button.onclick = () => {
-        clearRecommendation(); description.value = text;
-        get("mood-count").textContent = `${text.length} / 600`;
+        if (!manual) clearRecommendation();
+        description.value = text;
+
         status.textContent = "可以改成自己的故事，再交给小厨师。";
         description.focus();
       };
       get("mood-examples").append(button);
     });
     description.oninput = () => {
-      get("mood-count").textContent = `${description.value.length} / 600`;
+
       if (recommendation) clearRecommendation();
       status.textContent = "";
     };
@@ -236,44 +240,32 @@
       const text = description.value.trim();
       if (pending) return;
       if (text.length < 2 || text.length > 600) { status.textContent = "再多告诉小厨师一点，写 2–600 个字就好。"; return; }
-      if (window.location.protocol === "file:") { status.textContent = "请使用本地游戏链接打开 AI 厨房，或先手动选择心情。"; return; }
+      if (manual) setMode(false);
       clearRecommendation();
       const ticket = ++revision, controller = new AbortController();
-      pending = controller; setBusy(true); showStep(1);
+      pending = controller; setBusy(true);
       status.dataset.kind = "loading";
       status.textContent = "正在给今天的故事配一道菜…";
-      question.textContent = "收到你的故事了，让我想想今天适合开什么锅。";
-      const timeout = window.setTimeout(() => controller.abort(), 28000);
+      const timeout = window.setTimeout(() => controller.abort(), 12000);
       try {
         const response = await window.fetch("/api/recommend", { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }), signal: controller.signal });
         const data = await response.json().catch(() => ({}));
         if (ticket !== revision) return;
-        if (!response.ok) throw new Error(data.error || "AI 厨房暂时没回应，可以重试或自己选。请用新版启动入口打开游戏。");
+        if (!response.ok) throw new Error(data.error || "AI 暂时没回应，请稍后重试。");
         applyRecommendation(data);
         status.dataset.kind = "success";
-        status.textContent = data.needs_clarification ? "小厨师还想听多一点，也可以直接在右侧选心情。" : "今日订单已配好，去翻开两张卡吧。";
+        status.textContent = data.reply || "今日订单已配好。";
       } catch (error) {
         if (ticket !== revision) return;
-        status.dataset.kind = "error";
-        status.textContent = error.name === "AbortError" ? "小厨师这次回应慢了，重试一下，或自己选择心情。" : error.message;
-        question.textContent = "还没收到小厨师的订单。你的故事还在这里，可以再试一次。";
-        editor.hidden = false;
-        showStep(0);
+        const randomItem = items => items[Math.floor(Math.random() * items.length)];
+        applyRecommendation({ scene: randomItem(scenes).id, emotion: randomItem(emotions).id });
+        status.dataset.kind = "success";
+        status.textContent = "AI 暂时没连上，已为你随机配卡。";
       } finally {
         window.clearTimeout(timeout);
         if (ticket === revision) { pending = null; setBusy(false); }
       }
-    };
-    get("mood-manual").onclick = showManual;
-    get("mood-correct").onclick = showManual;
-    get("mood-scene-select").onchange = event => {
-      if (!recommendation) return;
-      recommendation.scene = event.target.value;
-      scene = null;
-      get("mood-source").textContent = "已换成你选择的厨房";
-      get("mood-reason").textContent = "同一份心情，也可以换一个地方下锅。";
-      renderCards();
     };
     function show(screen) {
       cancelRequest();
@@ -281,14 +273,13 @@
       opening.hidden = false; game.inert = true;
       cover.hidden = screen !== "cover"; draw.hidden = screen !== "draw";
       opening.dataset.page = screen; home.hidden = screen === "cover";
-      document.title = screen === "cover" ? "CHAOS KITCHEN · AI 情绪厨房" : "说说今天 · AI 情绪厨房";
+      document.title = screen === "cover" ? "CHAOS OFFICE · AI 情绪厨房" : "说说今天 · AI 情绪厨房";
       opening.scrollTop = 0;
       const url = new URL(window.location.href);
       url.searchParams.delete("scene"); url.searchParams.delete("opening");
       window.history.replaceState(null, "", url.href);
       if (screen === "draw") {
-        clearRecommendation();
-        question.textContent = "今天，想把什么下锅？开心的、烦心的，我都听着。";
+        setMode(false);
         status.textContent = ""; status.dataset.kind = "";
         description.focus({ preventScroll: true });
       } else {
@@ -328,7 +319,7 @@
       if (!recommendation || dish !== null) return;
       window.KitchenAudio?.cue("card", "cover"); dish = recommendation.dish; renderCards();
     };
-    cook.onclick = () => { if (!cook.disabled) { hide(); launch(scene.id, dish, recommendation?.emotion); } };
+    cook.onclick = () => { if (!cook.disabled) { hide(); launch(scene.id, dish, emotions.find(item => item.dish === dish).id); } };
     return { show };
   }
   window.KitchenOpening = { bind };

@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>极限出餐｜赛博后厨</title>
 <link rel="stylesheet" href="hardware-chop.css">
-<link rel="stylesheet" href="kitchen-opening.css?v=emotion-kitchen-1">
+<link rel="stylesheet" href="kitchen-opening.css?v=order-layout-6">
 <style>
+main[inert]{visibility:hidden}
 @layer legacyGame {
 *{box-sizing:border-box}body{margin:0;background:#05051a;color:#edfcff;font-family:"Courier New","PingFang SC","Microsoft Yahei",monospace;min-height:100svh;display:grid;place-items:center}main{width:min(100vw,177.78svh);position:relative;aspect-ratio:16/9;background:#050523;overflow:hidden;container-type:inline-size}canvas{width:100%;height:100%;display:block;image-rendering:pixelated;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030520b8;backdrop-filter:blur(3px)}[hidden]{display:none!important}.panel{width:63%;text-align:center;background:#080b2cf5;border:3px solid #31e8ff;box-shadow:0 0 0 5px #2025b4,0 0 0 8px #0c1035,0 0 36px #126fff80,inset 0 0 30px #1834aa88;padding:4cqw 3cqw;position:relative}.panel:before,.panel:after{content:"";position:absolute;width:8%;height:6px;background:#f456ff;box-shadow:0 0 13px #ff00eb;top:-4px}.panel:before{left:6%}.panel:after{right:6%}.tag{letter-spacing:.26em;color:#51efff;font-weight:bold;font-size:1.45cqw}.panel h1{font-size:6cqw;letter-spacing:.09em;margin:.08em 0 .23em;text-shadow:3px 4px #3122ac,0 0 20px #24caff}.panel p{font:600 1.65cqw/1.7 system-ui;margin:.45em 0 1.1em;color:#cbdbff}.buttons{display:flex;justify-content:center;gap:.9cqw;flex-wrap:wrap}button,select,input{font:700 1.45cqw system-ui;color:#e9faff;background:#0e1d57;border:2px solid #438fd8;border-radius:0;padding:.6em .85em}button{cursor:pointer}button:hover,button:focus-visible{background:#293993;border-color:#ff7bf8;outline:none}button.primary{color:#060b35;background:#35eaff;border-color:#baffff;box-shadow:4px 4px #273bc6;padding:.7em 1.4em}button.primary:hover{background:#fff}.small{margin-top:1.4cqw}.controls{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);display:flex;gap:.65cqw}.controls button{padding:.4em .65em;touch-action:none}.pause{position:absolute;right:1.2%;top:1.5%;padding:.25em .55em;font-family:inherit}.hint{font-size:1.12cqw;color:#a8c7f4;margin-top:1.3cqw}select{max-width:40%}input{width:76%;margin-bottom:1.3cqw;border-color:#3657b2;background:#0a143d}input::placeholder{color:#9db6e0}
 .scene-choice{display:flex;align-items:center;justify-content:center;gap:.7cqw;margin:0 0 1.1cqw;font:700 1.35cqw system-ui}.scene-choice button{font-size:1.25cqw;padding:.35em .7em}.scene-choice button.selected{background:#35eaff;color:#071044;border-color:#fff}
@@ -27,7 +28,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <link rel="stylesheet" href="kitchen-theme.css?v=20261120-orange-entry-2">
 </head>
 <body>
-<main>
+<main inert>
 <canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
 <div class="pocket-order"></div>
 <div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">体感未连接 · 触屏可用</span></div>
@@ -62,7 +63,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
   <div class="opening-shell">
     <header class="opening-top">
       <button class="opening-nav" id="opening-home" type="button" aria-label="退出到封面" hidden>退出</button>
-      <div class="opening-wordmark" aria-hidden="true">CHAOS <span>KITCHEN</span></div>
+      <div class="opening-wordmark" aria-hidden="true">CHAOS <span>OFFICE</span></div>
     </header>
     <div class="opening-cover" id="opening-cover">
       <div class="cover-art" id="cover-art" aria-hidden="true">
@@ -112,7 +113,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
           </g>
         </svg>
       </div>
-      <h1 class="opening-sr">CHAOS KITCHEN</h1>
+      <h1 class="opening-sr">CHAOS OFFICE</h1>
       <p class="cover-mood-note"><span>AI 情绪厨房</span>把今天的心情，做成一道菜。</p>
       <div class="cover-actions">
         <button class="opening-primary" id="opening-play" type="button"><span>心情开锅</span></button>
@@ -124,61 +125,50 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
         <div class="chef-portrait" role="img" aria-label="小厨师"></div>
         <div class="chef-line">
           <h2 id="opening-draw-title">AI 小厨师 · 今日情绪订单</h2>
-          <p id="chef-question" tabindex="-1" aria-live="polite"></p>
+          <p id="chef-question">今天心情怎么样？快来说说，然后胡闹办公室吧！</p>
         </div>
         <form class="mood-form" id="mood-form">
-          <label for="mood-description">今天发生了什么？</label>
-          <textarea id="mood-description" rows="4" maxlength="600" minlength="2" required placeholder="开心的、烦心的，都可以倒进厨房里。" aria-describedby="mood-hint mood-status"></textarea>
-          <div class="mood-input-meta"><span id="mood-hint">说一两句话就好，小厨师会认真听。</span><span id="mood-count">0 / 600</span></div>
+          <textarea id="mood-description" rows="4" maxlength="600" minlength="2" required placeholder="开心的、烦心的，都可以倒进厨房里。" aria-label="描述你的心情" aria-describedby="mood-status"></textarea>
           <div class="mood-examples" id="mood-examples" aria-label="试试这些心情"></div>
-          <button class="opening-primary mood-submit" id="mood-submit" type="submit">把心情交给小厨师 <span aria-hidden="true">→</span></button>
           <p class="mood-status" id="mood-status" role="status" aria-live="polite"></p>
-          <button class="mood-text-button" id="mood-manual" type="button">我想自己选择心情</button>
         </form>
+        <button class="opening-primary mood-submit" id="mood-submit" type="submit" form="mood-form">把心情交给小厨师 <span aria-hidden="true">→</span></button>
       </div>
       <div class="draw-picks">
-        <div class="draw-atlas" role="group" aria-label="可前往的厨房">
-          <div class="draw-world" data-world="coffee"><i aria-hidden="true"></i><span>咖啡豆仓</span></div>
-          <div class="draw-world" data-world="fridge"><i aria-hidden="true"></i><span>冰封后厨</span></div>
-          <div class="draw-world" data-world="toilet"><i aria-hidden="true"></i><span>马桶水箱</span></div>
-          <div class="draw-world" data-world="neon"><i aria-hidden="true"></i><span>赛博办公室</span></div>
+        <div class="order-content">
+          <h2 class="order-heading">本局订单</h2>
+          <div class="order-modes" role="group" aria-label="开局方式">
+            <button type="button" id="mode-ai" aria-pressed="true">AI 心情配卡</button>
+            <button type="button" id="mode-manual" aria-pressed="false">手动选菜</button>
+          </div>
+          <div id="manual-picker" hidden>
+          <div class="draw-atlas" role="group" aria-label="选择场景">
+            <button type="button" class="draw-world" data-world="coffee"><i aria-hidden="true"></i><span>咖啡豆仓</span></button>
+            <button type="button" class="draw-world" data-world="fridge"><i aria-hidden="true"></i><span>冰封后厨</span></button>
+            <button type="button" class="draw-world" data-world="toilet"><i aria-hidden="true"></i><span>马桶水箱</span></button>
+            <button type="button" class="draw-world" data-world="neon"><i aria-hidden="true"></i><span>赛博办公室</span></button>
+          </div>
+          <div class="mood-editor" id="mood-editor">
+            <div class="chef-answers" id="chef-answers" role="group" aria-label="选择菜品"></div>
+          </div>
+          </div>
+          <div class="opening-decks" hidden>
+            <div class="draw-card-light" aria-hidden="true"></div>
+            <button class="opening-card" id="opening-scene" type="button">
+              <span class="opening-card-label">场景卡</span>
+              <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+              <span class="opening-card-name">抽场景</span>
+            </button>
+            <button class="opening-card" id="opening-dish" type="button">
+              <span class="opening-card-label">菜品卡</span>
+              <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
+              <span class="opening-card-name">抽菜品</span>
+            </button>
+          </div>
+          <p class="opening-sr" id="opening-result" role="status" aria-live="polite"></p>
+          <p class="draw-readout" id="draw-readout" hidden></p>
         </div>
-        <ol class="opening-steps" aria-label="开局进度">
-          <li aria-current="step">说说今天</li>
-          <li>读懂心情</li>
-          <li>翻卡开锅</li>
-        </ol>
-        <div class="mood-ticket" id="mood-ticket">
-          <span class="mood-ticket-kicker">TODAY'S SPECIAL / 今日限定</span>
-          <h3 id="mood-summary">今天的心情，准备下锅。</h3>
-          <p id="mood-reason">小厨师读懂你的描述后，会为你配好厨房与菜品。翻开两张卡，再决定要不要开锅。</p>
-          <span class="mood-source" id="mood-source">六种心情 · 四个厨房 · 你来确认</span>
-        </div>
-        <div class="mood-editor" id="mood-editor" hidden>
-          <p>此刻，你更接近哪一种心情？</p>
-          <div class="chef-answers" id="chef-answers" aria-label="选择心情"></div>
-        </div>
-        <div class="mood-adjustments" id="mood-adjustments" hidden>
-          <button class="mood-text-button" id="mood-correct" type="button">心情不太对？</button>
-          <label for="mood-scene-select">换个厨房</label>
-          <select id="mood-scene-select"><option value="coffee">咖啡豆仓</option><option value="fridge">冰封后厨</option><option value="toilet">马桶水箱</option><option value="neon">赛博办公室</option></select>
-        </div>
-        <div class="opening-decks" hidden>
-          <div class="draw-card-light" aria-hidden="true"></div>
-          <button class="opening-card" id="opening-scene" type="button">
-            <span class="opening-card-label">场景卡</span>
-            <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
-            <span class="opening-card-name">抽场景</span>
-          </button>
-          <button class="opening-card" id="opening-dish" type="button">
-            <span class="opening-card-label">菜品卡</span>
-            <span class="opening-card-art"><canvas width="32" height="32" aria-hidden="true"></canvas></span>
-            <span class="opening-card-name">抽菜品</span>
-          </button>
-        </div>
-        <p class="opening-sr" id="opening-result" role="status" aria-live="polite"></p>
-        <p class="draw-readout" id="draw-readout" hidden></p>
-        <button class="opening-primary opening-cook" id="opening-cook" type="button" hidden disabled>就做这道菜 · 开锅</button>
+        <button class="opening-primary opening-cook" id="opening-cook" type="button" hidden disabled>开始游戏</button>
       </div>
     </div>
   </div>
@@ -192,7 +182,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <script src="kitchen-stage-fx.js"></script>
 <script src="kitchen-screen.js?v=screen-1"></script>
 <script src="kitchen-audio.js?v=excellent-vocoder-1"></script>
-<script src="kitchen-opening.js?v=emotion-kitchen-1"></script>
+<script src="kitchen-opening.js?v=order-layout-6"></script>
 <script src="kitchen-coach.js?v=motion-coach-1"></script>
 <script>
 (() => {
@@ -2134,7 +2124,8 @@ const opening=window.KitchenOpening?.bind({
 get("opening-return").onclick=()=>returnToOpening();
 get("game-exit").onclick=()=>returnToOpening("cover");
 if(new URLSearchParams(window.location.search).get("opening")==="draw")opening?.show("draw");
-else if(!hasRequestedScene)opening?.show("cover");
+else if(!hasRequestedScene && opening)opening.show("cover");
+else document.querySelector("main").inert=false;
 if(window.KitchenHardware)hardwareInput=window.KitchenHardware.bind({
   button:get("hardware-connect"),status:get("hardware-status"),
   onChop(){

@@ -947,9 +947,8 @@
 .mood-ticket p { margin: 0 0 10px; font-size: 13px; line-height: 1.8; color: #77513d; overflow-wrap: anywhere; }
 .mood-source { font-size: 10px; line-height: 1.6; color: #a0755b; }
 .mood-editor { margin-bottom: 15px; border: 1px solid #d6a67d; background: #ffe8bf; padding: 10px; }
-.mood-editor > p { margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #6e4735; }
 .mood-editor .chef-answers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-.kitchen-opening .mood-editor .chef-answers button { min-height: 58px; grid-template: auto auto / 25px minmax(0, 1fr); gap: 2px 6px; padding: 7px; border: 1px solid #b98264; box-shadow: 1px 2px #cd9b71; background: #fff8df; }
+.kitchen-opening .mood-editor .food-display { display: grid; min-height: 58px; grid-template: auto auto / 25px minmax(0, 1fr); gap: 2px 6px; padding: 7px; border: 1px solid #b98264; box-shadow: 1px 2px #cd9b71; background: #fff8df; }
 .mood-editor .chef-answers button::after { display: none; }
 .mood-editor .chef-answers canvas { grid-row: 1 / 3; width: 25px; height: 25px; align-self: center; image-rendering: pixelated; }
 .mood-editor .chef-answers strong { font-size: 13px; }
@@ -971,3 +970,149 @@
   .cover-mood-note { max-width: 65%; font-size: clamp(10px, 2.1vw, 16px); }
 }
 @media (prefers-reduced-motion: reduce) { .mood-status[data-kind="loading"]::before { animation: none; } }
+
+.mood-editor .food-display { cursor: default; text-align: left; color: #542b24; }
+
+
+/* Keep emotion input and AI cards inside the same viewport. */
+.kitchen-opening[data-page="draw"] { overflow: hidden; }
+[data-page="draw"] .opening-shell {
+  flex: 1 1 0;
+  width: min(calc(100% - 48px), 1240px);
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: 20px;
+  box-sizing: border-box;
+}
+[data-page="draw"] .opening-top { flex: 0 0 48px; min-height: 48px; }
+.opening-draw {
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 24px;
+  padding-top: 16px;
+  padding-bottom: 0;
+}
+.opening-draw .chef-chat,
+.opening-draw .draw-picks { min-height: 0; height: 100%; box-sizing: border-box; padding: 20px; }
+.opening-draw .chef-chat { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+.opening-draw .chef-line p { font-size: clamp(14px, 1.3vw, 18px); }
+.mood-form { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.kitchen-opening .mood-form textarea {
+  flex: 0 1 140px;
+  height: 140px;
+  min-height: 64px;
+  max-height: 140px;
+  resize: none;
+  box-sizing: border-box;
+}
+.mood-examples { margin: 0; }
+.mood-status { margin: 0; min-height: 0; }
+.mood-status:empty { display: none; }
+.opening-draw .draw-picks { display: flex; flex-direction: column; gap: 10px; }
+.opening-draw .draw-atlas { margin: 0; flex-shrink: 0; }
+.opening-draw .draw-world { padding: 7px 3px; }
+.opening-draw .draw-world i { width: clamp(28px, 3.4vw, 48px); }
+.opening-draw .draw-world span { font-size: 12px; }
+.opening-draw .mood-editor { margin: 0; padding: 8px; flex-shrink: 0; }
+.mood-editor .food-display { min-height: 45px; padding: 5px; }
+.opening-draw .opening-decks { flex: 1 1 140px; min-height: 100px; max-height: 180px; padding: 8px; }
+.opening-draw .opening-card { height: 100%; min-height: 0; }
+.opening-draw .draw-readout { margin: 0; padding: 6px; }
+.opening-draw .opening-cook { margin: 0; min-height: 42px; flex-shrink: 0; }
+@media (max-height: 650px), (max-width: 800px) {
+  [data-page="draw"] .opening-shell { width: calc(100% - 28px); padding-bottom: 12px; }
+  [data-page="draw"] .opening-top { flex-basis: 36px; min-height: 36px; }
+  .opening-draw { gap: 14px; padding-top: 10px; }
+  .opening-draw .chef-chat, .opening-draw .draw-picks { padding: 12px; }
+  .opening-draw .chef-chat { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
+  .opening-draw .chef-portrait { width: 40px; }
+  .opening-draw .chef-line h2 { font-size: 9px; margin-bottom: 4px; }
+  .opening-draw .chef-line p { font-size: 13px; }
+  .kitchen-opening .mood-form textarea { height: 100px; flex-basis: 100px; font-size: 14px; padding: 10px; }
+  .mood-form { gap: 8px; }
+  .opening-draw .draw-picks { gap: 7px; }
+  .opening-draw .draw-world i { width: 28px; }
+  .opening-draw .draw-world span { font-size: 10px; }
+  .mood-editor .food-display { min-height: 34px; grid-template-columns: 18px minmax(0, 1fr); gap: 1px 4px; }
+  .mood-editor .chef-answers canvas { width: 18px; height: 18px; }
+  .mood-editor .chef-answers strong { font-size: 11px; }
+  .mood-editor .chef-answers small { font-size: 9px; }
+  .opening-draw .opening-decks { min-height: 80px; }
+}
+
+[data-page="draw"] .opening-shell {
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr);
+  flex: none;
+  padding-top: 10px;
+  padding-bottom: 32px;
+}
+.opening-draw { grid-template-rows: minmax(0, 1fr); align-content: stretch; }
+.opening-draw .chef-chat, .opening-draw .draw-picks { aspect-ratio: auto; }
+.opening-draw .opening-card { grid-template-rows: auto minmax(0, 1fr) auto; padding: 8px; gap: 4px; }
+.opening-draw .opening-card-art { width: min(60px, 7vh); max-height: 100%; }
+.opening-draw .opening-card-label { font-size: 12px; padding: 2px 6px; }
+.opening-draw .opening-card-name { font-size: 12px; }
+@media (max-height: 650px), (max-width: 800px) {
+  [data-page="draw"] .opening-shell { grid-template-rows: 44px minmax(0, 1fr); }
+}
+
+.order-modes { display: flex; gap: 6px; }
+.kitchen-opening .order-modes button { flex: 1; padding: 8px; border: 1px solid #ab6945; color: #673a2b; background: #fff6df; font-weight: bold; }
+.kitchen-opening .order-modes button[aria-pressed="true"] { color: white; background: #9d4026; }
+#manual-picker .draw-atlas { margin-bottom: 8px; }
+#manual-picker button[aria-pressed="true"] { outline: 3px solid #af4621; outline-offset: -3px; background-color: #ffdc9c; }
+#manual-picker button { cursor: pointer; }
+.order-heading { color: #623528; font-size: 18px; margin: 0; }
+.kitchen-opening .opening-card[data-revealed]:disabled { opacity: 1; filter: none; }
+.opening-draw .opening-cook { margin-top: auto; }
+
+[data-page="draw"] .opening-shell {
+  max-height: 690px;
+  width: min(calc(100% - 32px), 1120px);
+  margin-block: auto;
+}
+
+/* Both panels reserve the same bottom sixth for their primary action. */
+.opening-draw .chef-chat, .opening-draw .draw-picks {
+  display: grid;
+  row-gap: 0;
+}
+.opening-draw .chef-chat {
+  --chat-detail-gap: 8px;
+  row-gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) calc(100% / 6);
+}
+.opening-draw .chef-portrait { width: auto; height: 100%; min-width: 0; align-self: stretch; transform: none; }
+.opening-draw .chef-line { align-self: end; display: grid; justify-items: start; gap: var(--chat-detail-gap); }
+.opening-draw .chef-line h2 { margin: 0; }
+.opening-draw .chef-line p { font-size: clamp(17px, 1.65vw, 24px); }
+.opening-draw .mood-form { align-self: stretch; gap: var(--chat-detail-gap); }
+.opening-draw .mood-form textarea { flex: 1; min-height: 0; max-height: none; }
+.opening-draw .mood-status:not(:empty) {
+  border-left: 3px solid #c67c43; padding: 4px 8px; background: #ffebc6; overflow-wrap: anywhere;
+}
+.opening-draw .draw-picks { grid-template: minmax(0, 5fr) minmax(0, 1fr) / minmax(0, 1fr); }
+.order-content { display: flex; flex-direction: column; gap: 8px; min-height: 0; padding-bottom: 12px; }
+.opening-draw .opening-decks { max-height: none; }
+.opening-draw .opening-card-art { width: clamp(42px, 10vh, 84px); }
+.opening-draw .mood-submit, .kitchen-opening[data-page="draw"] .opening-cook {
+  grid-column: 1 / -1; align-self: stretch; margin: 0; min-height: 0; height: 100%;
+  font-size: clamp(17px, 1.6vw, 23px);
+}
+#manual-picker:not([hidden]) {
+  --pick-size: clamp(15px, 1.35vw, 20px);
+  display: grid; flex: 1; min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 8px;
+}
+#manual-picker .draw-atlas { margin: 0; min-height: 0; }
+#manual-picker .draw-world { justify-content: center; align-content: center; padding: 2px; }
+#manual-picker .draw-world i { width: clamp(26px, 6vh, 55px); }
+#manual-picker .mood-editor { display: grid; min-height: 0; padding: 0; border: 0; }
+#manual-picker .chef-answers { min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 4px; }
+#manual-picker .food-display { min-height: 0; align-content: center; padding: 2px 4px; row-gap: 0; }
+#manual-picker .draw-world span, #manual-picker .food-display strong, #manual-picker .food-display small {
+  margin: 0; font-size: var(--pick-size); line-height: 1.1;
+}

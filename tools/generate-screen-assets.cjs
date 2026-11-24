@@ -37,7 +37,7 @@ const hints=['把今天的心情，做成一道菜','原地小跑 · 到站开�
 for(let i=0;i<titles.length;i++){text('title_'+i,titles[i]);text('hint_'+i,hints[i],'#e7ba8c',9);}
 for(const [i,name] of ['赛博办公室','冰封后厨','马桶水箱','咖啡豆仓'].entries())text('theme_'+i,name,'#ffffff',10);
 for(const [i,name] of ['订书机','老板','文件夹','打印机','键盘','空调'].entries())text('dish_'+i,name,'#fff0d1',12);
-text('connected','CHAOS KITCHEN / 体感料理中','#fff0d1',9);
+text('connected','CHAOS OFFICE / 体感料理中','#fff0d1',9);
 text('disconnected','等待游戏连接…','#f5c78b',12);
 text('good','漂亮！','#fff0a3',16,90);text('miss','再找准时机','#ffbcab',12,110);
 const h=['#pragma once','#include <stdint.h>','typedef struct {uint16_t width,height;uint32_t count;const uint16_t *spans;} kitchen_sprite_t;'];
