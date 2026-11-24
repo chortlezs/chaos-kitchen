@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>极限出餐｜赛博后厨</title>
-<link rel="stylesheet" href="hardware-chop.css">
+<link rel="stylesheet" href="hardware-chop.css?v=clean-status-1">
 <link rel="stylesheet" href="kitchen-opening.css?v=order-layout-6">
 <style>
 main[inert]{visibility:hidden}
@@ -25,14 +25,14 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <link rel="stylesheet" href="kitchen-viewport.css">
 <link rel="stylesheet" href="kitchen-audio.css">
 <link rel="stylesheet" href="kitchen-coach.css">
-<link rel="stylesheet" href="kitchen-theme.css?v=20261120-orange-entry-2">
+<link rel="stylesheet" href="kitchen-theme.css?v=20261125-success-aligned-1">
 </head>
 <body>
 <main inert>
 <canvas class="stage-ambience" width="80" height="45" aria-hidden="true"></canvas>
 <div class="pocket-order"></div>
-<div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" role="status">体感未连接 · 触屏可用</span></div>
-<div class="foot-controls" id="foot-controls" hidden><span id="foot-status" role="status">脚踝传感器未连接</span><span id="foot-activity">脚踝 AI：等待连接</span><span id="run-route" aria-live="polite"></span></div>
+<div class="hardware-controls" id="hardware-controls"><button id="hardware-connect" type="button">连接 ESP</button><span id="hardware-status" hidden></span></div>
+<div class="foot-controls" id="foot-controls" hidden aria-hidden="true"><span id="foot-status" hidden></span><span id="foot-activity" hidden></span><span id="run-route" hidden></span></div>
 <canvas id="game" width="960" height="540" tabindex="-1" aria-label="极限出餐像素厨房"></canvas>
 <iframe id="frost-experience" title="Frost Kitchen 冰封后厨" src="about:blank" hidden></iframe>
 <button class="frost-back" id="frost-back" type="button" hidden>← 返回配菜</button>
@@ -48,7 +48,7 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <div class="scene-choice" id="scene-choice"><span>选择厨房</span><button type="button" data-scene="neon" class="selected">赛博办公室</button><button type="button" data-scene="fridge">冰箱内部</button><button type="button" data-scene="toilet">冲水马桶内部</button><button type="button" data-scene="coffee">咖啡机豆仓</button></div>
 <input id="office-event" type="text" maxlength="80" aria-label="今天的办公室烦心事" placeholder="今天发生了什么？例如：又被老板催了（选填）">
 <div class="coffee-levels" id="coffee-levels" aria-label="选择咖啡豆仓关卡" hidden></div>
-<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业</button><button id="resume" hidden>继续游戏</button><button id="opening-return" type="button">返回配菜</button></div>
+<div class="buttons" id="main-buttons"><button class="primary" id="start">开始营业</button><button id="next-level" type="button" hidden>下一关</button><button id="resume" hidden>继续游戏</button><button id="opening-return" type="button">返回配菜</button><button id="end-return" type="button" hidden>返回选关</button></div>
 <div class="buttons small" id="practice">
 <select id="dish-select" aria-label="练习菜品"></select>
 <button data-mode="chop">切菜练习</button><button data-mode="wok">颠锅练习</button><button data-mode="serve">端盘练习</button>
@@ -181,9 +181,9 @@ body.coffee-scene button,body.coffee-scene select,body.coffee-scene input{backgr
 <script src="kitchen-art.js"></script>
 <script src="kitchen-stage-fx.js"></script>
 <script src="kitchen-screen.js?v=screen-1"></script>
-<script src="kitchen-audio.js?v=excellent-vocoder-1"></script>
+<script src="kitchen-audio.js?v=cosyvoice-only-2"></script>
 <script src="kitchen-opening.js?v=order-layout-6"></script>
-<script src="kitchen-coach.js?v=motion-coach-1"></script>
+<script src="kitchen-coach.js?v=scene-lines-2"></script>
 <script>
 (() => {
 "use strict";
@@ -249,7 +249,7 @@ const activeStations=()=>state?.scene==="coffee"?[
 ]:state?.scene==="neon"?[{...bins[2],dish:state.neonLevel??0,label:officeDishes[state.neonLevel??0].name},...station]:all;
 const keys=new Set();
 const menu=get("overlay");
-const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
+const state={scene:"neon",coffeeLevel:0,view:"map",open:"menu",time:180,score:0,queue:[],served:0,failed:0,source:null,held:null,phase:null,practice:false,evaluations:[],serveIntegrity:0,player:{x:302,y:399},target:null,toast:null,fx:[],avatar:0};
 const stageFx=window.KitchenStageFx?.create(ctx,W,H,()=>state.scene);
 const deviceScreen=window.KitchenScreen?.create();
 let frostScreen=null;
@@ -1520,23 +1520,31 @@ function toggleMenu(mode){
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   state.open=mode; keys.clear(); state.moving=false;
+  const successEnd=mode==="end"&&state.served>0;
+  if(menu.dataset)menu.dataset.mode=successEnd?"success":mode??"";
   menu.hidden=!mode;
   if(mode){
-    const title={menu:"极限出餐",pause:"营业暂停",end:state.served?"大成功！！！":"营业结算",practice:"练习结算"}[mode];
+    const title={menu:"极限出餐",pause:"营业暂停",end:successEnd?"大成功！！！":"营业结算",practice:"练习结算"}[mode];
     get("menu-title").textContent=title;
     get("menu-copy").innerHTML={
       menu:{neon:"把今天的办公室烦心事拆开、翻炒，再端上桌。<br>单人营业 · 180 秒",fridge:"掉进冰箱内部，在结霜货架间完成冰冻订单。<br>六种办公室食材 · 180 秒",toilet:"缩小进入冲水马桶内部，把办公室烦恼泡进漩涡后厨。<br>六种办公室食材 · 180 秒",coffee:"掉进咖啡机上方的豆仓，在咖啡豆浮台完成浓缩订单。<br>六种办公室食材 · 180 秒"}[state.scene],
       pause:"营业、订单和工序倒计时已暂停。",
-      end:state.coffeeDrain?"被研磨轮卷走了！<br>点击「重新营业」重开本局。":state.toiletDrain?"被冲进下水道了！<br>点击「重新营业」重开本局。":(state.served?"通关成功 · ":"挑战结束 · ")+dishes[state.orderDishId??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道",
+      end:successEnd?dishes[state.orderDishId??0].name+" · 已出餐 · "+state.serveIntegrity+"% 完整度":state.coffeeDrain?"被研磨轮卷走了！<br>点击「重新营业」重开本局。":state.toiletDrain?"被冲进下水道了！<br>点击「重新营业」重开本局。":"挑战结束 · "+dishes[state.orderDishId??0].name+"<br>本关 "+state.score+" 分 · 完成 "+state.served+" / 1 道",
       practice:state.practiceResult||"练习完成"
     }[mode];
     get("resume").hidden=mode!=="pause";
-    get("opening-return").hidden=mode==="pause"||!window.KitchenOpening;
-    get("office-event").hidden=mode==="pause";
-    get("scene-choice").hidden=mode==="pause";
+    get("next-level").hidden=!successEnd||state.orderDishId>=dishes.length-1;
+    get("end-return").hidden=!successEnd;
+    get("opening-return").hidden=mode==="pause"||successEnd||!window.KitchenOpening;
+    get("office-event").hidden=mode==="pause"||successEnd;
+    get("scene-choice").hidden=mode==="pause"||successEnd;
+    document.querySelector(".foot-option").hidden=successEnd;
     get("start").textContent=mode==="menu"?"开始营业":"重新营业";
-    get("practice").hidden=mode==="pause";
+    get("start").classList.toggle("primary",!successEnd);
+    get("next-level").classList.toggle("primary",successEnd);
+    get("practice").hidden=mode==="pause"||successEnd;
     get("coffee-levels").hidden=true;
+    if(successEnd)get("menu-hint").textContent=state.evaluations.map(item=>item.name+" "+item.grade).join("　·　");
     if(state.scene==="coffee"){
       if(mode==="menu")get("menu-copy").innerHTML="把今天的办公室烦心事，烘焙成一份豆香料理。<br>单人挑战 · 180 秒";
       get("start").textContent=mode==="menu"?"开始营业":"重新营业";
@@ -1560,7 +1568,7 @@ function reset(){
   hardwareInput?.clearStir();
   hardwareInput?.clearPlate();
   const spawn=state.scene==="coffee"?{x:228,y:444}:state.scene==="toilet"?{x:480,y:460}:{x:285,y:401};
-  Object.assign(state,{view:"map",time:180,score:0,queue:[],orderDishId:null,served:0,failed:0,held:null,phase:null,practice:false,frostRound:false,player:spawn,toiletDrain:null,shockUntil:0,shockReadyAt:now+2.8,target:null,toast:null,noticeQueue:[],fx:[],runBudget:0,runJourney:null,footCycles:0});
+  Object.assign(state,{view:"map",time:180,score:0,queue:[],orderDishId:null,served:0,failed:0,held:null,phase:null,practice:false,evaluations:[],serveIntegrity:0,frostRound:false,player:spawn,toiletDrain:null,shockUntil:0,shockReadyAt:now+2.8,target:null,toast:null,noticeQueue:[],fx:[],runBudget:0,runJourney:null,footCycles:0});
   state.coffeeDrain=null;
 }
 function start(){
@@ -1657,11 +1665,13 @@ function returnFromPhase(){
   }
   if(state.practice){state.practiceResult=p.done.label;toggleMenu("practice");return;}
   if(p.done.success){
+    state.evaluations.push({name:{chop:"切菜",wok:"颠锅",serve:"端盘"}[v],grade:p.done.label.startsWith("EXCELLENT")?"EXCELLENT":"GOOD"});
     if(v==="serve"){
       state.served++;state.score+=70+Math.floor(p.integrity*.35)+Math.floor(state.queue[0].left/4);
-      state.queue.shift();state.held=null;
+      state.serveIntegrity=Math.ceil(p.integrity);state.queue.shift();state.held=null;
     }else state.held.stage++;
   }else {
+    state.evaluations=[];state.serveIntegrity=0;
     if(v==="serve")state.score-=25;
     state.held=null;
     if(state.time<=0){state.failed+=state.queue.length;state.queue=[];}
@@ -2101,6 +2111,12 @@ function returnToOpening(screen="draw"){
 }
 get("frost-back").onclick=()=>returnToOpening();
 get("start").onclick=()=>start();get("resume").onclick=()=>toggleMenu(null);get("pause").onclick=()=>toggleMenu("pause");
+get("next-level").onclick=()=>{
+  const next=(state.orderDishId??-1)+1;
+  if(next<0||next>=dishes.length)return;
+  get("dish-select").value=String(next);start();
+};
+get("end-return").onclick=()=>toggleMenu("menu");
 get("scene-back").onclick=()=>returnToOpening();
 get("dish-select").onchange=()=>{const value=get("dish-select").value;if(state.scene==="coffee"&&/^[0-5]$/.test(value))state.coffeeLevel=Number(value);};
 for(const button of document.querySelectorAll("[data-scene]"))button.onclick=()=>{selectScene(button.dataset.scene);window.KitchenAudio?.cue("select",state.scene);};

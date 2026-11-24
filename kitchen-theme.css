@@ -120,13 +120,27 @@ body:is(.neon-scene,.fridge-scene,.toilet-scene,.coffee-scene) main .pocket-orde
   color:var(--ink);background:var(--cream);border-color:var(--ink);
 }
 
-/* Shared entry/menu branding is orange, regardless of the selected kitchen. */
-body main:has(#overlay:not([hidden])), body main #overlay {
+/* Entry, pause, practice and failure menus keep the shared orange branding; success keeps the scene palette. */
+body main:has(#overlay:not([hidden]):not([data-mode="success"])), body main #overlay:not([data-mode="success"]) {
   --cream:#fff7e8; --paper:#fffdf5; --orange:#f85e23;
   --ink:#452115; --line:#e8b99a; --focus:#a73b0b;
 }
-body main #overlay .panel { box-shadow:5px 5px #f98b51,8px 8px var(--ink); }
-body main #overlay .panel h1 { color:var(--ink);text-shadow:2px 3px #ffb785; }
-body main #overlay .panel :is(p,.hint,small) { color:#6a4632; }
-body main #overlay .panel :is(.tag,.kicker) { color:#91390c; }
-body main #overlay button:not(:disabled):hover { background:#ffc18f; }
+body main #overlay:not([data-mode="success"]) .panel { box-shadow:5px 5px #f98b51,8px 8px var(--ink); }
+body main #overlay:not([data-mode="success"]) .panel h1 { color:var(--ink);text-shadow:2px 3px #ffb785; }
+body main #overlay:not([data-mode="success"]) .panel :is(p,.hint,small) { color:#6a4632; }
+body main #overlay:not([data-mode="success"]) .panel :is(.tag,.kicker) { color:#91390c; }
+body main #overlay:not([data-mode="success"]) button:not(:disabled):hover { background:#ffc18f; }
+
+/* Frost-style result structure, themed by the active kitchen. */
+body main #overlay[data-mode="success"] .panel { box-shadow:4px 4px var(--orange),7px 7px var(--ink); }
+body main #overlay[data-mode="success"] .panel h1 { color:var(--ink);text-shadow:none; }
+body main #overlay[data-mode="success"] .panel :is(p,.hint,small,.tag,.kicker) { color:var(--ink); }
+body main #overlay[data-mode="success"] .buttons { justify-content:center; }
+body main #overlay[data-mode="success"] button:not(:disabled):hover { background:var(--orange); }
+body.neon-scene main #overlay[data-mode="success"] { background:#030520b8; }
+body.toilet-scene main #overlay[data-mode="success"] { background:#31536bb8; }
+body.coffee-scene main #overlay[data-mode="success"] { background:#2b1a16b8; }
+body.neon-scene main #overlay[data-mode="success"] .panel { box-shadow:4px 4px #283acd,7px 7px #38dfff; }
+body.neon-scene main #overlay[data-mode="success"] .panel h1 { text-shadow:2px 3px #283acd; }
+body.neon-scene main #overlay[data-mode="success"] .panel :is(p,.hint,small,.tag,.kicker) { color:#a9e5f2; }
+body.neon-scene main #overlay[data-mode="success"] button:not(:disabled):hover { background:#283acd; }

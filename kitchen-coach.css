@@ -13,6 +13,8 @@
 .coach-note{font-size:.85cqw;color:#946e50;}
 .kitchen-coach[data-kind="recover"]{border-color:#467346;background:#f0ffe8;}
 .kitchen-coach[data-kind="recover"]::after{background:#f0ffe8;border-color:#467346;}
+.kitchen-coach[data-kind="praise"]{border-color:#a56b12;background:#fff9dc;}
+.kitchen-coach[data-kind="praise"]::after{background:#fff9dc;border-color:#a56b12;}
 .kitchen-coach[data-kind="urgent"],.kitchen-coach[data-kind="balance"]{border-color:#bb5127;}
 .kitchen-coach[data-theme="fridge"]{box-shadow:4px 5px 0 #54778355;}
 @keyframes coach-pop{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}

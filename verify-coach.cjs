@@ -3,6 +3,13 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const window={};
 vm.runInNewContext(fs.readFileSync('kitchen-coach.js','utf8'),{window,Date,Math,Number,Object,String,Array,Map,Infinity});
 let t=0,cycle=0,cues=[];
+const sceneLines=window.KitchenCoach.sceneLines;
+const localLines=[];
+for(const scene of ['neon','fridge','toilet','coffee'])for(const kind of ['slow','urgent','recover','balance','praise']){
+  assert.equal(sceneLines[scene][kind].length,2,scene+' '+kind+' has two local lines');
+  for(const line of sceneLines[scene][kind]){assert(line.length>0&&line.length<=40,'local line length');localLines.push(line);}
+}
+assert.equal(new Set(localLines).size,40,'every scene has unique local lines');
 const coach=window.KitchenCoach.create({now:()=>t,onCue:event=>cues.push(event)});
 const context={active:true,key:'round:map:bin',stage:'map',theme:'coffee',foot:true,runExpected:true,tilt:0,seconds:90};
 function tick(cadence=90,seconds=1,changes={},live=true){
@@ -15,11 +22,15 @@ function tick(cadence=90,seconds=1,changes={},live=true){
 }
 function fresh(){coach.reset();cues=[];Object.assign(context,{active:true,key:'round:map:bin',stage:'map',foot:true,runExpected:true,tilt:0,seconds:90});tick(90,2);}
 fresh();assert.equal(coach.baseline,90);
-tick(60,1.6);assert.equal(cues.length,0,'a brief change does not nag');
-tick(90,1);tick(60,3);assert.equal(cues.at(-1).kind,'slow');
+tick(60,.6);assert.equal(cues.length,0,'a brief change does not nag');
+tick(90,1);tick(60,2);assert.equal(cues.at(-1).kind,'slow');
 tick(60,9);assert.equal(cues.length,1,'one reminder per sustained slow episode');
 tick(90,2);assert.equal(cues.at(-1).kind,'recover');
 tick(90,4);assert.equal(cues.length,2,'steady pace does not repeat praise');
+fresh();tick(90,4);assert.equal(cues.length,0,'praise waits for sustained movement');
+tick(90,3);assert.equal(cues.at(-1).kind,'praise');
+tick(90,9);assert.equal(cues.filter(e=>e.kind==='praise').length,1,'praise has its own cooldown');
+tick(90,11);assert.equal(cues.filter(e=>e.kind==='praise').length,2,'continuous movement can praise again after cooldown');
 
 fresh();tick(60,3,{seconds:20});assert.equal(cues.at(-1).kind,'urgent');
 fresh();tick(0,4,{},false);assert.equal(cues.length,0,'missing telemetry is not slow running');
@@ -55,4 +66,4 @@ for(const invalid of [{cadence:NaN},{cadence:-1},{cadence:241},{cycle_ms:{}},{se
 assert.equal(paceCount,1);assert.equal(cycles,0,'pace telemetry never grants distance');
 input.accept({type:'link',transport:'xiao-ble',connected:false});
 input.accept({...packet,event_id:'pace:2'});assert.equal(paceCount,1);
-console.log('PASS: slowdown/recovery, personal baseline, urgency, live-data gating, pause/arrival/disconnect, balance priority, cooldown and pace transport.');
+console.log('PASS: 1s slowdown, scene praise, recovery, personal baseline, urgency, live-data gating, pause/arrival/disconnect, balance priority, cooldown and pace transport.');

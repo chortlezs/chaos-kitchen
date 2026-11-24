@@ -4,7 +4,14 @@ const root=path.resolve(__dirname,'../..');
 const {chromium}=require(path.join(root,'.hardware-runtime/node_modules/playwright'));
 const base=process.env.KITCHEN_TEST_URL||'http://127.0.0.1:8877';
 const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:['来不及啦！这盘菜还等着你送呢！'],
-  recover:['对对对，就是这个节奏！'],balance:['脚下可以快，手上可得稳！']};
+  recover:['对对对，就是这个节奏！'],balance:['脚下可以快，手上可得稳！'],
+  praise:['你真棒，这个场景的节奏保持得真稳！']};
+const localSlow={
+  coffee:'豆香都慢下来了，快把节奏重新磨起来！',
+  neon:'脚步慢啦，霓虹线路都替你着急！',
+  toilet:'水花慢啦，漩涡还在等你转起来！',
+  fridge:'冰面有点拖脚，找回刚才那股热乎劲！'
+};
 
 (async()=>{
   const browser=await chromium.launch({channel:'msedge',headless:true});
@@ -31,6 +38,7 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
           cancel:()=>window.__cancelled++}});
       });
       await context.route('**/api/screen',route=>route.fulfill({json:{accepted:false}}));
+      await context.route('**/api/tts',route=>route.fulfill({status:503,json:{error:'Offline fixture'}}));
       await context.route('**/api/coach/assess',route=>{
         const summary=route.request().postDataJSON();
         assessments.push(summary);
@@ -85,12 +93,10 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
       const bubble=page.locator('.kitchen-coach');
       await bubble.waitFor({state:'visible'});
       assert.equal(await bubble.getAttribute('data-kind'),'slow',scene+' slowdown reaches the real UI');
-      assert((await page.evaluate(()=>window.__spoken.length))>0,scene+' requests Chinese narration');
+      assert.equal(await page.evaluate(()=>window.__spoken.length),0,scene+' never mixes browser speech into CosyVoice lines');
+      assert.equal(await bubble.locator('p').textContent(),localSlow[scene],scene+' shows its unique local line immediately');
+      assert.equal(assessments.length,0,scene+' avoids a second realtime AI request');
       if(checkAssessment){
-        assert.equal(await bubble.locator('p').textContent(),assessmentLine);
-        assert.equal(assessments[0]?.activity,'walk');
-        assert.equal(assessments[0]?.cadence,60);
-        assert.equal(assessments[0]?.scene,scene);
         const status=(child||page).locator('#foot-activity');
         assert.equal(await status.textContent(),'脚踝 AI：行走 · 85%');
       }
@@ -105,7 +111,6 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
       await tick(60,28);await tick(90,10);
       await page.waitForFunction(()=>document.querySelector('.kitchen-coach').dataset.kind==='recover',null,{polling:100});
       assert.equal(await bubble.getAttribute('data-kind'),'recover',scene+' recovery follows a slowdown');
-      if(checkAssessment)assert.equal(assessments.at(-1)?.activity,'jog');
       await page.evaluate(()=>window.__game.toggleMenu('pause'));
       assert(await bubble.isHidden(),'pause immediately hides the bubble');
       await tick(40,20);assert(await bubble.isHidden(),'paused input cannot re-open a bubble');
@@ -125,21 +130,16 @@ const aiLines={slow:['咖啡要凉啦，找回刚才的小跑节奏！'],urgent:
         const bounds=await bubble.boundingBox(),main=await page.locator('main').boundingBox();
         assert(bounds.x>=main.x&&bounds.x+bounds.width<=main.x+main.width+1,'bubble stays inside mobile viewport');
       }
-      const before=await page.evaluate(()=>window.__cancelled);
       await page.click('#audio-toggle');
-      assert((await page.evaluate(()=>window.__cancelled))>before,'muting cancels active speech');
+      assert.equal(await page.locator('#audio-toggle').getAttribute('aria-pressed'),'true','mute control applies immediately');
       await page.click('#audio-toggle');
       const unavailable=await page.evaluate(()=>{
-        window.__voices=[{lang:'en-US'}];
         return window.KitchenAudio.speak('稳稳端好盘子！','balance');
       });
-      assert.equal(unavailable,false,'missing Chinese voice falls back to a cue');
-      await page.evaluate(()=>{
-        window.__voices=[{lang:'zh-CN'}];window.KitchenAudio.speak('稳稳端好盘子！','balance');
-        window.__lastUtterance.onerror();
-      });
+      assert.equal(unavailable,false,'CosyVoice playback is asynchronous');
+      assert.equal(await page.evaluate(()=>window.__spoken.length),0,'browser system speech remains disabled');
       assert.deepEqual(errors,[],scene+' has no browser errors');
-      console.log('PASS browser: '+scene+' slow/recovery/balance, Chinese narration, pause, mute and fallback.');
+      console.log('PASS browser: '+scene+' slow/recovery/balance, CosyVoice-only text feedback, pause and mute.');
       await context.close();
     }
     // Standalone fridge uses the same coach without opening a second parent stream.

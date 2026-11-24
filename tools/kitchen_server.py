@@ -3,25 +3,30 @@ from __future__ import annotations
 
 import argparse
 import functools
+import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
 import socket
+import tempfile
 import threading
 import time
 from urllib import error, parse, request
 from screen_protocol import encode_screen
 
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".config"))) / "ChaosKitchen" / "deepseek.json"
+CONFIG_DIR = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / ".config"))) / "ChaosKitchen"
+CONFIG_PATH = CONFIG_DIR / "deepseek.json"
+TTS_CONFIG_PATH = CONFIG_DIR / "dashscope.json"
+TTS_CACHE_DIR = CONFIG_DIR / "tts-cache"
 EMOTIONS = {
     "joy": ("快乐", 0, "订书机"), "sadness": ("悲伤", 2, "文件夹"),
     "anger": ("愤怒", 1, "老板"), "fear": ("恐惧", 3, "打印机"),
     "surprise": ("惊讶", 4, "键盘"), "disgust": ("厌恶", 5, "空调"),
 }
 SCENES = {"neon", "fridge", "toilet", "coffee"}
-COACH_KINDS = ("slow", "urgent", "recover", "balance")
+COACH_KINDS = ("slow", "urgent", "recover", "balance", "praise")
 COACH_CACHE = {}
 COACH_LOCK = threading.Lock()
 ANKLE_CACHE = {}
@@ -41,11 +46,12 @@ emotion仅表示开场心情，用于语气，不能断言玩家现在的情绪�
 只返回JSON：{"decision":"speak或quiet","text":"一句台词，quiet时为空"}。
 """
 COACH_PROMPT = """你是《极限出餐》中陪玩家一起忙活的小厨师，生成简短、生动的中文游戏语音台词。
-根据用户给出的厨房场景和开场情绪调整比喻与语气。只生成指定的四类台词，每类两句，每句8-32字。
+根据用户给出的厨房场景和开场情绪调整比喻与语气。只生成指定的五类台词，每类两句，每句8-32字。
 slow：已通过实时传感器检测到玩家小跑节奏持续变慢，轻松提醒找回自己的节奏。
 urgent：同样检测到变慢，且游戏倒计时紧张，可以着急但不责备、不羞辱、不要求拼命跑。
 recover：玩家在提醒后恢复了原来的节奏，具体鼓励，不再催促。
 balance：端盘持续倾斜，提醒手上轻轻反向修正，优先稳住，不催加速。
+praise：玩家连续保持自己的小跑节奏至少6秒，结合当前厨房场景具体夸奖，不做健康或疲劳判断。
 这是游戏动作反馈，不推断疲劳、健康或当前心情，不声称看到了摄像头或身体轨迹。
 场景：coffee咖啡豆仓、fridge冰封后厨、toilet马桶水箱、neon赛博办公室。
 开场情绪仅用于语气：joy快乐、sadness悲伤、anger愤怒、fear恐惧、surprise惊讶、disgust厌恶。
@@ -53,7 +59,8 @@ balance：端盘持续倾斜，提醒手上轻轻反向修正，优先稳住，�
 {"slow":["脚步慢下来啦，找回刚才的小跑节奏！","菜还在等你，跟着自己的节奏往前跑！"],
 "urgent":["来不及啦！这盘菜还等着你送呢！","订单倒计时啦，找回刚才的节奏！"],
 "recover":["对对对，就是这个节奏！","节奏回来啦，小厨师给你加颗星！"],
-"balance":["脚下可以快，手上可得稳！","盘子在跳舞啦，轻轻往反方向扶一扶！"]}
+"balance":["脚下可以快，手上可得稳！","盘子在跳舞啦，轻轻往反方向扶一扶！"],
+"praise":["你真棒，这个节奏保持得真稳！","状态真好，继续用你舒服的节奏前进！"]}
 """
 SYSTEM_PROMPT = """你是《极限出餐》的小厨师，为用户把今天的心情做成一道菜。
 理解整段描述的语境，选择一个主要情绪；不能只根据出现的物品关键词判断。
@@ -96,12 +103,20 @@ def load_settings():
 
 
 def load_tts_settings():
+    config = {}
+    path = Path(os.environ.get("KITCHEN_TTS_CONFIG", str(TTS_CONFIG_PATH)))
+    try:
+        config = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(config, dict):
+            config = {}
+    except (OSError, ValueError):
+        pass
     return {
-        "api_key": os.environ.get("DASHSCOPE_API_KEY", ""),
-        "workspace": os.environ.get("DASHSCOPE_WORKSPACE_ID", ""),
-        "region": os.environ.get("COSYVOICE_REGION", "cn-beijing"),
-        "model": os.environ.get("COSYVOICE_MODEL", "cosyvoice-v3-flash"),
-        "voice": os.environ.get("COSYVOICE_VOICE", "longanyang"),
+        "api_key": os.environ.get("DASHSCOPE_API_KEY") or config.get("api_key", ""),
+        "workspace": os.environ.get("DASHSCOPE_WORKSPACE_ID") or config.get("workspace_id") or config.get("workspace", ""),
+        "region": os.environ.get("COSYVOICE_REGION") or config.get("region", "cn-beijing"),
+        "model": os.environ.get("COSYVOICE_MODEL") or config.get("model", "cosyvoice-v3-flash"),
+        "voice": os.environ.get("COSYVOICE_VOICE") or config.get("voice", "longanhuan"),
     }
 
 
@@ -117,6 +132,37 @@ def validate_tts_request(value):
     return text.strip(), kind
 
 
+def tts_cache_path(model, voice, kind, text):
+    identity = json.dumps([model, voice, kind, text], ensure_ascii=False, separators=(",", ":"))
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+    return TTS_CACHE_DIR / (digest + ".mp3")
+
+
+def load_cached_tts(model, voice, kind, text):
+    path = tts_cache_path(model, voice, kind, text)
+    try:
+        audio = path.read_bytes()
+        return audio if audio else None
+    except OSError:
+        return None
+
+
+def store_cached_tts(model, voice, kind, text, audio):
+    path = tts_cache_path(model, voice, kind, text)
+    TTS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=path.stem + ".", suffix=".tmp", dir=TTS_CACHE_DIR)
+    os.close(descriptor)
+    temporary_path = Path(temporary)
+    try:
+        temporary_path.write_bytes(audio)
+        os.replace(temporary_path, path)
+    finally:
+        try:
+            temporary_path.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def synthesize_tts(text, kind="slow", settings=None):
     text, kind = validate_tts_request({"text": text, "kind": kind})
     settings = settings or load_tts_settings()
@@ -127,6 +173,11 @@ def synthesize_tts(text, kind="slow", settings=None):
         cached = TTS_CACHE.get(cache_key)
         if cached:
             return cached
+    disk_cached = load_cached_tts(*cache_key)
+    if disk_cached:
+        with TTS_LOCK:
+            TTS_CACHE[cache_key] = disk_cached
+        return disk_cached
     try:
         from dashscope import Client
         client = Client(api_key=settings["api_key"], workspace=settings["workspace"], region=settings["region"])
@@ -139,6 +190,7 @@ def synthesize_tts(text, kind="slow", settings=None):
     if not isinstance(audio, (bytes, bytearray)) or not audio:
         raise ApiError(502, "CosyVoice 返回的音频无效。")
     audio = bytes(audio)
+    store_cached_tts(*cache_key, audio)
     with TTS_LOCK:
         if len(TTS_CACHE) >= 128:
             TTS_CACHE.pop(next(iter(TTS_CACHE)))
@@ -230,7 +282,7 @@ def coach_pack(context, settings=None):
         if cached and time.monotonic()-cached[0] < 600:
             return cached[1]
     payload = {'model': settings['model'], 'stream': False, 'thinking': {'type': 'disabled'},
-               'max_tokens': 650, 'response_format': {'type': 'json_object'},
+               'max_tokens': 900, 'response_format': {'type': 'json_object'},
                'messages': [{'role': 'system', 'content': COACH_PROMPT},
                             {'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]}
     call = request.Request('https://api.deepseek.com/chat/completions',

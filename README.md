@@ -4,8 +4,9 @@
 
 先关闭旧版启动窗口，再运行原有的 `启动AI情绪厨房.cmd` 或 `启动V1体感跑步游戏.cmd`，刷新游戏页面即可使用，无需更新设备固件。
 脚踝网关每约 200 ms 发送一次节奏状态；慢动作和静止也有状态，数据中断不会当作跑慢。
-小厨师从四个独立脚踝周期学习本局个人节奏，低于基准 75% 持续约 2.2 秒提醒；
+小厨师从四个独立脚踝周期学习本局个人节奏，低于基准 75% 持续约 1 秒提醒；
 恢复到 88% 并持续约 1.2 秒后鼓励。普通提示之间至少间隔 4.5 秒，同类冷却 12 秒；端盘失衡优先打断跑步提醒。
+连续保持 88% 以上节奏约 6 秒后会发出场景专属表扬，表扬间隔至少 20 秒。
 端盘倾斜超过 0.62 并持续 0.7 秒时提醒反向修正，盘子不稳时优先保持平衡，不催加速。
 提示气泡不暂停游戏，在四个场景的地图和共用近景生效，独立冰箱页面也支持。
 暂停、菜单、结算、到站和断连不累计变慢证据；切菜、炒菜时不催跑。
@@ -45,7 +46,11 @@ python tools/train_ankle_model.py
 
 训练脚本把 UCI MHEALTH 官方压缩包下载到 `.hardware-runtime/datasets/`，仓库提供约 536 KB 的推理模型和元数据。
 DeepSeek 接收动作类别、分类分数、节奏、游戏阶段和剩余时间等摘要，
-由 `/api/coach/assess` 决定 `speak` 或 `quiet` 并生成短台词；质量门、超时和过期响应会在本地丢弃。
+开局预生成短台词并后台预热语音；实时节奏事件直接使用缓存或场景台词，避免二次 AI 判断拖慢反馈。
+四场景各有减速、紧急、恢复、平衡和表扬五组本地台词，共 40 句，全部使用各自场景独有的比喻。
+运行 `python tools/warm_tts_cache.py` 可将全部固定台词一次性合成并保存到
+`%LOCALAPPDATA%\ChaosKitchen\tts-cache`；之后相同台词直接读取本地音频。
+教练台词只使用 CosyVoice，不混用浏览器系统语音；语音暂时不可用时只保留字幕和提示音，现有“EXCELLENT”游戏人声音效不受影响。
 
 ## ESP 屏幕同步动画
 
@@ -89,6 +94,16 @@ ESP-Mosaico 的 480×480 屏幕复用网页原有像素食材、厨师、砧板�
 密钥不会发送到网页；服务不保存用户描述和聊天记录，网页会将提交的描述交给 DeepSeek。
 接口：`POST /api/recommend`，请求 `{"text":"今天发生的事"}`；`GET /api/health` 仅返回配置状态。
 按 [DeepSeek 官方 JSON Output 文档](https://api-docs.deepseek.com/guides/json_mode/) 调用，服务端验证情绪/场景并强制执行食材映射。
+
+CosyVoice 使用阿里云百炼的 API Key 与业务空间 ID。环境变量 `DASHSCOPE_API_KEY`、
+`DASHSCOPE_WORKSPACE_ID` 优先，也支持仓库外的 `%LOCALAPPDATA%\ChaosKitchen\dashscope.json`：
+
+```json
+{"api_key": "你的 DashScope API Key", "workspace_id": "你的百炼业务空间 ID", "region": "cn-beijing"}
+```
+
+可用 `KITCHEN_TTS_CONFIG` 指定配置文件路径，并用 `COSYVOICE_MODEL`、`COSYVOICE_VOICE`
+覆盖默认的 `cosyvoice-v3-flash` 和 `longanhuan`。语音未配置或合成失败时，页面回退到浏览器中文 TTS。
 
 验证：`python -m unittest discover -s tools/tests -p "test_*.py"`，覆盖固定食材映射、上游错误、超时、无效输出和 HTTP 接口边界。
 

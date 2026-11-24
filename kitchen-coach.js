@@ -1,20 +1,54 @@
 /* Motion feedback uses live local telemetry; AI prepares short lines off the hot path. */
 (function(root){
   'use strict';
-  const kinds=['slow','urgent','recover','balance'];
-  const lines={
-    slow:['脚步慢下来啦，找回刚才的小跑节奏！','菜还在等你，跟着自己的节奏往前跑！'],
-    urgent:['来不及啦！这盘菜还等着你送呢！','订单倒计时啦，找回刚才的节奏！'],
-    recover:['对对对，就是这个节奏！','节奏回来啦，小厨师给你加颗星！'],
-    balance:['脚下可以快，手上可得稳！','盘子在跳舞啦，轻轻往反方向扶一扶！']
+  const kinds=['slow','urgent','recover','balance','praise'];
+  let sceneLines={
+    neon:{
+      slow:['脚步慢啦，霓虹线路都替你着急！','先别断电，找回刚才的冲刺节奏！'],
+      urgent:['订单快闪红了，踩着电流往前冲！','倒计时响啦，把节奏重新接上线！'],
+      recover:['线路接通啦，就是这个闪光节奏！','电流回来了，小厨师给你满格点赞！'],
+      balance:['盘子在过电，左右轻扶稳住电流！','别让电弧晃盘，手上轻轻反向压！'],
+      praise:['你真棒，霓虹都被你跑成直线啦！','节奏满格，整层办公室都亮起来了！']
+    },
+    fridge:{
+      slow:['冰面有点拖脚，找回刚才那股热乎劲！','冻品还在等你，别让脚步被冰霜慢下来！'],
+      urgent:['订单快冻住了，踩着冰面赶紧跑回来！','冷风催着呢，快把刚才的节奏跑热！'],
+      recover:['冰面稳住了，这股节奏让后厨都升温啦！','脚步暖起来啦，小厨师给你一颗冰晶星！'],
+      balance:['盘子往冰边滑了，反向轻扶把它拽回！','冷风在推盘，手上稳稳托住别打滑！'],
+      praise:['你真棒，冰面再滑也被你跑出热气啦！','脚步稳得像钉在冰上，这波节奏真漂亮！']
+    },
+    toilet:{
+      slow:['水花慢啦，漩涡还在等你转起来！','脚步别让水冲散，找回刚才的节奏！'],
+      urgent:['订单要冲走啦，顺着漩涡快跑起来！','倒计时在冒泡，赶紧找回小跑水流！'],
+      recover:['水流转顺啦，就是这个稳稳的节奏！','漩涡跟上你啦，小厨师给你一朵水花！'],
+      balance:['盘子被水推偏了，朝反方向轻扶！','水流在捣乱，手上稳稳把盘带回！'],
+      praise:['你真棒，整股漩涡都追不上你的脚步！','水流再好动，也被你的节奏带顺啦！']
+    },
+    coffee:{
+      slow:['豆香都慢下来了，快把节奏重新磨起来！','咖啡还在等你，找回刚才的小跑转速！'],
+      urgent:['浓缩要凉啦，踩着豆香把订单送出去！','倒计时滴答响，赶紧把转速拉回来！'],
+      recover:['转速回来啦，这股节奏像刚磨好的豆香！','豆仓又转顺了，小厨师给你加满香气！'],
+      balance:['豆浪在晃盘，轻轻朝反方向扶稳！','杯口还热着呢，手上稳住别让豆浪推翻！'],
+      praise:['你真棒，这股节奏比头道浓缩还带劲！','豆仓晃个不停，也被你的脚步磨得顺滑！']
+    }
   };
+  if(root.fetch&&root.location?.protocol!=='file:')
+    root.fetch('coach-lines.json',{cache:'no-store'}).then(response=>{
+      if(!response.ok)throw new Error('Coach lines unavailable');
+      return response.json();
+    }).then(data=>{
+      const valid=['neon','fridge','toilet','coffee'].every(scene=>
+        kinds.every(kind=>Array.isArray(data?.[scene]?.[kind])&&data[scene][kind].length===2&&
+          data[scene][kind].every(line=>typeof line==='string'&&line.length>0&&line.length<=40)));
+      if(valid)sceneLines=data;
+    }).catch(()=>{});
   function create({onCue=()=>{},onClear=()=>{},now=()=>Date.now()}={}){
     let context={},key=null,pace=null,activity=null,baseline=0,learning=[],lastCycle=null;
-    let lowSince=null,recoverSince=null,wobbleSince=null,steadySince=null;
+    let lowSince=null,recoverSince=null,wobbleSince=null,steadySince=null,praiseSince=null;
     let warned=false,wobbleWarned=false,lastCue=-Infinity,lastKind=null;
     const cooldown={};
     const clear=()=>{
-      pace=activity=null;lowSince=recoverSince=wobbleSince=steadySince=null;
+      pace=activity=null;lowSince=recoverSince=wobbleSince=steadySince=praiseSince=null;
       warned=wobbleWarned=false;onClear();
     };
     function reset(){
@@ -41,7 +75,8 @@
       activity={label:packet.label,confidence:packet.confidence,at:now()};
     }
     function emit(kind,t){
-      if((t-lastCue<4500&&!(kind==='balance'&&lastKind!=='balance'))||t-(cooldown[kind]??-Infinity)<12000)return false;
+      const cooldownMs=kind==='praise'?20000:12000;
+      if((t-lastCue<4500&&!(kind==='balance'&&lastKind!=='balance'))||t-(cooldown[kind]??-Infinity)<cooldownMs)return false;
       lastCue=t;lastKind=kind;cooldown[kind]=t;
       onCue({kind,...context,baseline,cadence:pace?.cadence??null,activity:activity&&t-activity.at<1500?activity:null});return true;
     }
@@ -61,13 +96,13 @@
         }
       }else wobbleSince=steadySince=null;
       if(!next.foot||!next.runExpected||!pace||t-pace.at>700){
-        pace=null;lowSince=recoverSince=null;warned=false;return;
+        pace=null;lowSince=recoverSince=praiseSince=null;warned=false;return;
       }
-      if(!baseline)return;
+      if(!baseline){praiseSince=null;return;}
       const ratio=pace.cadence/baseline;
       if(ratio<.75){
-        recoverSince=null;lowSince??=t;
-        if(!warned&&t-lowSince>=2200&&!(next.stage==='serve'&&Math.abs(next.tilt)>.5)){
+        recoverSince=praiseSince=null;lowSince??=t;
+        if(!warned&&t-lowSince>=1000&&!(next.stage==='serve'&&Math.abs(next.tilt)>.5)){
           if(emit(next.seconds<30?'urgent':'slow',t))warned=true;
         }
       }else if(ratio>=.88){
@@ -78,7 +113,9 @@
             warned=false;recoverSince=null;
           }
         }
-      }else {lowSince=null;recoverSince=null;}
+        praiseSince??=t;
+        if(t-praiseSince>=6000&&!(next.stage==='serve'&&Math.abs(next.tilt)>.5))emit('praise',t);
+      }else {lowSince=null;recoverSince=praiseSince=null;}
     }
     return {observe,observeActivity,update,reset,get baseline(){return baseline;}};
   }
@@ -92,7 +129,7 @@
     const text=bubble.querySelector('p'),note=bubble.querySelector('.coach-note');
     const portrait=bubble.querySelector('canvas').getContext('2d');
     const packs=new Map(),requests=new Map(),counts={};
-    let hideAt=0,current={},round=0,latest={},lastPace=null,lastActivity=null,assessment=null,revision=0;
+    let hideAt=0,current={},round=0,latest={},lastPace=null,lastActivity=null;
     function hide(){
       if(!bubble.hidden){bubble.hidden=true;root.KitchenAudio?.stopSpeech?.();}
     }
@@ -101,6 +138,8 @@
       if(!['joy','sadness','anger','fear','surprise','disgust'].includes(emotion))emotion='joy';
       const cacheKey=scene+':'+emotion;
       current={scene,emotion,cacheKey};
+      for(const kind of ['slow','urgent','recover','praise','balance'])
+        root.KitchenAudio?.warm?.(sceneLines[scene][kind][0],kind);
       if(packs.has(cacheKey)||requests.has(cacheKey)||!root.fetch||root.location.protocol==='file:')return;
       const controller=new AbortController(),timer=root.setTimeout(()=>controller.abort(),15000);
       requests.set(cacheKey,controller);
@@ -108,20 +147,15 @@
         body:JSON.stringify({scene,emotion}),signal:controller.signal})
         .then(response=>{if(!response.ok)throw new Error('Coach unavailable');return response.json();})
         .then(data=>{
-          if(kinds.every(kind=>Array.isArray(data.lines?.[kind])&&data.lines[kind].length>=1&&
-            data.lines[kind].length<=3&&data.lines[kind].every(line=>typeof line==='string'&&line.trim().length>0&&line.length<=40)))
-            packs.set(cacheKey,data.lines);
+          const valid=kinds.every(kind=>Array.isArray(data.lines?.[kind])&&data.lines[kind].length>=1&&
+            data.lines[kind].length<=3&&data.lines[kind].every(line=>typeof line==='string'&&line.trim().length>0&&line.length<=40));
+          if(!valid)return;
+          packs.set(cacheKey,data.lines);
+          for(const kind of kinds)root.KitchenAudio?.warm?.(data.lines[kind][0],kind);
         }).catch(()=>{}).finally(()=>{root.clearTimeout(timer);requests.delete(cacheKey);});
     }
     function clear(){
-      revision++;assessment?.abort();assessment=null;lastPace=lastActivity=null;hide();
-    }
-    function relevant(event){
-      if(!latest.active||latest.key!==event.key||!latest.foot||!latest.runExpected||doc.hidden||parent.inert)return false;
-      if(!lastPace||Date.now()-lastPace.at>700)return false;
-      if(event.stage==='serve'&&Math.abs(latest.tilt||0)>.5)return false;
-      const ratio=lastPace.cadence/event.baseline;
-      return event.kind==='recover'?ratio>=.88:ratio<.75;
+      lastPace=lastActivity=null;hide();
     }
     function show(event,message){
       if(typeof message!=='string'||!message.trim()||message.length>40)return;
@@ -129,35 +163,18 @@
       portrait.clearRect(0,0,96,96);portrait.imageSmoothingEnabled=false;
       root.KitchenArt?.chef(portrait,48,67,1.7,event.theme,0,false);
       text.textContent=message;
-      note.textContent=event.kind==='recover'?'节奏找回来啦':event.kind==='balance'?'轻倾修正 · 稳稳端好':'保持你舒服的小跑节奏';
+      note.textContent=event.kind==='recover'?'节奏找回来啦':event.kind==='balance'?'轻倾修正 · 稳稳端好':event.kind==='praise'?'持续运动 · 节奏真稳':'保持你舒服的小跑节奏';
       bubble.hidden=false;hideAt=Date.now()+Math.min(6500,Math.max(4200,message.length*180+800));
       root.KitchenAudio?.speak?.(message,event.kind);
     }
     const engine=create({onClear:clear,onCue:event=>{
-      revision++;assessment?.abort();assessment=null;
-      const choices=packs.get(current.cacheKey)?.[event.kind]||lines[event.kind];
       const index=counts[event.kind]||0;counts[event.kind]=index+1;
-      const message=choices[index%choices.length];
-      // Balance stays on the existing immediate path; only ankle feedback uses this assessment.
-      if(event.kind==='balance'||!event.activity||!root.fetch||root.location.protocol==='file:'){show(event,message);return;}
-      if(event.activity.label==='unknown'||event.activity.confidence<.65)return;
-      const token=revision,controller=new AbortController();assessment=controller;
-      const timer=root.setTimeout(()=>controller.abort(),2500);
-      const fresh=()=>token===revision&&relevant(event)&&lastActivity&&Date.now()-lastActivity.at<1500&&
-        lastActivity.label!=='unknown'&&lastActivity.confidence>=.65;
-      root.fetch('/api/coach/assess',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,
-        body:JSON.stringify({scene:event.theme,emotion:current.emotion||'joy',stage:event.stage,event:event.kind,
-          activity:event.activity.label,confidence:event.activity.confidence,cadence:event.cadence,
-          baseline:event.baseline,seconds:Math.max(0,Math.min(180,event.seconds))})})
-        .then(response=>{if(!response.ok)throw new Error('Assessment unavailable');return response.json();})
-        .then(data=>{
-          if(!fresh())return;
-          if(data.decision==='quiet')return;
-          if(data.decision!=='speak'||data.kind!==event.kind||typeof data.text!=='string'||!data.text.trim()||data.text.length>40)
-            throw new Error('Invalid assessment');
-          show(event,data.text);
-        }).catch(()=>{if(fresh())show(event,message);})
-        .finally(()=>{root.clearTimeout(timer);if(assessment===controller)assessment=null;});
+      const local=sceneLines[event.theme][event.kind];
+      const pack=packs.get(current.cacheKey)?.[event.kind];
+      const preferred=pack?.[index%pack.length];
+      // Prefer an already-voiced AI line; otherwise use the warm local line immediately.
+      const message=preferred&&root.KitchenAudio?.hasSpeech?.(preferred,event.kind)?preferred:local[index%local.length];
+      show(event,message);
     }});
     doc.addEventListener('visibilitychange',()=>{if(doc.hidden){engine.reset();hide();}});
     root.addEventListener('pagehide',()=>{engine.reset();for(const controller of requests.values())controller.abort();});
@@ -173,5 +190,5 @@
       }
     };
   }
-  root.KitchenCoach={create,mount};
+  root.KitchenCoach={create,mount,sceneLines};
 })(window);

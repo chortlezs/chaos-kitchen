@@ -1,8 +1,10 @@
 """Emotion routing, provider failures and the public HTTP boundary."""
 import io
 import json
+import os
 from pathlib import Path
 import sys
+import tempfile
 import threading
 import unittest
 from unittest.mock import patch
@@ -63,6 +65,55 @@ class RecommendationTests(unittest.TestCase):
         with patch.object(kitchen.request, "urlopen", return_value=response), self.assertRaises(kitchen.ApiError) as caught:
             kitchen.recommend("今天心情复杂", {"api_key": "private", "model": "test"})
         self.assertEqual(caught.exception.status, 502)
+
+
+class TtsSettingsTests(unittest.TestCase):
+    def test_loads_private_dashscope_config_and_environment_precedence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dashscope.json"
+            path.write_text(json.dumps({
+                "api_key": "file-private-key",
+                "workspace_id": "file-workspace",
+                "region": "cn-beijing",
+                "voice": "longanhuan",
+            }), encoding="utf-8")
+            with patch.dict(os.environ, {
+                "KITCHEN_TTS_CONFIG": str(path),
+                "DASHSCOPE_API_KEY": "",
+                "DASHSCOPE_WORKSPACE_ID": "",
+                "COSYVOICE_REGION": "",
+                "COSYVOICE_MODEL": "",
+                "COSYVOICE_VOICE": "",
+            }):
+                settings = kitchen.load_tts_settings()
+            self.assertEqual(settings["api_key"], "file-private-key")
+            self.assertEqual(settings["workspace"], "file-workspace")
+            self.assertEqual(settings["voice"], "longanhuan")
+
+            with patch.dict(os.environ, {
+                "KITCHEN_TTS_CONFIG": str(path),
+                "DASHSCOPE_API_KEY": "env-private-key",
+                "DASHSCOPE_WORKSPACE_ID": "env-workspace",
+                "COSYVOICE_VOICE": "env-voice",
+            }):
+                settings = kitchen.load_tts_settings()
+            self.assertEqual(settings["api_key"], "env-private-key")
+            self.assertEqual(settings["workspace"], "env-workspace")
+            self.assertEqual(settings["voice"], "env-voice")
+
+    def test_tts_disk_cache_round_trip_and_separation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(kitchen, "TTS_CACHE_DIR", Path(directory)):
+                audio = b"ID3\x03\x00\x00audio"
+                kitchen.store_cached_tts("cosyvoice-v3-flash", "longanhuan", "slow", "测试台词", audio)
+                self.assertEqual(
+                    kitchen.load_cached_tts("cosyvoice-v3-flash", "longanhuan", "slow", "测试台词"),
+                    audio,
+                )
+                self.assertIsNone(
+                    kitchen.load_cached_tts("cosyvoice-v3-flash", "longanhuan", "praise", "测试台词")
+                )
+                self.assertEqual(len(list(Path(directory).glob("*.mp3"))), 1)
 
 
 class HttpTests(unittest.TestCase):
